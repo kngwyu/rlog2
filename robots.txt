@@ -1,1 +1,1 @@
-Sitemap: https://kngwyu.github.io/rlog2/sitemap.xml
+Sitemap: https://github.com/kngwyu/rlog2/sitemap.xml
