@@ -107,14 +107,14 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "rlog2",
+    "title": "RLog2",
     "section": "",
     "text": "Exercise 5.12 Racetrack from the Reinforcement Learning textbook\n\n\n\n\n\n\n\nen\n\n\nRL\n\n\nbasic\n\n\n\n\n\n\n\n\n\n\n\nJul 3, 2022\n\n\n\n\n\n\n  \n\n\n\n\nJax・Brax・HaikuでGPU引きこもり学習\n\n\n\n\n\n\n\nja\n\n\nRL\n\n\ndeep\n\n\n\n\n\n\n\n\n\n\n\nJun 12, 2022\n\n\n\n\n\n\n  \n\n\n\n\nより良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう\n\n\n\n\n\n\n\nja\n\n\nRL\n\n\nbasic\n\n\n\n\n\n\n\n\n\n\n\nOct 12, 2021\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "about.html",
     "href": "about.html",
-    "title": "RLog2",
+    "title": "RLog2: RL blog 2",
     "section": "",
     "text": "Blog posts on reinforcement learning and other technical stuff with some code"
   }
