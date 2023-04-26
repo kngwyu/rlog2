@@ -17,7 +17,7 @@ website:
         href: https://github.com/kngwyu
 format:
   html:
-    theme: cosmo
+    theme: flatly
     css: styles.css
 
 

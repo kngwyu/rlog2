@@ -1,5 +1,5 @@
 ---
-title: "rlog2"
+title: "RLog2"
 listing:
   contents: posts
   sort: "date desc"

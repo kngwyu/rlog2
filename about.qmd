@@ -1,5 +1,5 @@
 ---
-title: "RLog2"
+title: "RLog2: RL blog 2"
 image: profile.png
 about:
   template: jolla
