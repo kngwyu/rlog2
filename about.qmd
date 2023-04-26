@@ -1,0 +1,16 @@
+---
+title: "RLog2"
+image: profile.png
+about:
+  template: jolla
+  links:
+    - icon: mastodon
+      text: Mastodon
+      href: https://sigmoid.social/@kngwyu
+    - icon: github
+      text: Github
+      href: https://github.com/kngwyu
+
+---
+
+Blog posts on reinforcement learning and other technical stuff with some code
