@@ -1,0 +1,5 @@
+-r jupyter.in
+distrax
+equinox
+jax
+optax

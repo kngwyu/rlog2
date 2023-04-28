@@ -16,15 +16,19 @@ function _ensure_venv() {
         mkdir .venv
         python -m venv .venv
         pip install pip-tools
-    else
-        source .venv/bin/activate
     fi
+    source .venv/bin/activate
 }
 
 function subcmd_compile() {
     _ensure_venv
     filename=$(basename "$@")
     pip-compile "$@" --output-file="requirements/${filename%.*}.txt"
+}
+
+function subcmd_register() {
+    _ensure_venv
+    python -m ipykernel install --user --name rlog2
 }
 
 function subcmd_sync() {
