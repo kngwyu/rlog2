@@ -15,9 +15,11 @@ function _ensure_venv() {
     if [[ ! -d .venv ]]; then
         mkdir .venv
         python -m venv .venv
+        source .venv/bin/activate
         pip install pip-tools
+    else
+        source .venv/bin/activate
     fi
-    source .venv/bin/activate
 }
 
 function subcmd_compile() {
