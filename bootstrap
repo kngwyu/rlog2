@@ -31,6 +31,11 @@ function subcmd_register() {
     python -m ipykernel install --user --name rlog2
 }
 
+function subcmd_run() {
+    _ensure_venv
+    jupyter lab --ServerApp.open_browser=False
+}
+
 function subcmd_sync() {
     _ensure_venv
     pip-sync "$@"

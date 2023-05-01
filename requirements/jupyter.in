@@ -1,5 +1,7 @@
+black
 ipympl
 ipywidgets
+isort
 jupyterlab
 jupyterlab_code_formatter
 jupyterlab-lsp
