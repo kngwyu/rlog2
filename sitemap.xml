@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://github.com/kngwyu/rlog2/posts/understanding-transformer.html</loc>
+    <lastmod>2023-05-01T03:05:38.171Z</lastmod>
+  </url>
+  <url>
     <loc>https://github.com/kngwyu/rlog2/posts/sandb-exercise-racetrack.html</loc>
-    <lastmod>2023-04-28T01:31:18.405Z</lastmod>
+    <lastmod>2023-05-01T03:05:39.535Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/jax-brax-haiku.html</loc>
-    <lastmod>2023-04-28T01:31:20.457Z</lastmod>
+    <lastmod>2023-05-01T03:05:40.795Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/understanding-what-makes-rl-difficult.html</loc>
-    <lastmod>2023-04-28T01:31:21.873Z</lastmod>
+    <lastmod>2023-05-01T03:05:41.911Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/about.html</loc>
-    <lastmod>2023-04-28T01:31:22.189Z</lastmod>
+    <lastmod>2023-05-01T03:05:42.175Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/index.html</loc>
-    <lastmod>2023-04-28T01:31:22.805Z</lastmod>
+    <lastmod>2023-05-01T03:05:42.747Z</lastmod>
   </url>
 </urlset>

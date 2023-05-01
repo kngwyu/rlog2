@@ -1,5 +1,33 @@
 [
   {
+    "objectID": "posts/understanding-transformer.html",
+    "href": "posts/understanding-transformer.html",
+    "title": "Transformerが何をやっているのか理解する",
+    "section": "",
+    "text": "ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたり（親不孝な息子でごめんなさい）するようです。そんな中僕はいまだにTransformerが何なのかすらよくわかっていなかったので、とりあえず何をやっているのかくらいは理解してみようとしてみます。"
+  },
+  {
+    "objectID": "posts/understanding-transformer.html#最初に列があった",
+    "href": "posts/understanding-transformer.html#最初に列があった",
+    "title": "Transformerが何をやっているのか理解する",
+    "section": "最初に列があった",
+    "text": "最初に列があった\nトークン列というのは文字通りトークンからなる列のことです。トークンは有限集合の要素です。実用上はbyte pair encodingにより得られたsubwordなどがこれに該当しますが、とりあえず気にしなくていいです。トークンの集合を\\(V\\)とし、\\([Nv] := {1, ..., Nv}\\)と番号付けしておきます。トークン列を\\(x = x[1: l]\\)と書きます。また、トークン列の最大の長さを\\(L\\)とします。トークンとして連続値や無限集合は扱えないと思いますが、素人なので何か抜け道があるかどうかは知りません。"
+  },
+  {
+    "objectID": "posts/understanding-transformer.html#トークンからベクトルに",
+    "href": "posts/understanding-transformer.html#トークンからベクトルに",
+    "title": "Transformerが何をやっているのか理解する",
+    "section": "トークンからベクトルに",
+    "text": "トークンからベクトルに\n適当な\\(d_e \\times Nv\\)次元の行列\\(W_e\\)を使って、\\(v\\)番目のトークンから埋め込み（Token embedding）を \\(e = W_e[:, v]\\)により得ます。これは\\(d_e\\)次元のベクトルになります。なお、numpy風に\\(i\\)番目の行ベクトルを\\(W[i, :]\\)、\\(j\\)番目の列ベクトルを\\(W[:, j]\\)と書いています。この行列\\(W_e\\)は勾配降下により学習されるようです。"
+  },
+  {
+    "objectID": "posts/understanding-transformer.html#ついでに位置もベクトルに",
+    "href": "posts/understanding-transformer.html#ついでに位置もベクトルに",
+    "title": "Transformerが何をやっているのか理解する",
+    "section": "ついでに位置もベクトルに",
+    "text": "ついでに位置もベクトルに\n適当な\\(d_p \\times L\\)次元の行列\\(W_p\\)を使って、トークン列中の\\(l\\)番目にトークンがあるという情報から、位置埋め込み（Positional embedding）を \\(p = W_p[:, l]\\)により得ます。これも\\(d_e\\)次元のベクトルになります。正直なんの意味があるのかよくわからないのですが、これを先程のトークン埋め込みに足してトークン列\\(x\\)の\\(t\\)番目のトークン\\(x[t]\\)に対する埋め込みを\\(e = W_e[:, x[t]] + W_p[:, t]\\)によって得ます。これ足して大丈夫なのかな？って思うんですが。 位置埋め込みは、学習されることもあるようですが、Transformerが最初に提案されたAttention Is All You Needの論文では、以下のように構成されています。 \\[\n\\begin{align*}\nW_p[2i - 1, t] &= \\sin (\\frac{t}{L^{2i / d_e}}) \\\\\nW_p[2i, t] &= \\cos (\\frac{t}{L^{2i / d_e}}) \\\\\n&~~~~~(0 &lt; 2i \\leq d_e)\n\\end{align*}\n\\] これを\\(L=50, d_e = 5\\)として可視化してみましょう。\n\n\nCode\nimport numpy as np\nfrom matplotlib import pyplot as plt\n\nL = 50\nd_e = 5\nx = np.arange(L)\nfor i in range(1, 1 + d_e):\n    if i % 2 == 0:\n        w_p = np.sin(x / L ** (i / d_e))\n    else:\n        w_p = np.cos(x / L ** ((i - 1) / d_e)) \n    _ = plt.plot(x, w_p, label=f\"i={i}\")\nplt.legend()\n\n\nというわけで、この埋めこみは各成分ごとに異なる周波数での単語を埋め込むようです。これにより、短いコンテキストの中での位置も同時に考慮できるのかな。"
+  },
+  {
     "objectID": "posts/sandb-exercise-racetrack.html",
     "href": "posts/sandb-exercise-racetrack.html",
     "title": "Exercise 5.12 Racetrack from the Reinforcement Learning textbook",
@@ -116,6 +144,6 @@
     "href": "index.html",
     "title": "RLog2",
     "section": "",
-    "text": "Exercise 5.12 Racetrack from the Reinforcement Learning textbook\n\n\n\n\n\n\n\nen\n\n\nRL\n\n\nbasic\n\n\n\n\n\n\n\n\n\n\n\nJul 3, 2022\n\n\n\n\n\n\n  \n\n\n\n\nJax・Brax・HaikuでGPU引きこもり学習\n\n\n\n\n\n\n\nja\n\n\nRL\n\n\ndeep\n\n\n\n\n\n\n\n\n\n\n\nJun 12, 2022\n\n\n\n\n\n\n  \n\n\n\n\nより良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう\n\n\n\n\n\n\n\nja\n\n\nRL\n\n\nbasic\n\n\n\n\n\n\n\n\n\n\n\nOct 12, 2021\n\n\n\n\n\n\nNo matching items"
+    "text": "Transformerが何をやっているのか理解する\n\n\n\n\n\n\n\nja\n\n\nNLP\n\n\ndeep\n\n\n\n\n\n\n\n\n\n\n\nApr 4, 2025\n\n\n\n\n\n\n  \n\n\n\n\nExercise 5.12 Racetrack from the Reinforcement Learning textbook\n\n\n\n\n\n\n\nen\n\n\nRL\n\n\nbasic\n\n\n\n\n\n\n\n\n\n\n\nJul 3, 2022\n\n\n\n\n\n\n  \n\n\n\n\nJax・Brax・HaikuでGPU引きこもり学習\n\n\n\n\n\n\n\nja\n\n\nRL\n\n\ndeep\n\n\n\n\n\n\n\n\n\n\n\nJun 12, 2022\n\n\n\n\n\n\n  \n\n\n\n\nより良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう\n\n\n\n\n\n\n\nja\n\n\nRL\n\n\nbasic\n\n\n\n\n\n\n\n\n\n\n\nOct 12, 2021\n\n\n\n\n\n\nNo matching items"
   }
 ]
