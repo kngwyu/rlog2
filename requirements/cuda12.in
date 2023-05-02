@@ -1,0 +1,6 @@
+--find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+-r jupyter.in
+distrax
+equinox
+jax[cuda12_pip]
+optax
