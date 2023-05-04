@@ -200,7 +200,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたりするようです。親不孝な息子でごめんなさいという感じもしますが、僕はいまだにTransformerが何なのかすらよくわかっていないで、これを機に何をやっているのかくらいは理解してみます。</p>
+<p>ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたりするようです。親不孝な息子でごめんなさいという感じもしますが、僕はいまだにTransformerが何なのかすらよくわかっていないので、これを機に何をやっているのかくらいは理解してみます。</p>
 <section id="参考にしたもの" class="level1">
 <h1>参考にしたもの</h1>
 <ul>
@@ -234,7 +234,7 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 &amp;~~~~~(0 &lt; 2i \leq d_e)
 \end{align*}
 \]</span> これを<span class="math inline">\(L=50, d_e = 5\)</span>として可視化してみましょう。</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="1">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -251,6 +251,12 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> plt.plot(x, w_p, label<span class="op">=</span><span class="ss">f"i=</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>&lt;matplotlib.legend.Legend at 0x7f61c15acfd0&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-transformer_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
+</div>
 </div>
 <p>というわけで、この埋めこみは各成分ごとに異なる周波数での単語を埋め込むようです。これにより、短いコンテキストの中での位置も同時に考慮できるのかな。</p>
 </section>
@@ -268,214 +274,224 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 \]</span> 埋め込みの次元を<span class="math inline">\(d_\textrm{in}\)</span>、出力の次元と<span class="math inline">\(d_\textrm{out}\)</span>とすると、<span class="math inline">\(W_q, Q_k\)</span>は<span class="math inline">\(d_\textrm{attn} \times e\)</span>の行列、<span class="math inline">\(W_q, Q_k\)</span>は<span class="math inline">\(d_\textrm{out} \times d_\textrm{in}\)</span>の行列、<span class="math inline">\(b_*\)</span>はベクトル（バイアス項）です。ここで、<span class="math inline">\(q^\top k_{t'}\)</span>の値でソフトマックスをとって<span class="math inline">\(v\)</span>にマスクをかけるので、これは現在のトークンと<span class="math inline">\(t'\)</span>番目のトークンが「どれくらい対応しているか」を表していてほしいです。<span class="math inline">\(v_{t'}\)</span>が何を表しているかはタスクによって異なると思いますが、<span class="math inline">\(t'\)</span>番目のトークンの埋め込みに線形に関係する値が入っているはずです。このトークン列に後ろ向きの因果関係がない場合（あるトークン<span class="math inline">\(x[t]\)</span>が、任意の未来のトークン<span class="math inline">\(x[t']~\textrm{where}~t &lt; t'\)</span>に依存しない場合）は、<span class="math inline">\(\alpha_{t'}\)</span>にマスクをかける(<span class="math inline">\(\alpha_{t'}[i] = 0 ~\textrm{if}~t &lt; i\)</span>)こともあります。なので、未来を予測する際にはこのマスクをかけるのが一般的なようです。</p>
 <p>実際に、時系列から何か（次の単語、ラベルなど）を予測する際には、この単一クエリに対するAttentionを長さ<span class="math inline">\(T\)</span>の系列内のすべてのトークンに対して計算し、<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列<span class="math inline">\(\tilde{V}\)</span>を得ます。</p>
 <p>とりあえずこれを学習させてみましょう。今回は<a href="https://jax.readthedocs.io/en/latest/">jax</a>と<a href="https://docs.kidger.site/equinox/">equinox</a>を使ってモデルを書いてみます。</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Attention(eqx.Module):</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    w_q: jax.Array</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    b_q: jax.Array</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    w_k: jax.Array</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    b_k: jax.Array</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    w_v: jax.Array</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    b_v: jax.Array</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    sqrt_d_attn: <span class="bu">float</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in: <span class="bu">int</span>, d_attn: <span class="bu">int</span>, d_out: <span class="bu">int</span>, key: jax.Array) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        wq_key, bq_key, wk_key, bk_key, wv_key, bv_key <span class="op">=</span> jax.random.split(key, <span class="dv">6</span>)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_q <span class="op">=</span> jax.random.normal(wq_key, (d_attn, d_in))</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_q <span class="op">=</span> jax.random.normal(bq_key, (d_attn, <span class="dv">1</span>))</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_k <span class="op">=</span> jax.random.normal(wk_key, (d_attn, d_in))</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_k <span class="op">=</span> jax.random.normal(bk_key, (d_attn, <span class="dv">1</span>))</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_v <span class="op">=</span> jax.random.normal(wv_key, (d_out, d_in))</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_v <span class="op">=</span> jax.random.normal(bv_key, (d_out, <span class="dv">1</span>))</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.sqrt_d_attn <span class="op">=</span> <span class="bu">float</span>(np.sqrt(d_attn))</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""Take a matrix e with shape [d_in x seq_len], compute attention for all tokens in e.</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">        Outputs a matrix with shape [d_out x seq_len]</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.w_q <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_q</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.w_k <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_k</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.w_v <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_v</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(q.T <span class="op">@</span> k <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn, axis<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> causal_mask(x: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    ltri <span class="op">=</span> jnp.tri(x.shape[<span class="dv">0</span>], dtype<span class="op">=</span><span class="bu">bool</span>, k<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jax.lax.select(ltri, jnp.ones_like(x) <span class="op">*</span> <span class="op">-</span>jnp.inf, x)</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MaskedAttention(Attention):</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.w_q <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_q</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.w_k <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_k</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.w_v <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_v</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>        score <span class="op">=</span> causal_mask(q.T <span class="op">@</span> k) <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn</span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(score, axis<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Attention(eqx.Module):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    w_q: jax.Array</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    b_q: jax.Array</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    w_k: jax.Array</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    b_k: jax.Array</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    w_v: jax.Array</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    b_v: jax.Array</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    sqrt_d_attn: <span class="bu">float</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in: <span class="bu">int</span>, d_attn: <span class="bu">int</span>, d_out: <span class="bu">int</span>, key: jax.Array) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        wq_key, bq_key, wk_key, bk_key, wv_key, bv_key <span class="op">=</span> jax.random.split(key, <span class="dv">6</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_q <span class="op">=</span> jax.random.normal(wq_key, (d_attn, d_in))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_q <span class="op">=</span> jax.random.normal(bq_key, (d_attn, <span class="dv">1</span>))</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_k <span class="op">=</span> jax.random.normal(wk_key, (d_attn, d_in))</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_k <span class="op">=</span> jax.random.normal(bk_key, (d_attn, <span class="dv">1</span>))</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_v <span class="op">=</span> jax.random.normal(wv_key, (d_out, d_in))</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_v <span class="op">=</span> jax.random.normal(bv_key, (d_out, <span class="dv">1</span>))</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.sqrt_d_attn <span class="op">=</span> <span class="bu">float</span>(np.sqrt(d_attn))</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""Take a matrix e with shape [d_in x seq_len], compute attention for all tokens in e.</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">        Outputs a matrix with shape [d_out x seq_len]</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.w_q <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_q</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.w_k <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_k</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.w_v <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_v</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(q.T <span class="op">@</span> k <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> causal_mask(x: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    ltri <span class="op">=</span> jnp.tri(x.shape[<span class="dv">0</span>], dtype<span class="op">=</span><span class="bu">bool</span>, k<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jax.lax.select(ltri, jnp.ones_like(x) <span class="op">*</span> <span class="op">-</span>jnp.inf, x)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MaskedAttention(Attention):</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.w_q <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_q</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.w_k <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_k</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.w_v <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_v</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        score <span class="op">=</span> causal_mask(q.T <span class="op">@</span> k) <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(score, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>これを学習させてみましょう。トークンとして、天気🌧️・☁️・☀️を考えます。この3つの記号に対し適当な埋め込みを与えて、次の日の天気を学習させてみます。よくわからないので、ダブらないようにトークン埋め込みを<span class="math inline">\([-1, 0, 1]\)</span>、位置埋め込みを<span class="math inline">\(1 / t\)</span>としてみましょう。最大文字列長は適当に10にします。</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="3">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TOKEN_EMBEDDING <span class="op">=</span> {</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"🌧️"</span>: <span class="op">-</span><span class="fl">1.0</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☁️"</span>: <span class="fl">0.0</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☀️"</span>: <span class="fl">1.0</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_embedding(seq: <span class="bu">str</span>, max_seq_len: <span class="bu">int</span> <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>) <span class="op">-&gt;</span> np.ndarray:</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> max_seq_len <span class="kw">is</span> <span class="va">None</span>:</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        max_seq_len <span class="op">=</span> <span class="bu">len</span>(seq)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    length <span class="op">=</span> <span class="bu">len</span>(seq) <span class="op">//</span> <span class="dv">2</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> np.zeros(length)</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(length):</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> seq[i <span class="op">*</span> <span class="dv">2</span>: i <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">2</span>]</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        e[i] <span class="op">=</span> TOKEN_EMBEDDING[x] <span class="op">+</span> (i <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> max_seq_len</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e.reshape(<span class="dv">1</span>, length)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TOKEN_EMBEDDING <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"🌧️"</span>: <span class="op">-</span><span class="fl">1.0</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☁️"</span>: <span class="fl">0.0</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☀️"</span>: <span class="fl">1.0</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_embedding(seq: <span class="bu">str</span>, max_seq_len: <span class="bu">int</span> <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> max_seq_len <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        max_seq_len <span class="op">=</span> <span class="bu">len</span>(seq)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    length <span class="op">=</span> <span class="bu">len</span>(seq) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> np.zeros(length)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(length):</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> seq[i <span class="op">*</span> <span class="dv">2</span>: i <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">2</span>]</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        e[i] <span class="op">=</span> TOKEN_EMBEDDING[x] <span class="op">+</span> (i <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> max_seq_len</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e.reshape(<span class="dv">1</span>, length)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <section id="markovモデルの学習" class="level2">
 <h2 class="anchored" data-anchor-id="markovモデルの学習">Markovモデルの学習</h2>
 <p>まず簡単なモデルで天気を生成してみます。<strong>次の日の天気は、前の日の天気にもとづいて確率的に決まる</strong>ことにしましょう。🌧️・☁️・☀️がマルチバイト文字であることに注意して、以下のように実装します。</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="4">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> dataclasses</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>_GEN <span class="op">=</span> np.random.Generator(np.random.PCG64(<span class="dv">11111</span>))</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>_MARKOV <span class="op">=</span> {</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>: [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>],</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"🌧️"</span>: [<span class="fl">0.6</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>],</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☁️"</span>: [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>],</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☀️"</span>: [<span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>],</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>WEATHERS <span class="op">=</span> [<span class="st">"🌧️"</span>, <span class="st">"☁️"</span>, <span class="st">"☀️"</span>]</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> markov(prev: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    prob <span class="op">=</span> _MARKOV[prev[<span class="op">-</span><span class="dv">2</span>:]]</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate(f, n: <span class="bu">int</span>):</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="st">""</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> f(value)</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> value</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclasses.dataclass</span></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Dataset:</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    weathers: <span class="bu">list</span>[<span class="bu">str</span>]</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    embeddings: jax.Array</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    next_weather_indices: jax.Array</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__len__</span>(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">len</span>(<span class="va">self</span>.weathers)</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_dataset(f, seq_len, size) <span class="op">-&gt;</span> Dataset:</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    w_list, e_list, nw_list <span class="op">=</span> [], [], []</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(size):</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>        weathers <span class="op">=</span> generate(f, seq_len <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> jnp.array(get_embedding(weathers[:<span class="op">-</span><span class="dv">2</span>]))</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>        w_list.append(weathers)</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>        e_list.append(e)</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>        nw_list.append(WEATHERS.index(weathers[<span class="op">-</span><span class="dv">2</span>:]))</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Dataset(w_list, jnp.stack(e_list), jnp.array(nw_list))</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>generate(markov, <span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> dataclasses</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>_GEN <span class="op">=</span> np.random.Generator(np.random.PCG64(<span class="dv">11111</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>_MARKOV <span class="op">=</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>: [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>],</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"🌧️"</span>: [<span class="fl">0.6</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>],</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☁️"</span>: [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>],</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☀️"</span>: [<span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>],</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>WEATHERS <span class="op">=</span> [<span class="st">"🌧️"</span>, <span class="st">"☁️"</span>, <span class="st">"☀️"</span>]</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> markov(prev: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    prob <span class="op">=</span> _MARKOV[prev[<span class="op">-</span><span class="dv">2</span>:]]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate(f, n: <span class="bu">int</span>):</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="st">""</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> f(value)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> value</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclasses.dataclass</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Dataset:</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    weathers: <span class="bu">list</span>[<span class="bu">str</span>]</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    embeddings: jax.Array</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    next_weather_indices: jax.Array</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__len__</span>(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">len</span>(<span class="va">self</span>.weathers)</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_dataset(f, seq_len, size) <span class="op">-&gt;</span> Dataset:</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    w_list, e_list, nw_list <span class="op">=</span> [], [], []</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(size):</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        weathers <span class="op">=</span> generate(f, seq_len <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> jnp.array(get_embedding(weathers[:<span class="op">-</span><span class="dv">2</span>]))</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        w_list.append(weathers)</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        e_list.append(e)</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        nw_list.append(WEATHERS.index(weathers[<span class="op">-</span><span class="dv">2</span>:]))</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Dataset(w_list, jnp.stack(e_list), jnp.array(nw_list))</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>generate(markov, <span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>'☁️🌧️🌧️🌧️🌧️🌧️🌧️☁️☀️🌧️🌧️🌧️☁️☁️☁️☀️☁️🌧️☁️☀️'</code></pre>
+</div>
 </div>
 <p>こんな感じです。いま、次の日の天気だけ予測したいので、モデルの出力は集合{🌧️・☁️・☀️}上での確率分布が適切でしょう。Attentionは長さ<span class="math inline">\(T\)</span>の埋め込み列に対して長さ<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列をかえします。なので、<span class="math inline">\(d_\textrm{out} = 3\)</span>とし、Attentionの出力<span class="math inline">\(\tilde{V}\)</span>に対してソフトマックス関数を適用し、<span class="math inline">\(P_t = \textrm{softmax}(\tilde{V}[:, t])\)</span>とします。このとき、<span class="math inline">\(P_t\)</span>の各要素が次の日🌧️・☁️・☀️になる確率を表すとして、モデル化します。これを、対数尤度の和<span class="math inline">\(\sum_t \log P_t(\textrm{next weather})\)</span>を最大化するように学習しましょう。学習のコードを定義します。</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="9">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_logp(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> seq.shape[<span class="dv">0</span>]</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT x SEQ_LEN</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    logp <span class="op">=</span> jax.nn.log_softmax(tilde_v, axis<span class="op">=</span><span class="dv">1</span>)  <span class="co"># B x OUT x SEQ_LEN</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    logp_masked <span class="op">=</span> logp <span class="op">*</span> jax.nn.one_hot(next_w, num_classes<span class="op">=</span><span class="dv">3</span>).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>jnp.mean(jnp.<span class="bu">sum</span>(logp_masked.reshape(batch_size, <span class="op">-</span><span class="dv">1</span>), axis<span class="op">=-</span><span class="dv">1</span>))</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>compute_loss <span class="op">=</span> eqx.filter_value_and_grad(neg_logp)</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>evaluate_model <span class="op">=</span> jax.jit(neg_logp)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    n_epochs: <span class="bu">int</span>,</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    minibatch_size: <span class="bu">int</span>,</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    model: eqx.Module,</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    ds: Dataset,</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    test_ds: Dataset,</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    key: jax.Array,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    learning_rate: <span class="bu">float</span> <span class="op">=</span> <span class="fl">1e-2</span>,</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[eqx.Module, jax.Array, <span class="bu">list</span>[<span class="bu">float</span>], <span class="bu">list</span>[<span class="bu">float</span>]]:</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    n_data <span class="op">=</span> <span class="bu">len</span>(ds)</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    indices <span class="op">=</span> jnp.arange(n_data)</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    optim <span class="op">=</span> optax.adam(learning_rate)</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">@eqx.filter_jit</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> train_1step(</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        model: eqx.Module,</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        seq: jax.Array,</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        next_w: jax.Array,</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        opt_state: optax.OptState,</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[jax.Array, eqx.Module, optax.OptState]:</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        loss, grads <span class="op">=</span> compute_loss(model, seq, next_w)</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        updates, opt_state <span class="op">=</span> optim.update(grads, opt_state)</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> eqx.apply_updates(model, updates)</span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> loss, model, opt_state</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    opt_state <span class="op">=</span> optim.init(model)</span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    n_optim_epochs <span class="op">=</span> n_data <span class="op">//</span> minibatch_size</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    loss_list, eval_list <span class="op">=</span> [], []</span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(n_epochs):</span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        key, shuffle_key <span class="op">=</span> jax.random.split(key)</span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>        shuffled_indices <span class="op">=</span> jax.random.shuffle(shuffle_key, indices)</span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_optim_epochs):</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>            e <span class="op">=</span> ds.embeddings[shuffled_indices]</span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>            next_w <span class="op">=</span> ds.next_weather_indices[shuffled_indices]</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>            loss, model, opt_state <span class="op">=</span> train_1step(model, e, next_w, opt_state)</span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>            loss_list.append(loss.item())</span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>            test_loss <span class="op">=</span> evaluate_model(</span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>                model, test_ds.embeddings, test_ds.next_weather_indices</span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>            eval_list.append(test_loss.item())</span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model, key, loss_list, eval_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> neg_logp(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT x SEQ_LEN</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    logp <span class="op">=</span> jax.nn.log_softmax(tilde_v, axis<span class="op">=</span><span class="dv">1</span>)  <span class="co"># B x OUT x SEQ_LEN</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    logp_masked <span class="op">=</span> logp <span class="op">*</span> jax.nn.one_hot(next_w, num_classes<span class="op">=</span><span class="dv">3</span>).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>jnp.mean(jnp.<span class="bu">sum</span>(logp_masked.reshape(batch_size, <span class="op">-</span><span class="dv">1</span>), axis<span class="op">=-</span><span class="dv">1</span>))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>compute_loss <span class="op">=</span> eqx.filter_value_and_grad(neg_logp)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>evaluate_model <span class="op">=</span> jax.jit(neg_logp)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    n_epochs: <span class="bu">int</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    minibatch_size: <span class="bu">int</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    model: eqx.Module,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    ds: Dataset,</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    test_ds: Dataset,</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    key: jax.Array,</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    learning_rate: <span class="bu">float</span> <span class="op">=</span> <span class="fl">1e-2</span>,</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[eqx.Module, jax.Array, <span class="bu">list</span>[<span class="bu">float</span>], <span class="bu">list</span>[<span class="bu">float</span>]]:</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    n_data <span class="op">=</span> <span class="bu">len</span>(ds)</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    optim <span class="op">=</span> optax.adam(learning_rate)</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">@eqx.filter_jit</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> train_1step(</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>        model: eqx.Module,</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        seq: jax.Array,</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>        next_w: jax.Array,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>        opt_state: optax.OptState,</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[jax.Array, eqx.Module, optax.OptState]:</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        loss, grads <span class="op">=</span> compute_loss(model, seq, next_w)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        updates, opt_state <span class="op">=</span> optim.update(grads, opt_state)</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> eqx.apply_updates(model, updates)</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> loss, model, opt_state</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    opt_state <span class="op">=</span> optim.init(model)</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    n_optim_epochs <span class="op">=</span> n_data <span class="op">//</span> minibatch_size</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    loss_list, eval_list <span class="op">=</span> [], []</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(n_epochs):</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>        key, perm_key <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>        indices <span class="op">=</span> jax.random.permutation(perm_key, n_data, independent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_optim_epochs):</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>            e <span class="op">=</span> ds.embeddings[indices]</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>            next_w <span class="op">=</span> ds.next_weather_indices[indices]</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>            loss, model, opt_state <span class="op">=</span> train_1step(model, e, next_w, opt_state)</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>            loss_list.append(loss.item())</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>            test_loss <span class="op">=</span> evaluate_model(</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>                model,</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>                test_ds.embeddings,</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>                test_ds.next_weather_indices,</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>            eval_list.append(test_loss.item())</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model, key, loss_list, eval_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>これを実際に走らせてみます。適当に、Attentionの次元を8、天気列の長さを10にしましょう。</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="10">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">8</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>SEQ_LEN <span class="op">=</span> <span class="dv">10</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">123</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">1</span>, D_ATTN, <span class="dv">3</span>, key)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dataset(markov, SEQ_LEN, <span class="dv">1000</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_dataset(markov, SEQ_LEN, <span class="dv">100</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">50</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-3</span>)</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>SEQ_LEN <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">123</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">1</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dataset(markov, SEQ_LEN, <span class="dv">1000</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_dataset(markov, SEQ_LEN, <span class="dv">100</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">50</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-3</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>&lt;matplotlib.legend.Legend at 0x7f617862c250&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-transformer_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
 </div>
 
 
