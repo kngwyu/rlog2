@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.340">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2025-04-04">
+
+<title>RLog2 - Attentionが何をやっているのか理解しよう</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+<script type="application/json" class="js-hypothesis-config">
+{
+  "theme": "clean"
+}
+</script>
+<script async="" src="https://hypothes.is/embed.js"></script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">RLog2</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html" rel="" target="">
+ <span class="menu-text">RLog2: RL blog 2</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://sigmoid.social/@kngwyu" rel="" target=""><i class="bi bi-mastodon" role="img">
+</i> 
+ <span class="menu-text">Mastodon</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/kngwyu" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text">Github</span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Attentionが何をやっているのか理解しよう</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">ja</div>
+                <div class="quarto-category">NLP</div>
+                <div class="quarto-category">deep</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">April 4, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#参考にしたもの" id="toc-参考にしたもの" class="nav-link active" data-scroll-target="#参考にしたもの">参考にしたもの</a></li>
+  <li><a href="#トークン列のエンコーディング" id="toc-トークン列のエンコーディング" class="nav-link" data-scroll-target="#トークン列のエンコーディング">トークン列のエンコーディング</a>
+  <ul class="collapse">
+  <li><a href="#最初に列があった" id="toc-最初に列があった" class="nav-link" data-scroll-target="#最初に列があった">最初に列があった</a></li>
+  <li><a href="#トークンからベクトルに" id="toc-トークンからベクトルに" class="nav-link" data-scroll-target="#トークンからベクトルに">トークンからベクトルに</a></li>
+  <li><a href="#ついでに位置もベクトルに" id="toc-ついでに位置もベクトルに" class="nav-link" data-scroll-target="#ついでに位置もベクトルに">ついでに位置もベクトルに</a></li>
+  </ul></li>
+  <li><a href="#attention" id="toc-attention" class="nav-link" data-scroll-target="#attention">Attention</a></li>
+  <li><a href="#やってみよう" id="toc-やってみよう" class="nav-link" data-scroll-target="#やってみよう">やってみよう</a>
+  <ul class="collapse">
+  <li><a href="#マルコフモデルの学習" id="toc-マルコフモデルの学習" class="nav-link" data-scroll-target="#マルコフモデルの学習">マルコフモデルの学習</a></li>
+  <li><a href="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" id="toc-独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" class="nav-link" data-scroll-target="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</a></li>
+  <li><a href="#attentionいらないんじゃ" id="toc-attentionいらないんじゃ" class="nav-link" data-scroll-target="#attentionいらないんじゃ">Attentionいらないんじゃ…</a></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<p>ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたりするようです。親不孝な息子でごめんなさいという感じもします。 ところで、ChatGPTのような言語生成モデルでしばしば利用されているのが、Transformerと呼ばれるニューラルネットワークの構成です。Transformerでは、Multihead Attentionと呼ばれるレイヤーを入力のトークン列に対し繰り返し適用し複雑なモデルを構成します。このブログでは、その簡略版である1レイヤーのAttention(Multiheadではない)に着目し、これが何をしているのかを勉強し、ついでにコードを書いて動かしてみます。</p>
+<section id="参考にしたもの" class="level1">
+<h1>参考にしたもの</h1>
+<ul>
+<li><a href="https://arxiv.org/abs/2207.09238">Formal Algorithms for Transformers</a>
+<ul>
+<li>疑似コードをまとめた論文です。これが一番わかりやすいと思うので、とりあえずこれを見ればいいと思います。他にも<a href="https://jalammar.github.io/illustrated-gpt2/">The Illustrated GPT-2</a>などを見たのですが、よくわかりませんでした。</li>
+</ul></li>
+<li><a href="https://github.com/syuntoku14/Shumi-Note/blob/main/notebooks/NN_transformer.ipynb">Shumi-Note Transformer</a>
+<ul>
+<li>これを見て真似しようと思ったのがこの記事のきっかけです。</li>
+</ul></li>
+</ul>
+</section>
+<section id="トークン列のエンコーディング" class="level1">
+<h1>トークン列のエンコーディング</h1>
+<p>Attentionは、入力としてトークンの列が与えられることを</p>
+<section id="最初に列があった" class="level2">
+<h2 class="anchored" data-anchor-id="最初に列があった">最初に列があった</h2>
+<p>トークン列というのは文字通りトークンからなる列のことです。トークンは有限集合の要素です。実用上はbyte pair encodingにより得られた部分文字列などがこれに該当しますが、とりあえず気にしなくていいです。トークンの集合を<span class="math inline">\(V\)</span>とし、<span class="math inline">\([Nv] := {1, ..., Nv}\)</span>と番号付けしておきます。トークン列を<span class="math inline">\(x = x[1: l]\)</span>と書きます。また、トークン列の最大の長さを<span class="math inline">\(L\)</span>とします。トークンとして連続値や無限集合は扱えないと思いますが、素人なので何か抜け道があるかどうかは知りません。</p>
+</section>
+<section id="トークンからベクトルに" class="level2">
+<h2 class="anchored" data-anchor-id="トークンからベクトルに">トークンからベクトルに</h2>
+<p>適当な<span class="math inline">\(d_e \times Nv\)</span>次元の行列<span class="math inline">\(W_e\)</span>を使って、<span class="math inline">\(v\)</span>番目のトークンから埋め込み（Token embedding）を <span class="math inline">\(e = W_e[:, v]\)</span>により得ます。これは<span class="math inline">\(d_e\)</span>次元のベクトルになります。なお、numpy風に<span class="math inline">\(i\)</span>番目の行ベクトルを<span class="math inline">\(W[i, :]\)</span>、<span class="math inline">\(j\)</span>番目の列ベクトルを<span class="math inline">\(W[:, j]\)</span>と書いています。この行列<span class="math inline">\(W_e\)</span>は勾配降下により学習されるようです。</p>
+</section>
+<section id="ついでに位置もベクトルに" class="level2">
+<h2 class="anchored" data-anchor-id="ついでに位置もベクトルに">ついでに位置もベクトルに</h2>
+<p>適当な<span class="math inline">\(d_p \times L\)</span>次元の行列<span class="math inline">\(W_p\)</span>を使って、トークン列中の<span class="math inline">\(l\)</span>番目にトークンがあるという情報から、位置埋め込み（Positional embedding）を <span class="math inline">\(p = W_p[:, l]\)</span>により得ます。これも<span class="math inline">\(d_e\)</span>次元のベクトルになります。正直なんの意味があるのかよくわからないのですが、これを先程のトークン埋め込みに足してトークン列<span class="math inline">\(x\)</span>の<span class="math inline">\(t\)</span>番目のトークン<span class="math inline">\(x[t]\)</span>に対する埋め込みを<span class="math inline">\(e = W_e[:, x[t]] + W_p[:, t]\)</span>によって得ます。これ足して大丈夫なのかな？って思うんですが。 位置埋め込みは、学習されることもあるようですが、Transformerが最初に提案された<a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>の論文では、以下のように構成されています。 <span class="math display">\[
+\begin{align*}
+W_p[2i - 1, t] &amp;= \sin (\frac{t}{L^{2i / d_e}}) \\
+W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
+&amp;~~~~~(0 &lt; 2i \leq d_e)
+\end{align*}
+\]</span> これを<span class="math inline">\(L=50, d_e = 5\)</span>として可視化してみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="1">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>matplotlib.font_manager.fontManager.addfont(<span class="st">"NotoEmoji-Medium.ttf"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>L <span class="op">=</span> <span class="dv">50</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>d_e <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.arange(L)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">1</span> <span class="op">+</span> d_e):</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> i <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        w_p <span class="op">=</span> np.sin(x <span class="op">/</span> L <span class="op">**</span> (i <span class="op">/</span> d_e))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        w_p <span class="op">=</span> np.cos(x <span class="op">/</span> L <span class="op">**</span> ((i <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> d_e))</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> plt.plot(x, w_p, label<span class="op">=</span><span class="ss">f"i=</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<pre><code>&lt;matplotlib.legend.Legend at 0x7f36d1b8ae60&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>というわけで、この埋めこみは各成分ごとに異なる周波数での単語を埋め込むようです。これにより、短いコンテキストの中での位置も同時に考慮できるのかな。</p>
+</section>
+</section>
+<section id="attention" class="level1">
+<h1>Attention</h1>
+<p>Transformerの主要な構成要素になるのがAttentionです。Attentionでは、入力されたトークン列中のすべてのトークンの組み合わせについて、そいつらの組み合わせがどれくらい重要なのかというモデル化を行います。具体的に、単一クエリに対するAttentionでは、現在のトークンから得た埋め込み<span class="math inline">\(e_t\)</span>と<span class="math inline">\(x\)</span>中のすべてのトークンの埋め込み<span class="math inline">\(e_0, e_1, ..., e_{Nv} \in E\)</span>に対し、以下のような操作を行います。 <span class="math display">\[
+\begin{align*}
+q_t &amp;\leftarrow W_q e_t + b_q \\
+k_{t'} &amp;\leftarrow W_k e_{t'} + b_k,~\forall e_{t'} \in E \\
+v_{t'} &amp;\leftarrow W_v e_{t'} + b_v,~\forall e_{t'} \in E \\
+\alpha_{t'} &amp;\leftarrow \frac{\exp(q_t^\top k_{t'} / \sqrt{d_{\textrm{attn}}})}{\sum_u \exp(q_t^\top k_{t'} / \sqrt{d_{\textrm{attn}}})},~\forall e_{t'} \in E \\
+v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
+\end{align*}
+\]</span> 埋め込みの次元を<span class="math inline">\(d_\textrm{in}\)</span>、出力の次元と<span class="math inline">\(d_\textrm{out}\)</span>とすると、<span class="math inline">\(W_q, Q_k\)</span>は<span class="math inline">\(d_\textrm{attn} \times e\)</span>の行列、<span class="math inline">\(W_q, Q_k\)</span>は<span class="math inline">\(d_\textrm{out} \times d_\textrm{in}\)</span>の行列、<span class="math inline">\(b_*\)</span>はベクトル（バイアス項）です。ここで、<span class="math inline">\(q^\top k_{t'}\)</span>の値でソフトマックスをとって<span class="math inline">\(v\)</span>にマスクをかけるので、これは現在のトークンと<span class="math inline">\(t'\)</span>番目のトークンが「どれくらい対応しているか」を表していてほしいです。<span class="math inline">\(v_{t'}\)</span>が何を表しているかはタスクによって異なると思いますが、<span class="math inline">\(t'\)</span>番目のトークンの埋め込みに線形に関係する値が入っているはずです。このトークン列に後ろ向きの因果関係がない場合（あるトークン<span class="math inline">\(x[t]\)</span>が、任意の未来のトークン<span class="math inline">\(x[t']~\textrm{where}~t &lt; t'\)</span>に依存しない場合）は、<span class="math inline">\(\alpha_{t'}\)</span>にマスクをかける(<span class="math inline">\(\alpha_{t'}[i] = 0 ~\textrm{if}~t &lt; i\)</span>)こともあります。なので、未来を予測する際にはこのマスクをかけるのが一般的なようです。</p>
+<p>実際に、時系列から何か（次の単語、ラベルなど）を予測する際には、この単一クエリに対するAttentionを長さ<span class="math inline">\(T\)</span>の系列内のすべてのトークンに対して計算し、<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列<span class="math inline">\(\tilde{V}\)</span>を得ます。</p>
+</section>
+<section id="やってみよう" class="level1">
+<h1>やってみよう</h1>
+<p>とりあえずこれを学習させてみましょう。今回は<a href="https://jax.readthedocs.io/en/latest/">jax</a>と<a href="https://docs.kidger.site/equinox/">equinox</a>を使ってモデルを書いてみます。</p>
+<div class="cell" data-tags="[]" data-execution_count="2">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Attention(eqx.Module):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    w_q: jax.Array</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    b_q: jax.Array</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    w_k: jax.Array</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    b_k: jax.Array</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    w_v: jax.Array</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    b_v: jax.Array</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    sqrt_d_attn: <span class="bu">float</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in: <span class="bu">int</span>, d_attn: <span class="bu">int</span>, d_out: <span class="bu">int</span>, key: jax.Array) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        wq_key, bq_key, wk_key, bk_key, wv_key, bv_key <span class="op">=</span> jax.random.split(key, <span class="dv">6</span>)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_q <span class="op">=</span> jax.random.normal(wq_key, (d_attn, d_in))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_q <span class="op">=</span> jax.random.normal(bq_key, (d_attn, <span class="dv">1</span>))</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_k <span class="op">=</span> jax.random.normal(wk_key, (d_attn, d_in))</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_k <span class="op">=</span> jax.random.normal(bk_key, (d_attn, <span class="dv">1</span>))</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w_v <span class="op">=</span> jax.random.normal(wv_key, (d_out, d_in))</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b_v <span class="op">=</span> jax.random.normal(bv_key, (d_out, <span class="dv">1</span>))</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.sqrt_d_attn <span class="op">=</span> <span class="bu">float</span>(np.sqrt(d_attn))</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""Take a matrix e with shape [d_in x seq_len], compute attention for all tokens in e.</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="co">        Outputs a matrix with shape [d_out x seq_len]</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.w_q <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_q</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.w_k <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_k</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.w_v <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_v</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(q.T <span class="op">@</span> k <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> causal_mask(x: jax.Array, fill: jax.Array <span class="op">=</span> <span class="op">-</span>jnp.inf) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    ltri <span class="op">=</span> jnp.tri(x.shape[<span class="dv">0</span>], dtype<span class="op">=</span><span class="bu">bool</span>, k<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jax.lax.select(ltri, jnp.ones_like(x) <span class="op">*</span> fill, x)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MaskedAttention(Attention):</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.w_q <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_q</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.w_k <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_k</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.w_v <span class="op">@</span> e <span class="op">+</span> <span class="va">self</span>.b_v</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        score <span class="op">=</span> causal_mask(q.T <span class="op">@</span> k) <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(score, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>これを学習させてみましょう。トークンとして、天気🌧️・☁️・☀️を考えます。この3つの記号に対し適当な埋め込みを与えて、次の日の天気を学習させてみます。一般的にTransformerで用いられる方法とは全く違いますが、なるべく簡単なネットワークで学習できるように、以下のような要素数4のベクトルを埋め込みとします。 - <span class="math inline">\(e[0]\)</span>: 天気が🌧️なら1、それ以外のときは0 - <span class="math inline">\(e[1]\)</span>: 天気が☁️なら同上 - <span class="math inline">\(e[2]\)</span>: 天気が☀️なら同上 - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span>(位置埋め込み)</p>
+<p>最大文字列長は20にします。</p>
+<div class="cell" data-tags="[]" data-execution_count="3">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WEATHERS <span class="op">=</span> [<span class="st">"🌧️"</span>, <span class="st">"☁️"</span>, <span class="st">"☀️"</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>MAX_SEQ_LEN <span class="op">=</span> <span class="dv">20</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_embedding(seq: <span class="bu">str</span>) <span class="op">-&gt;</span> np.ndarray:</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    length <span class="op">=</span> <span class="bu">len</span>(seq) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> np.zeros((<span class="dv">4</span>, length))</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(length):</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> seq[i <span class="op">*</span> <span class="dv">2</span>: i <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">2</span>]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        e[WEATHERS.index(w), i] <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        e[<span class="dv">3</span>, i] <span class="op">=</span> (i <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> MAX_SEQ_LEN</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="マルコフモデルの学習" class="level2">
+<h2 class="anchored" data-anchor-id="マルコフモデルの学習">マルコフモデルの学習</h2>
+<p>まず簡単なモデルで天気を生成してみます。<strong>次の日の天気は、前の日の天気にもとづいて確率的に決まる</strong>ことにしましょう。🌧️・☁️・☀️がマルチバイト文字であることに注意して、以下のように実装します。</p>
+<div class="cell" data-tags="[]" data-execution_count="89">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> dataclasses</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>_GEN <span class="op">=</span> np.random.Generator(np.random.PCG64(<span class="dv">20230508</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>_MARKOV <span class="op">=</span> {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span>: [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>],</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"🌧️"</span>: [<span class="fl">0.6</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>],</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☁️"</span>: [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>],</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"☀️"</span>: [<span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>],</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> markov(prev: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    prob <span class="op">=</span> _MARKOV[prev[<span class="op">-</span><span class="dv">2</span>:]]</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate(f, n: <span class="bu">int</span>):</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="st">""</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> f(value)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> value</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclasses.dataclass</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Dataset:</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    weathers: <span class="bu">list</span>[<span class="bu">str</span>]</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    embeddings: jax.Array</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    next_weather_indices: jax.Array</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__len__</span>(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">len</span>(<span class="va">self</span>.weathers)</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_dataset(f, seq_len, size) <span class="op">-&gt;</span> Dataset:</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    w_list, e_list, nw_list <span class="op">=</span> [], [], []</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(size):</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        weathers <span class="op">=</span> generate(f, seq_len <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> jnp.array(get_embedding(weathers[:<span class="op">-</span><span class="dv">2</span>]))</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        w_list.append(weathers)</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        e_list.append(e)</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        nw_list.append(WEATHERS.index(weathers[<span class="op">-</span><span class="dv">2</span>:]))</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Dataset(w_list, jnp.stack(e_list), jnp.array(nw_list))</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>generated <span class="op">=</span> generate(markov, <span class="dv">10</span>)</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>generated, get_embedding(generated)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="89">
+<pre><code>('🌧️🌧️🌧️☀️🌧️☁️🌧️🌧️☀️☀️',
+ array([[1.  , 1.  , 1.  , 0.  , 1.  , 0.  , 1.  , 1.  , 0.  , 0.  ],
+        [0.  , 0.  , 0.  , 0.  , 0.  , 1.  , 0.  , 0.  , 0.  , 0.  ],
+        [0.  , 0.  , 0.  , 1.  , 0.  , 0.  , 0.  , 0.  , 1.  , 1.  ],
+        [0.05, 0.1 , 0.15, 0.2 , 0.25, 0.3 , 0.35, 0.4 , 0.45, 0.5 ]]))</code></pre>
+</div>
+</div>
+<p>こんな感じです。いま、次の日の天気だけ予測したいので、モデルの出力は集合{🌧️・☁️・☀️}上での確率分布が適切でしょう。Attentionは長さ<span class="math inline">\(T\)</span>の埋め込み列に対して長さ<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列をかえします。なので、<span class="math inline">\(d_\textrm{out} = 3\)</span>とし、Attentionの出力<span class="math inline">\(\tilde{V}\)</span>に対してソフトマックス関数を適用し、<span class="math inline">\(P_t = \textrm{softmax}(\tilde{V}[:, t])\)</span>とします。このとき、<span class="math inline">\(P_t\)</span>の各要素が次の日🌧️・☁️・☀️になる確率を表すとして、モデル化します。これを、対数尤度の和<span class="math inline">\(\sum_t \log P_t(\textrm{next weather})\)</span>を最大化するように学習しましょう。学習のコードを定義します。</p>
+<div class="cell" data-tags="[]" data-execution_count="60">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Callable</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> attn_neglogp(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT x SEQ_LEN</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    logp <span class="op">=</span> jax.nn.log_softmax(tilde_v, axis<span class="op">=</span><span class="dv">1</span>)  <span class="co"># B x OUT x SEQ_LEN</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    logp_masked <span class="op">=</span> logp <span class="op">*</span> jax.nn.one_hot(next_w, num_classes<span class="op">=</span><span class="dv">3</span>).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>jnp.mean(jnp.<span class="bu">sum</span>(logp_masked.reshape(batch_size, <span class="op">-</span><span class="dv">1</span>), axis<span class="op">=-</span><span class="dv">1</span>))</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train(</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    n_total_epochs: <span class="bu">int</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    minibatch_size: <span class="bu">int</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    model: eqx.Module,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    ds: Dataset,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    test_ds: Dataset,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    key: jax.Array,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    learning_rate: <span class="bu">float</span> <span class="op">=</span> <span class="fl">1e-2</span>,</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    loss_fn: Callable[[eqx.Module, jax.Array, jax.Array], jax.Array] <span class="op">=</span> attn_neglogp,</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[eqx.Module, jax.Array, <span class="bu">list</span>[<span class="bu">float</span>], <span class="bu">list</span>[<span class="bu">float</span>]]:</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    n_data <span class="op">=</span> <span class="bu">len</span>(ds)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    optim <span class="op">=</span> optax.adam(learning_rate)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">@eqx.filter_jit</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> train_1step(</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>        model: eqx.Module,</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>        seq: jax.Array,</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>        next_w: jax.Array,</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        opt_state: optax.OptState,</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[jax.Array, eqx.Module, optax.OptState]:</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>        loss, grads <span class="op">=</span> eqx.filter_value_and_grad(loss_fn)(model, seq, next_w)</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>        updates, opt_state <span class="op">=</span> optim.update(grads, opt_state)</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>        model <span class="op">=</span> eqx.apply_updates(model, updates)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> loss, model, opt_state</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    opt_state <span class="op">=</span> optim.init(model)</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    n_optim_epochs <span class="op">=</span> n_data <span class="op">//</span> minibatch_size</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    loss_list, eval_list <span class="op">=</span> [], []</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(n_total_epochs <span class="op">//</span> n_optim_epochs):</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>        key, perm_key <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>        indices <span class="op">=</span> jax.random.permutation(perm_key, n_data, independent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_optim_epochs):</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>            e <span class="op">=</span> ds.embeddings[indices]</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>            next_w <span class="op">=</span> ds.next_weather_indices[indices]</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>            loss, model, opt_state <span class="op">=</span> train_1step(model, e, next_w, opt_state)</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>            loss_list.append(loss.item())</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>            test_loss <span class="op">=</span> jax.jit(loss_fn)(</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>                model,</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>                test_ds.embeddings,</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>                test_ds.next_weather_indices,</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>            eval_list.append(test_loss.item())</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model, key, loss_list, eval_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>これを実際に走らせてみます。適当に、Attentionの次元を8、天気列の長さを10にしましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="112">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>SEQ_LEN <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">1234</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dataset(markov, SEQ_LEN, <span class="dv">1000</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_dataset(markov, SEQ_LEN, <span class="dv">1000</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on Markov model"</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> accuracy(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT x SEQ_LEN</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    inferred <span class="op">=</span> jnp.argmax(tilde_v[:, :, <span class="dv">0</span>], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    n_correct <span class="op">=</span> jnp.<span class="bu">sum</span>(inferred <span class="op">==</span> next_w)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_correct <span class="op">/</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="112">
+<pre><code>'Accuracy: 0.46700000762939453'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>400エポックあたりでロスが落ちなくなっているので収束はしていそうです。実際に何を学習したのか確認してみましょう。とりあえず天気を生成してみます。まあこんなもの見ても何もわからないのですが、生成の流れを確認しておくにはいいかなと。ビームサーチが使われることが多いようですが、面倒なので今回はもっと簡単な方法を使います。☁️からスタートして、カテゴリカル分布から次の天気をサンプルし、どんどん足していくことにします。</p>
+<div class="cell" data-tags="[]" data-execution_count="113">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_from_model(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    model: eqx.Module,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    key: jax.Array,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    seq_len: <span class="bu">int</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    init: <span class="bu">str</span> <span class="op">=</span> <span class="st">"☁️"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[<span class="bu">str</span>, jax.Array]:</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">@jax.jit</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step(</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        model: eqx.Module,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        seq: jax.Array,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        key: jax.Array,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[jax.Array, jax.Array]:</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        sample_key, key <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        tilde_v <span class="op">=</span> model(seq)  <span class="co"># 3 x len(seq)</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        sampled <span class="op">=</span> jax.random.categorical(key<span class="op">=</span>sample_key, logits<span class="op">=</span>tilde_v[:, <span class="dv">0</span>])</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> sampled, key</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    generated <span class="op">=</span> init</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(seq_len):</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> get_embedding(generated)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        next_w, key <span class="op">=</span> step(model, get_embedding(generated), key)</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>        generated <span class="op">+=</span> WEATHERS[next_w.item()]</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> generated, key</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>generated, key <span class="op">=</span> generate_from_model(model, key, <span class="dv">20</span>)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>generated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="113">
+<pre><code>'☁️🌧️🌧️☀️🌧️☁️🌧️☀️☀️☀️☀️☁️☀️☀️☀️☀️☀️☁️☁️☀️☁️'</code></pre>
+</div>
+</div>
+<p>こんな感じになりました。当たり前ですがこれを見たところで何もわからないですね。次に、テストデータ中の適当なデータに対しAttentionの中身を可視化してみます。</p>
+<div class="cell" data-tags="[]" data-execution_count="114">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_attn(model: eqx.Module, seq: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> model.w_q <span class="op">@</span> seq <span class="op">+</span> model.b_q</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> model.w_k <span class="op">@</span> seq <span class="op">+</span> model.b_k</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    score <span class="op">=</span> causal_mask(q.T <span class="op">@</span> k) <span class="op">/</span> model.sqrt_d_attn</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jax.nn.softmax(score, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> visualize_attn(ax, model: eqx.Module, ds: Dataset, index: <span class="bu">int</span> <span class="op">=</span> <span class="dv">0</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    attn <span class="op">=</span> np.array(get_attn(model, ds.embeddings[index]))</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    im <span class="op">=</span> ax.imshow(attn)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    ax.set_xticks(</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        np.arange(<span class="dv">10</span>),</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        labels<span class="op">=</span>[ds.weathers[index][i <span class="op">*</span> <span class="dv">2</span>] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)],</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>        fontname<span class="op">=</span><span class="st">"Noto Emoji"</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    ax.set_yticks(</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        np.arange(<span class="dv">10</span>),</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        labels<span class="op">=</span>[ds.weathers[index][i <span class="op">*</span> <span class="dv">2</span>] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>)],</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        fontname<span class="op">=</span><span class="st">"Noto Emoji"</span>,</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> [np.argmin(attn), np.argmax(attn)]:</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Show min and max values</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        im.axes.text(i <span class="op">%</span> <span class="dv">10</span>, i <span class="op">//</span> <span class="dv">10</span>, <span class="ss">f"</span><span class="sc">{</span>attn<span class="sc">.</span>flatten()[i]<span class="sc">:.1f}</span><span class="ss">"</span>, color<span class="op">=</span><span class="st">"gray"</span>)</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>matplotlibでカラー絵文字が使えなかったのでモノクロの絵文字にしました。というわけで、 1. 直前の天気→直前の天気 のAttentionが最も大きい 2. 他の日の天気→直前の天気 のAttentionも大きい 3. 他はほとんど関係ない</p>
+<p>といったことがわかります。マルコフモデルから生成した天気列を学習させたので、1は当たり前ですよね。2の他の日の天気→直前の天気の関係も実際はいらないのですが、注意されているようです。</p>
+</section>
+<section id="独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" class="level2">
+<h2 class="anchored" data-anchor-id="独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</h2>
+<p>次に、もう少し複雑なデータを学習させてみましょう。今度は、以下のような方法で11日ぶんの天気を生成します。 1. 1日目、4日目、8日目の天気を独立に生成する 2. 2,3日目の天気を1日目の天気を初期状態とするマルコフ連鎖により生成する。5,6,7,9,10日目の天気についても、4日目・8日目の天気にもとづいて同様に生成する。 3. 11日目の天気を1日目、4日目、8日目の天気から確率的に生成する。</p>
+<p>これを学習できるか試してみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="115">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _make_table() <span class="op">-&gt;</span> <span class="bu">dict</span>[<span class="bu">str</span>, <span class="bu">list</span>[<span class="bu">float</span>]]:</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    candidates <span class="op">=</span> []</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">9</span>):</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">9</span>):</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">9</span>):</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> i <span class="op">+</span> j <span class="op">+</span> k <span class="op">==</span> <span class="dv">10</span>:</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                    candidates.append((i, j, k))</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    table <span class="op">=</span> {}</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> WEATHERS:</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> WEATHERS:</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> k <span class="kw">in</span> WEATHERS:</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                table[i <span class="op">+</span> j <span class="op">+</span> k] <span class="op">=</span> [p <span class="op">/</span> <span class="dv">10</span> <span class="cf">for</span> p <span class="kw">in</span> _GEN.choice(candidates)]</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> table</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>_ONE_FOUR_8_TABLE <span class="op">=</span> _make_table()</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> one_four_8(prev: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    length <span class="op">=</span> <span class="bu">len</span>(prev) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> length <span class="op">==</span> <span class="dv">10</span>:</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        p <span class="op">=</span> _ONE_FOUR_8_TABLE[prev[<span class="dv">0</span>: <span class="dv">2</span>] <span class="op">+</span> prev[<span class="dv">6</span>: <span class="dv">8</span>] <span class="op">+</span> prev[<span class="dv">14</span>: <span class="dv">16</span>]]</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>p)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> length <span class="op">==</span> <span class="dv">4</span> <span class="kw">or</span> length <span class="op">==</span> <span class="dv">8</span>:</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>_MARKOV[<span class="st">""</span>])</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> markov(prev)</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>generate(one_four_8, <span class="dv">11</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="115">
+<pre><code>'☁️☁️☁️☀️🌧️🌧️☁️☁️☁️☁️☁️'</code></pre>
+</div>
+</div>
+<p>こんな感じですね。では学習させましょう。さっきよりも少しデータが複雑なので、サンプルの数を増やしてみます。</p>
+<div class="cell" data-tags="[]" data-execution_count="116">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>SEQ_LEN <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dataset(one_four_8, SEQ_LEN, <span class="dv">1000</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_dataset(one_four_8, SEQ_LEN, <span class="dv">1000</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 1-4-8 model"</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="116">
+<pre><code>'Accuracy: 0.34800001978874207'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-11-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<p>損失は小さくなっていますがAccuracyが悪くまたAttentionの出方も微妙ですね。一応1・4・8日目にも注意がいっていますが、先ほどの実験と同じく最後の日の注意が大きめに出ていますね。</p>
+</section>
+<section id="attentionいらないんじゃ" class="level2">
+<h2 class="anchored" data-anchor-id="attentionいらないんじゃ">Attentionいらないんじゃ…</h2>
+<p>勘のいい読者の方はお気づきかと思いますが、ここまで学習させた2つの天気列を表現するのに、Attentionなんて小難しいものはいらないですよね。最初のものは前日（10日目)の天気、次のやつは1・4・8日目から11日目の天気が決定されるため、入力された天気列の内部相関がタスクに一切関係ないからです。というわけで、線形モデル+ソフトマックス(いわゆるmultinomial logistic regressionというやつ)で学習してみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="117">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LinearModel(eqx.Module):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    w: jax.Array</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    b: jax.Array</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in: <span class="bu">int</span>, d_out: <span class="bu">int</span>, key: jax.Array) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        w_key, b_key <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.w <span class="op">=</span> jax.random.normal(w_key, (d_out, d_in))</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.b <span class="op">=</span> jax.random.normal(b_key, (d_out,))</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, seq: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.w <span class="op">@</span> seq.flatten() <span class="op">+</span> <span class="va">self</span>.b</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> linear_neglogp(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    logp <span class="op">=</span> jax.nn.log_softmax(jax.vmap(model)(seq), axis<span class="op">=</span><span class="dv">1</span>)  <span class="co"># B x OUT</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    logp_masked <span class="op">=</span> logp <span class="op">*</span> jax.nn.one_hot(next_w, num_classes<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>jnp.mean(jnp.<span class="bu">sum</span>(logp_masked, axis<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearModel(<span class="dv">4</span> <span class="op">*</span> SEQ_LEN, <span class="dv">3</span>, key)</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>, linear_neglogp</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 1-4-8 model"</span>)</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> linear_accuracy(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    inferred <span class="op">=</span> jnp.argmax(tilde_v, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    n_correct <span class="op">=</span> jnp.<span class="bu">sum</span>(inferred <span class="op">==</span> next_w)</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_correct <span class="op">/</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="117">
+<pre><code>'Accuracy: 0.48500001430511475'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-12-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>普通にこっちのほうが良さそうですね…。では、Attentionはどういう時に役に立つのでしょうか。</p>
+<ol type="1">
+<li>パラメータ数がをトークン列の長さ<span class="math inline">\(L\)</span>に依存させたくないとき</li>
+</ol>
+<p>Attentionではパラメータの数が <span class="math inline">\((d_\textrm{in} + 1)(2d_\textrm{attn} + d_\textrm{out})\)</span>になるのに対し、線形モデルでは<span class="math inline">\((d_\textrm{in}L + 1)d_\textrm{out}\)</span>になることに注意しましょう。また、線形モデルでは任意の長さの系列を扱うことはできません。</p>
+<ol start="2" type="1">
+<li>トークン列の内部相関があるとき</li>
+</ol>
+<p>トークン列よりもっと一般化して、確率的なイベントの集合<span class="math inline">\(A, B, C\)</span>が与えられたときに<span class="math inline">\(D\)</span>を予測する問題を考えます。このとき、予測したい確率分布は<span class="math inline">\(P(D|A, B, C)\)</span>になります。イベント<span class="math inline">\(A, B, C\)</span>の間に因果関係が存在しないとき、この問題はこれ以上簡単になりません。一方で、つまり、<span class="math inline">\(D\)</span>の条件付き確率分布は独立な事象<span class="math inline">\(A, B, C\)</span></p>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -2,7 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/understanding-transformer.html",
+      "/posts/understanding-attention.html",
       "/posts/sandb-exercise-racetrack.html",
       "/posts/jax-brax-haiku.html",
       "/posts/understanding-what-makes-rl-difficult.html"
