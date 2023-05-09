@@ -193,8 +193,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#マルコフモデルの学習" id="toc-マルコフモデルの学習" class="nav-link" data-scroll-target="#マルコフモデルの学習">マルコフモデルの学習</a></li>
   <li><a href="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" id="toc-独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" class="nav-link" data-scroll-target="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</a></li>
   <li><a href="#attentionいらないんじゃ" id="toc-attentionいらないんじゃ" class="nav-link" data-scroll-target="#attentionいらないんじゃ">Attentionいらないんじゃ…</a></li>
-  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a></li>
+  <li><a href="#隠れ変数がある場合" id="toc-隠れ変数がある場合" class="nav-link" data-scroll-target="#隠れ変数がある場合">隠れ変数がある場合</a></li>
+  <li><a href="#非線形ならどうか" id="toc-非線形ならどうか" class="nav-link" data-scroll-target="#非線形ならどうか">非線形ならどうか</a></li>
   </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -238,7 +240,7 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 &amp;~~~~~(0 &lt; 2i \leq d_e)
 \end{align*}
 \]</span> これを<span class="math inline">\(L=50, d_e = 5\)</span>として可視化してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="1">
+<div class="cell" data-tags="[]" data-execution_count="14">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib</span>
@@ -258,8 +260,8 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> plt.plot(x, w_p, label<span class="op">=</span><span class="ss">f"i=</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="1">
-<pre><code>&lt;matplotlib.legend.Legend at 0x7f36d1b8ae60&gt;</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>&lt;matplotlib.legend.Legend at 0x7fed785813c0&gt;</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
@@ -284,7 +286,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <section id="やってみよう" class="level1">
 <h1>やってみよう</h1>
 <p>とりあえずこれを学習させてみましょう。今回は<a href="https://jax.readthedocs.io/en/latest/">jax</a>と<a href="https://docs.kidger.site/equinox/">equinox</a>を使ってモデルを書いてみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="2">
+<div class="cell" data-tags="[]" data-execution_count="15">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
@@ -339,7 +341,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 </div>
 <p>これを学習させてみましょう。トークンとして、天気🌧️・☁️・☀️を考えます。この3つの記号に対し適当な埋め込みを与えて、次の日の天気を学習させてみます。一般的にTransformerで用いられる方法とは全く違いますが、なるべく簡単なネットワークで学習できるように、以下のような要素数4のベクトルを埋め込みとします。 - <span class="math inline">\(e[0]\)</span>: 天気が🌧️なら1、それ以外のときは0 - <span class="math inline">\(e[1]\)</span>: 天気が☁️なら同上 - <span class="math inline">\(e[2]\)</span>: 天気が☀️なら同上 - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span>(位置埋め込み)</p>
 <p>最大文字列長は20にします。</p>
-<div class="cell" data-tags="[]" data-execution_count="3">
+<div class="cell" data-tags="[]" data-execution_count="16">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WEATHERS <span class="op">=</span> [<span class="st">"🌧️"</span>, <span class="st">"☁️"</span>, <span class="st">"☀️"</span>]</span>
@@ -358,7 +360,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <section id="マルコフモデルの学習" class="level2">
 <h2 class="anchored" data-anchor-id="マルコフモデルの学習">マルコフモデルの学習</h2>
 <p>まず簡単なモデルで天気を生成してみます。<strong>次の日の天気は、前の日の天気にもとづいて確率的に決まる</strong>ことにしましょう。🌧️・☁️・☀️がマルチバイト文字であることに注意して、以下のように実装します。</p>
-<div class="cell" data-tags="[]" data-execution_count="89">
+<div class="cell" data-tags="[]" data-execution_count="41">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> dataclasses</span>
@@ -376,8 +378,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate(f, n: <span class="bu">int</span>):</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> <span class="st">""</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate(f, n: <span class="bu">int</span>, init: <span class="bu">str</span> <span class="op">=</span> <span class="st">""</span>):</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> init</span>
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n):</span>
 <span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> f(value)</span>
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> value</span>
@@ -407,7 +409,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>generated <span class="op">=</span> generate(markov, <span class="dv">10</span>)</span>
 <span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>generated, get_embedding(generated)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="89">
+<div class="cell-output cell-output-display" data-execution_count="41">
 <pre><code>('🌧️🌧️🌧️☀️🌧️☁️🌧️🌧️☀️☀️',
  array([[1.  , 1.  , 1.  , 0.  , 1.  , 0.  , 1.  , 1.  , 0.  , 0.  ],
         [0.  , 0.  , 0.  , 0.  , 0.  , 1.  , 0.  , 0.  , 0.  , 0.  ],
@@ -416,7 +418,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 </div>
 </div>
 <p>こんな感じです。いま、次の日の天気だけ予測したいので、モデルの出力は集合{🌧️・☁️・☀️}上での確率分布が適切でしょう。Attentionは長さ<span class="math inline">\(T\)</span>の埋め込み列に対して長さ<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列をかえします。なので、<span class="math inline">\(d_\textrm{out} = 3\)</span>とし、Attentionの出力<span class="math inline">\(\tilde{V}\)</span>に対してソフトマックス関数を適用し、<span class="math inline">\(P_t = \textrm{softmax}(\tilde{V}[:, t])\)</span>とします。このとき、<span class="math inline">\(P_t\)</span>の各要素が次の日🌧️・☁️・☀️になる確率を表すとして、モデル化します。これを、対数尤度の和<span class="math inline">\(\sum_t \log P_t(\textrm{next weather})\)</span>を最大化するように学習しましょう。学習のコードを定義します。</p>
-<div class="cell" data-tags="[]" data-execution_count="60">
+<div class="cell" data-tags="[]" data-execution_count="18">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Callable</span>
@@ -477,7 +479,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 </details>
 </div>
 <p>これを実際に走らせてみます。適当に、Attentionの次元を8、天気列の長さを10にしましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="112">
+<div class="cell" data-tags="[]" data-execution_count="26">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">8</span></span>
@@ -503,15 +505,15 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="112">
-<pre><code>'Accuracy: 0.46700000762939453'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="26">
+<pre><code>'Accuracy: 0.5190000534057617'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
 </div>
 </div>
 <p>400エポックあたりでロスが落ちなくなっているので収束はしていそうです。実際に何を学習したのか確認してみましょう。とりあえず天気を生成してみます。まあこんなもの見ても何もわからないのですが、生成の流れを確認しておくにはいいかなと。ビームサーチが使われることが多いようですが、面倒なので今回はもっと簡単な方法を使います。☁️からスタートして、カテゴリカル分布から次の天気をサンプルし、どんどん足していくことにします。</p>
-<div class="cell" data-tags="[]" data-execution_count="113">
+<div class="cell" data-tags="[]" data-execution_count="27">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_from_model(</span>
@@ -533,21 +535,20 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    generated <span class="op">=</span> init</span>
 <span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(seq_len):</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> get_embedding(generated)</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        next_w, key <span class="op">=</span> step(model, get_embedding(generated), key)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>        generated <span class="op">+=</span> WEATHERS[next_w.item()]</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> generated, key</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>        next_w, key <span class="op">=</span> step(model, get_embedding(generated), key)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        generated <span class="op">+=</span> WEATHERS[next_w.item()]</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> generated, key</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>generated, key <span class="op">=</span> generate_from_model(model, key, <span class="dv">20</span>)</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>generated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>generated, key <span class="op">=</span> generate_from_model(model, key, <span class="dv">20</span>)</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>generated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="113">
+<div class="cell-output cell-output-display" data-execution_count="27">
 <pre><code>'☁️🌧️🌧️☀️🌧️☁️🌧️☀️☀️☀️☀️☁️☀️☀️☀️☀️☀️☁️☁️☀️☁️'</code></pre>
 </div>
 </div>
 <p>こんな感じになりました。当たり前ですがこれを見たところで何もわからないですね。次に、テストデータ中の適当なデータに対しAttentionの中身を可視化してみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="114">
+<div class="cell" data-tags="[]" data-execution_count="29">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
@@ -591,7 +592,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <h2 class="anchored" data-anchor-id="独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</h2>
 <p>次に、もう少し複雑なデータを学習させてみましょう。今度は、以下のような方法で11日ぶんの天気を生成します。 1. 1日目、4日目、8日目の天気を独立に生成する 2. 2,3日目の天気を1日目の天気を初期状態とするマルコフ連鎖により生成する。5,6,7,9,10日目の天気についても、4日目・8日目の天気にもとづいて同様に生成する。 3. 11日目の天気を1日目、4日目、8日目の天気から確率的に生成する。</p>
 <p>これを学習できるか試してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="115">
+<div class="cell" data-tags="[]" data-execution_count="22">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _make_table() <span class="op">-&gt;</span> <span class="bu">dict</span>[<span class="bu">str</span>, <span class="bu">list</span>[<span class="bu">float</span>]]:</span>
@@ -622,35 +623,33 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>generate(one_four_8, <span class="dv">11</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="115">
-<pre><code>'☁️☁️☁️☀️🌧️🌧️☁️☁️☁️☁️☁️'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<pre><code>'☀️☁️☁️☀️🌧️🌧️☁️☀️🌧️🌧️🌧️'</code></pre>
 </div>
 </div>
 <p>こんな感じですね。では学習させましょう。さっきよりも少しデータが複雑なので、サンプルの数を増やしてみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="116">
+<div class="cell" data-tags="[]" data-execution_count="112">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">8</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>SEQ_LEN <span class="op">=</span> <span class="dv">10</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dataset(one_four_8, SEQ_LEN, <span class="dv">1000</span>)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_dataset(one_four_8, SEQ_LEN, <span class="dv">1000</span>)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 1-4-8 model"</span>)</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dataset(one_four_8, SEQ_LEN, <span class="dv">5000</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_dataset(one_four_8, SEQ_LEN, <span class="dv">1000</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 1-4-8 model"</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="116">
-<pre><code>'Accuracy: 0.34800001978874207'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="112">
+<pre><code>'Accuracy: 0.3680000305175781'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
@@ -664,7 +663,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <section id="attentionいらないんじゃ" class="level2">
 <h2 class="anchored" data-anchor-id="attentionいらないんじゃ">Attentionいらないんじゃ…</h2>
 <p>勘のいい読者の方はお気づきかと思いますが、ここまで学習させた2つの天気列を表現するのに、Attentionなんて小難しいものはいらないですよね。最初のものは前日（10日目)の天気、次のやつは1・4・8日目から11日目の天気が決定されるため、入力された天気列の内部相関がタスクに一切関係ないからです。というわけで、線形モデル+ソフトマックス(いわゆるmultinomial logistic regressionというやつ)で学習してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="117">
+<div class="cell" data-tags="[]" data-execution_count="113">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LinearModel(eqx.Module):</span>
@@ -681,36 +680,35 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> linear_neglogp(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> seq.shape[<span class="dv">0</span>]</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    logp <span class="op">=</span> jax.nn.log_softmax(jax.vmap(model)(seq), axis<span class="op">=</span><span class="dv">1</span>)  <span class="co"># B x OUT</span></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    logp_masked <span class="op">=</span> logp <span class="op">*</span> jax.nn.one_hot(next_w, num_classes<span class="op">=</span><span class="dv">3</span>)</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>jnp.mean(jnp.<span class="bu">sum</span>(logp_masked, axis<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    logp <span class="op">=</span> jax.nn.log_softmax(jax.vmap(model)(seq), axis<span class="op">=</span><span class="dv">1</span>)  <span class="co"># B x OUT</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    logp_masked <span class="op">=</span> logp <span class="op">*</span> jax.nn.one_hot(next_w, num_classes<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">-</span>jnp.mean(jnp.<span class="bu">sum</span>(logp_masked, axis<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearModel(<span class="dv">4</span> <span class="op">*</span> SEQ_LEN, <span class="dv">3</span>, key)</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(</span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>, linear_neglogp</span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 1-4-8 model"</span>)</span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
-<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
-<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearModel(<span class="dv">4</span> <span class="op">*</span> SEQ_LEN, <span class="dv">3</span>, key)</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>, linear_neglogp</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 1-4-8 model"</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
-<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> linear_accuracy(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
-<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT</span></span>
-<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    inferred <span class="op">=</span> jnp.argmax(tilde_v, axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    n_correct <span class="op">=</span> jnp.<span class="bu">sum</span>(inferred <span class="op">==</span> next_w)</span>
-<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_correct <span class="op">/</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> linear_accuracy(model: eqx.Module, seq: jax.Array, next_w: jax.Array) <span class="op">-&gt;</span> <span class="bu">float</span>:</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>    tilde_v <span class="op">=</span> jax.vmap(model)(seq)  <span class="co"># B x OUT</span></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    inferred <span class="op">=</span> jnp.argmax(tilde_v, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    n_correct <span class="op">=</span> jnp.<span class="bu">sum</span>(inferred <span class="op">==</span> next_w)</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_correct <span class="op">/</span> seq.shape[<span class="dv">0</span>]</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="117">
-<pre><code>'Accuracy: 0.48500001430511475'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="113">
+<pre><code>'Accuracy: 0.41600000858306885'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention_files/figure-html/cell-12-output-2.png" class="img-fluid"></p>
@@ -718,19 +716,254 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 </div>
 <p>普通にこっちのほうが良さそうですね…。では、Attentionはどういう時に役に立つのでしょうか。</p>
 <ol type="1">
-<li>パラメータ数がをトークン列の長さ<span class="math inline">\(L\)</span>に依存させたくないとき</li>
+<li>(MLP等と比較) パラメータ数をトークン列の長さ<span class="math inline">\(L\)</span>に依存させたくないとき</li>
 </ol>
-<p>Attentionではパラメータの数が <span class="math inline">\((d_\textrm{in} + 1)(2d_\textrm{attn} + d_\textrm{out})\)</span>になるのに対し、線形モデルでは<span class="math inline">\((d_\textrm{in}L + 1)d_\textrm{out}\)</span>になることに注意しましょう。また、線形モデルでは任意の長さの系列を扱うことはできません。</p>
+<p>Attentionではパラメータの数が <span class="math inline">\((d_\textrm{in} + 1)(2d_\textrm{attn} + d_\textrm{out})\)</span>になるのに対し、線形モデルでは<span class="math inline">\((d_\textrm{in}L + 1)d_\textrm{out}\)</span>になることに注意しましょう。線形モデルではトークン列の長さに比例してパラメータの数が増えてしまいます。ただし、Attentionでは<span class="math inline">\(q^\top k\)</span>を保持するのに<span class="math inline">\(O(L^2)\)</span>のメモリ使用量が必要な点に注意が必要です。もっとも、<a href="https://arxiv.org/abs/2112.05682">Self-attention Does Not Need <span class="math inline">\(O(n^2)\)</span> Memory</a>では効率的な<span class="math inline">\(O(\sqrt{L})\)</span>の実装が示されており、まあ何とかなるといえばなるようですが、それでも単純なRNNやCNNより遅くなります。</p>
 <ol start="2" type="1">
-<li>トークン列の内部相関があるとき</li>
+<li>(RNN・CNN等と比較) トークン系列に長期間の依存関係が存在する場合</li>
 </ol>
-<p>トークン列よりもっと一般化して、確率的なイベントの集合<span class="math inline">\(A, B, C\)</span>が与えられたときに<span class="math inline">\(D\)</span>を予測する問題を考えます。このとき、予測したい確率分布は<span class="math inline">\(P(D|A, B, C)\)</span>になります。イベント<span class="math inline">\(A, B, C\)</span>の間に因果関係が存在しないとき、この問題はこれ以上簡単になりません。一方で、つまり、<span class="math inline">\(D\)</span>の条件付き確率分布は独立な事象<span class="math inline">\(A, B, C\)</span></p>
+<p>CNNやRNNと比べたとき、<span class="math inline">\(q^\top k\)</span>により一層のレイヤーで任意のトークン間の依存関係が表現できるのはAttentionの利点と言えるでしょう。ただし<span class="math inline">\(q^\top k[i, j]\)</span>は2つの埋め込み<span class="math inline">\(e[i], e[j]\)</span>に対して線形な演算のみで得られるため、この2つの埋め込みが何か非線形な関数を介して依存している場合、その関係は一層のAttentionでは表現できません。</p>
+<p>というわけで、一層の線形レイヤーと比較すると、パラメタ数が<span class="math inline">\(L\)</span>に依存しないというメリットはあるものの、実際Attentionを使うともっと色々な関数が学習できるのかというとよくわかりません。もう少し試してみます。</p>
 </section>
-<section id="section" class="level2">
-<h2 class="anchored" data-anchor-id="section"></h2>
+<section id="隠れ変数がある場合" class="level2">
+<h2 class="anchored" data-anchor-id="隠れ変数がある場合">隠れ変数がある場合</h2>
+<p>以下の方法で天気列を生成します。過去<span class="math inline">\(n\)</span>日間の天気を見て、🌧️の登場回数が<span class="math inline">\(k\)</span>回なら、次の日の天気が🌧️になる確率を<span class="math inline">\(\frac{n - k}{2n}\)</span>とします。☁️、☀️についても同様に確率を割り当てます。この方法で大量に天気列を生成して適当な部分列からデータセットを作ります。</p>
+<div class="cell" data-tags="[]" data-execution_count="74">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ndays_model(prev: <span class="bu">str</span>, n: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    counts <span class="op">=</span> np.zeros(<span class="dv">3</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    prev_n <span class="op">=</span> prev[<span class="op">-</span><span class="dv">2</span> <span class="op">*</span> n: ]</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        prev_w_i <span class="op">=</span> prev_n[i <span class="op">*</span> <span class="dv">2</span>: i <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">2</span>]</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        counts[WEATHERS.index(prev_w_i)] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    prob <span class="op">=</span> (n <span class="op">-</span> counts) <span class="op">/</span> (n <span class="op">*</span> <span class="dv">2</span>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>generate(ndays_model, <span class="dv">100</span>, generate(markov, <span class="dv">10</span>))                </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="74">
+<pre><code>'☀️☀️☀️🌧️☀️🌧️☁️☁️☀️☀️🌧️☁️🌧️☁️☀️☀️☁️☀️☁️☀️🌧️🌧️🌧️☀️🌧️🌧️☁️🌧️🌧️☁️☀️☀️☁️☁️☀️☀️🌧️☀️🌧️🌧️☁️☁️☁️☁️🌧️☀️🌧️☀️☁️🌧️🌧️☁️☁️☁️☁️🌧️🌧️☀️☁️☁️☀️☀️☀️☀️☁️☁️🌧️☀️🌧️☀️☀️☁️🌧️☀️🌧️☀️☁️🌧️☁️☀️☁️☁️🌧️🌧️☁️☁️🌧️☁️☀️🌧️🌧️☁️☀️🌧️🌧️🌧️☀️☁️☀️🌧️☀️🌧️☁️☁️🌧️🌧️☁️🌧️☁️🌧️'</code></pre>
+</div>
+</div>
+<p>生成された天気列はこんな感じです。まず線形モデルを10日モデルで学習させます。この場合隠れ変数はありません。</p>
+<div class="cell" data-tags="[]" data-execution_count="114">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_ndays_dataset(seq_len, size, n: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span>) <span class="op">-&gt;</span> Dataset:</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    weathers <span class="op">=</span> generate(partial(ndays_model, n<span class="op">=</span>n), seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span>, generate(markov, n <span class="op">*</span> <span class="dv">2</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    w_list, e_list, nw_list <span class="op">=</span> [], [], []</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(size):</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        start <span class="op">=</span> _GEN.integers(<span class="dv">0</span>, seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">11</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> weathers[start <span class="op">*</span> <span class="dv">2</span> : start <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> (seq_len <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> <span class="dv">2</span>]</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> jnp.array(get_embedding(w[:<span class="op">-</span><span class="dv">2</span>]))</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        w_list.append(w)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        e_list.append(e)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>        nw_list.append(WEATHERS.index(w[<span class="op">-</span><span class="dv">2</span>:]))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Dataset(w_list, jnp.stack(e_list), jnp.array(nw_list))</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_ndays_dataset(SEQ_LEN, <span class="dv">5000</span>, n<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_ndays_dataset(SEQ_LEN, <span class="dv">1000</span>, n<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearModel(<span class="dv">4</span> <span class="op">*</span> SEQ_LEN, <span class="dv">3</span>, key)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>, linear_neglogp</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 10days model"</span>)</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="114">
+<pre><code>'Accuracy: 0.39000001549720764'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>次にAttentionを学習させます。</p>
+<div class="cell" data-tags="[]" data-execution_count="115">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 10days model"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="115">
+<pre><code>'Accuracy: 0.3570000231266022'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-15-output-2.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-15-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<p>Attentionのほうが線形レイヤーより悪くなってしまいました。次に隠れ変数があるモデルとして、先程の10日モデルを15日モデルにしてみます。まず、線形レイヤーを学習させます。</p>
+<div class="cell" data-tags="[]" data-execution_count="117">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_ndays_dataset(SEQ_LEN, <span class="dv">5000</span>, n<span class="op">=</span><span class="dv">15</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_ndays_dataset(SEQ_LEN, <span class="dv">1000</span>, n<span class="op">=</span><span class="dv">15</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearModel(<span class="dv">4</span> <span class="op">*</span> SEQ_LEN, <span class="dv">3</span>, key)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>, linear_neglogp</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 15days model"</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="117">
+<pre><code>'Accuracy: 0.35100001096725464'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-16-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>次にAttentionを学習させます。</p>
+<div class="cell" data-tags="[]" data-execution_count="119">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 15days model"</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="119">
+<pre><code>'Accuracy: 0.32500001788139343'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-17-output-2.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-17-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<p>この場合も結局Attentionのほうが悪くなってしまいました。悲しい。</p>
+</section>
+<section id="非線形ならどうか" class="level2">
+<h2 class="anchored" data-anchor-id="非線形ならどうか">非線形ならどうか</h2>
+<p>過去<span class="math inline">\(n\)</span>日間の🌧️、☁️、☀️の登場回数を<span class="math inline">\(k = (k_1, k_2, k_3)^\top\)</span>回としたとき、次の日の天気が<span class="math inline">\(p(i) = \textrm{SoftMax}(k)[i]\)</span>で与えられる非線形なモデルを学習してみます。まず線形関数から。</p>
+<div class="cell" data-tags="[]" data-execution_count="121">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ndays_mod4_model(prev: <span class="bu">str</span>, n: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    counts <span class="op">=</span> np.ones(<span class="dv">3</span>, dtype<span class="op">=</span><span class="bu">int</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    prev_n <span class="op">=</span> prev[<span class="op">-</span><span class="dv">2</span> <span class="op">*</span> n: ]</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n):</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>        prev_w_i <span class="op">=</span> prev_n[i <span class="op">*</span> <span class="dv">2</span>: i <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">2</span>]</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>        counts[WEATHERS.index(prev_w_i)] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    logits <span class="op">=</span> counts <span class="op">%</span> <span class="dv">4</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    prob <span class="op">=</span> np.exp(logits) <span class="op">/</span> np.<span class="bu">sum</span>(np.exp(logits))</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_ndays_mod4_dataset(seq_len, size, n: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span>) <span class="op">-&gt;</span> Dataset:</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    weathers <span class="op">=</span> generate(partial(ndays_mod4_model, n<span class="op">=</span>n), seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span>, generate(markov, n <span class="op">*</span> <span class="dv">2</span>))</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>    w_list, e_list, nw_list <span class="op">=</span> [], [], []</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(size):</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        start <span class="op">=</span> _GEN.integers(<span class="dv">0</span>, seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">11</span>)</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> weathers[start <span class="op">*</span> <span class="dv">2</span> : start <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> (seq_len <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> <span class="dv">2</span>]</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        e <span class="op">=</span> jnp.array(get_embedding(w[:<span class="op">-</span><span class="dv">2</span>]))</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>        w_list.append(w)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        e_list.append(e)</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>        nw_list.append(WEATHERS.index(w[<span class="op">-</span><span class="dv">2</span>:]))</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Dataset(w_list, jnp.stack(e_list), jnp.array(nw_list))</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_ndays_mod4_dataset(SEQ_LEN, <span class="dv">5000</span>, n<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> make_ndays_mod4_dataset(SEQ_LEN, <span class="dv">1000</span>, n<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearModel(<span class="dv">4</span> <span class="op">*</span> SEQ_LEN, <span class="dv">3</span>, key)</span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(</span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>, linear_neglogp</span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 10days Mod3 model"</span>)</span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="121">
+<pre><code>'Accuracy: 0.35200002789497375'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-18-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>次にAttentionを学習してみます。</p>
+<div class="cell" data-tags="[]" data-execution_count="124">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>model, key, loss_list, eval_list <span class="op">=</span> train(<span class="dv">500</span>, <span class="dv">100</span>, model, ds, test_ds, key, <span class="fl">1e-2</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>plt.plot(loss_list, label<span class="op">=</span><span class="st">"Training Loss"</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>plt.plot(eval_list, label<span class="op">=</span><span class="st">"Test Loss"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Trained on 10days Mod4 model"</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Training Epochs"</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Negative Log Likelihood"</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(ncols<span class="op">=</span><span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax1, model, test_ds, <span class="dv">1</span>)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="124">
+<pre><code>'Accuracy: 0.359000027179718'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-19-output-2.png" class="img-fluid"></p>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="understanding-attention_files/figure-html/cell-19-output-3.png" class="img-fluid"></p>
+</div>
+</div>
+<p>ようやくAttentionの精度のほうが良くなりました。結局、なんかよくわからないがタスクがめちゃくちゃ非線形ならAttentionのほうが少しだけ良いというつまらない結果になってしまいました。</p>
+</section>
+</section>
+<section id="まとめ" class="level1">
+<h1>まとめ</h1>
+<p>このブログ記事では、</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
