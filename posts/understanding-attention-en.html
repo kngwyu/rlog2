@@ -187,16 +187,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#from-a-token-to-a-vector" id="toc-from-a-token-to-a-vector" class="nav-link" data-scroll-target="#from-a-token-to-a-vector">From a token to a vector</a></li>
   <li><a href="#position-is-also-embedded" id="toc-position-is-also-embedded" class="nav-link" data-scroll-target="#position-is-also-embedded">Position is also embedded</a></li>
   </ul></li>
-  <li><a href="#attention" id="toc-attention" class="nav-link" data-scroll-target="#attention">Attention</a></li>
+  <li><a href="#self-attention" id="toc-self-attention" class="nav-link" data-scroll-target="#self-attention">Self-Attention</a></li>
   <li><a href="#lets-do-it" id="toc-lets-do-it" class="nav-link" data-scroll-target="#lets-do-it">Let’s do it</a>
   <ul class="collapse">
   <li><a href="#training-a-markov-model" id="toc-training-a-markov-model" class="nav-link" data-scroll-target="#training-a-markov-model">Training a Markov model</a></li>
-  <li><a href="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" id="toc-独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" class="nav-link" data-scroll-target="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</a></li>
-  <li><a href="#attentionいらないんじゃ" id="toc-attentionいらないんじゃ" class="nav-link" data-scroll-target="#attentionいらないんじゃ">Attentionいらないんじゃ…</a></li>
-  <li><a href="#隠れ変数がある場合" id="toc-隠れ変数がある場合" class="nav-link" data-scroll-target="#隠れ変数がある場合">隠れ変数がある場合</a></li>
-  <li><a href="#非線形ならどうか" id="toc-非線形ならどうか" class="nav-link" data-scroll-target="#非線形ならどうか">非線形ならどうか</a></li>
+  <li><a href="#when-future-events-depend-on-multiple-independently-occurring-past-events" id="toc-when-future-events-depend-on-multiple-independently-occurring-past-events" class="nav-link" data-scroll-target="#when-future-events-depend-on-multiple-independently-occurring-past-events">When future events depend on multiple independently occurring past events</a></li>
+  <li><a href="#do-we-need-attention" id="toc-do-we-need-attention" class="nav-link" data-scroll-target="#do-we-need-attention">Do we need attention?</a></li>
+  <li><a href="#when-there-are-hidden-variables" id="toc-when-there-are-hidden-variables" class="nav-link" data-scroll-target="#when-there-are-hidden-variables">When there are hidden variables</a></li>
+  <li><a href="#what-about-non-linear" id="toc-what-about-non-linear" class="nav-link" data-scroll-target="#what-about-non-linear">What about non-linear?</a></li>
   </ul></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">まとめ</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
 </nav>
     </div>
@@ -256,7 +256,7 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>plt.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="1">
-<pre><code>&lt;matplotlib.legend.Legend at 0x7f9028bcbee0&gt;</code></pre>
+<pre><code>&lt;matplotlib.legend.Legend at 0x7ff80d0abd60&gt;</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
@@ -265,9 +265,9 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 <p>So this embedding seems to embed words at different frequencies for each component. I suspect that this allows us to consider the position in a short context at the same time.</p>
 </section>
 </section>
-<section id="attention" class="level1">
-<h1>Attention</h1>
-<p>The main component of the Transformer is <em>Self-Attention</em>, which models the importance of every combination of tokens in the input token sequence. Specifically, Self-Attention for a single query uses the embedding <span class="math inline">\(e_t\)</span> from the current token and the embeddings $e_0, e_1, …, of all tokens in <span class="math inline">\(x\)</span>. , e_{Nv} E$, we perform: <span class="math display">\[
+<section id="self-attention" class="level1">
+<h1>Self-Attention</h1>
+<p>The main component of the Transformer is <em>self-attention</em>, which models the importance of every combination of tokens in the input token sequence. Specifically, self-attention for a single query uses the embedding <span class="math inline">\(e_t\)</span> from the current token and the embeddings $e_0, e_1, …, of all tokens in <span class="math inline">\(x\)</span>. , e_{Nv} E$, we perform: <span class="math display">\[
 \begin{align*}
 q_t &amp;\leftarrow W_q e_t + b_q \\
 k_{t'} &amp;\leftarrow W_k e_{t'} + b_k,~\forall e_{t'} \in E \\
@@ -336,7 +336,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 </div>
 <p>Let’s make this a learning experience. Consider the weather 🌧️, ☁️, and ☀️ as tokens. Let’s give the appropriate embedding to these three symbols and let them learn the weather for the next day. Although this method is completely different from the method generally used in Transformer, we will use a vector with 4 elements as the embedding so that it can be learned with as simple a network as possible, as shown below. - <span class="math inline">\(e[0]\)</span>: 1 if the weather is 🌧️, 0 otherwise - <span class="math inline">\(e[1]\)</span>: 1 if the weather is ☁️, 0 otherwise - <span class="math inline">\(e[2]\)</span>: 1 if the weather is ☀️, 0 otherwise - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span> (position embedding)</p>
 <p>Let the maximum string length <span class="math inline">\(L\)</span> 20.</p>
-<div class="cell" data-tags="[]">
+<div class="cell" data-tags="[]" data-execution_count="3">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WEATHERS <span class="op">=</span> [<span class="st">"🌧️"</span>, <span class="st">"☁️"</span>, <span class="st">"☀️"</span>]</span>
@@ -474,7 +474,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 </details>
 </div>
 <p>Let’s run it. I use <span class="math inline">\(6\)</span> for <span class="math inline">\(d_textrm{attn}\)</span> and <span class="math inline">\(10\)</span> for the sequence length <span class="math inline">\(T\)</span>.</p>
-<div class="cell" data-tags="[]" data-execution_count="90">
+<div class="cell" data-tags="[]" data-execution_count="6">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>D_ATTN <span class="op">=</span> <span class="dv">6</span></span>
@@ -500,7 +500,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="90">
+<div class="cell-output cell-output-display" data-execution_count="6">
 <pre><code>'Accuracy: 0.49800002574920654'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
@@ -508,7 +508,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 </div>
 </div>
 <p>The loss is no longer dropping around 100 epochs, so it seemes to have converged. Let’s see what has actually been learned. For now, let’s try generating weather. This is not very meaningful in this case, but I thought it would be good to learn the generative process. It seems that the beam search is often used, but since it’s complex, I use a simpler method this time. Starting from ☁️, we sample the next weather from the categorical distribution, and keep adding to it.</p>
-<div class="cell" data-tags="[]" data-execution_count="2">
+<div class="cell" data-tags="[]" data-execution_count="7">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_from_model(</span>
@@ -538,12 +538,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>generated, key <span class="op">=</span> generate_from_model(model, key, <span class="dv">20</span>)</span>
 <span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>generated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-error">
-<pre><code>NameError: name 'eqx' is not defined</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>'☁️🌧️🌧️☀️🌧️☁️🌧️☀️☀️☀️☁️☁️☀️☀️☀️☀️☀️☁️☁️☀️☁️'</code></pre>
 </div>
 </div>
-<p>こんな感じになりました。当たり前ですがこれを見たところで何もわからないですね。次に、テストデータ中の適当なデータに対しAttentionの中身を可視化してみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="92">
+<p>This is what the predicted weathers look like. Of course, this doesn’t tell us anything. Next, let’s visualize the contents of Self-Attention for some data in the test data.</p>
+<div class="cell" data-tags="[]" data-execution_count="9">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
@@ -580,14 +580,14 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <p><img src="understanding-attention-en_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
 </div>
 </div>
-<p>matplotlibでカラー絵文字が使えなかったのでモノクロの絵文字にしました。というわけで、 1. 直前の天気→直前の天気 のAttentionが最も大きい 2. 他の日の天気→直前の天気 のAttentionも大きい 3. 他はほとんど関係ない</p>
-<p>といったことがわかります。マルコフモデルから生成した天気列を学習させたので、1は当たり前ですよね。2の他の日の天気→直前の天気の関係も実際はいらないのですが、注意されているようです。</p>
+<p>Note that I could not use color emojis in matplotlib. We observe that: 1. ‘last day -&gt; last day’ has the largest attention 2. ‘other days -&gt; last day’ also has larger Attention 3. the other factors are almost irrelevant</p>
+<p>The first is natural since we trained a weather sequence generated from a Markov model. The attentions from other days to last days are actually unnecessary, but also were taken.</p>
 </section>
-<section id="独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" class="level2">
-<h2 class="anchored" data-anchor-id="独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</h2>
-<p>次に、もう少し複雑なデータを学習させてみましょう。今度は、以下のような方法で11日ぶんの天気を生成します。 1. 1日目、4日目、8日目の天気を独立に生成する 2. 2,3日目の天気を1日目の天気を初期状態とするマルコフ連鎖により生成する。5,6,7,9,10日目の天気についても、4日目・8日目の天気にもとづいて同様に生成する。 3. 11日目の天気を1日目、4日目、8日目の天気から確率的に生成する。</p>
-<p>これを学習できるか試してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="93">
+<section id="when-future-events-depend-on-multiple-independently-occurring-past-events" class="level2">
+<h2 class="anchored" data-anchor-id="when-future-events-depend-on-multiple-independently-occurring-past-events">When future events depend on multiple independently occurring past events</h2>
+<p>Next, let’s train some more complex data. This time, we will generate 11 days of weather in the following way: 1. Generate weather for days 1, 4, and 8 independently 2. Generate the weather for days 2 and 3 using a Markov chain with the weather for day 1 as the initial condition; generate the weather for days 5, 6, 7, 9, and 10 in the same way, based on the weather for days 4 and 8. 3. Generate the weather for day 11 stochastically based on the weather for days 1, 4, and 8.</p>
+<p>Let’s see if the self-attention layer can learn this.</p>
+<div class="cell" data-tags="[]" data-execution_count="10">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _make_table() <span class="op">-&gt;</span> <span class="bu">dict</span>[<span class="bu">str</span>, <span class="bu">list</span>[<span class="bu">float</span>]]:</span>
@@ -618,12 +618,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>generate(one_four_8, <span class="dv">11</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="93">
-<pre><code>'🌧️🌧️🌧️🌧️☁️🌧️🌧️☁️☁️☁️☁️'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>'☀️☁️☁️☀️🌧️🌧️☁️☀️🌧️🌧️🌧️'</code></pre>
 </div>
 </div>
-<p>こんな感じですね。では学習させましょう。さっきよりも少しデータが複雑なので、サンプルの数を増やしてみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="94">
+<p>OK, let’s do it.</p>
+<div class="cell" data-tags="[]" data-execution_count="11">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
@@ -643,8 +643,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="94">
-<pre><code>'Accuracy: 0.33800002932548523'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<pre><code>'Accuracy: 0.4020000100135803'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
@@ -653,12 +653,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <p><img src="understanding-attention-en_files/figure-html/cell-11-output-3.png" class="img-fluid"></p>
 </div>
 </div>
-<p>損失は小さくなっていますがAccuracyが悪くまたAttentionの出方も微妙ですね。一応1・48日目にも注意がいっていますが、先ほどの実験と同じく最後の日の注意が大きめに出ていますね。</p>
+<p>It converged, but the accuracy is poor and the attention is also not very effective. Attentions are given to days 1, 4, and 8, but as in the previous experiment, the last day’s attention is larger.</p>
 </section>
-<section id="attentionいらないんじゃ" class="level2">
-<h2 class="anchored" data-anchor-id="attentionいらないんじゃ">Attentionいらないんじゃ…</h2>
-<p>勘のいい読者の方はお気づきかと思いますが、ここまで学習させた2つの天気列を表現するのに、Attentionなんて小難しいものはいらないですよね。最初のものは前日（10日目)の天気、次のやつは1・4・8日目から11日目の天気が決定されるため、入力された天気列の内部相関がタスクに一切関係ないからです。というわけで、線形モデル+ソフトマックス(いわゆるmultinomial logistic regressionというやつ)で学習してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="95">
+<section id="do-we-need-attention" class="level2">
+<h2 class="anchored" data-anchor-id="do-we-need-attention">Do we need attention?</h2>
+<p>As smart readers may have noticed, we don’t need self-attention to represent the two weather sequences we have learned so far. This is because the internal correlation of the input weather sequence has no bearing on the task at all, since the first one determines the weather of the previous day (day 10) and the next one determines the weather of days 1, 4, 8 to 11. So, let’s train with a linear model + softmax (the so-called multinomial logistic regression).</p>
+<div class="cell" data-tags="[]" data-execution_count="12">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LinearModel(eqx.Module):</span>
@@ -702,28 +702,32 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="95">
-<pre><code>'Accuracy: 0.37700000405311584'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>'Accuracy: 0.44200003147125244'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-12-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>普通にこっちのほうが良さそうですね…。では、Attentionはどういう時に役に立つのでしょうか。</p>
+<p>This looks better. So, when is the self-attention useful?</p>
 <ol type="1">
-<li>(MLP等と比較) パラメータ数をトークン列の長さ<span class="math inline">\(L\)</span>に依存させたくないとき</li>
+<li>(Compared to MLP, etc.) when you don’t want to make the number of parameters depend on the length <span class="math inline">\(L\)</span> of the token sequence</li>
 </ol>
-<p>Attentionではパラメータの数が <span class="math inline">\((d_\textrm{in} + 1)(2d_\textrm{attn} + d_\textrm{out})\)</span>になるのに対し、線形モデルでは<span class="math inline">\((d_\textrm{in}L + 1)d_\textrm{out}\)</span>になることに注意しましょう。線形モデルではトークン列の長さに比例してパラメータの数が増えてしまいます。ただし、Attentionでは<span class="math inline">\(q^\top k\)</span>を保持するのに<span class="math inline">\(O(L^2)\)</span>のメモリ使用量が必要な点に注意が必要です。もっとも、<a href="https://arxiv.org/abs/2112.05682">Self-attention Does Not Need <span class="math inline">\(O(n^2)\)</span> Memory</a>では効率的な<span class="math inline">\(O(\sqrt{L})\)</span>の実装が示されており、まあ何とかなるといえばなるようですが、それでも単純なRNNやCNNより遅くなります。</p>
+<p>Note that in self-attention the number of parameters is <span class="math inline">\((d_\textrm{in} + 1)(2d_\textrm{attn} + d_\textrm{out})\)</span>, while in the linear model it is <span class="math inline">\((d_\textrm{in}L + 1)d_\textrm{out}\)</span>. In the linear model, the number of parameters increases linearly with the length of the token sequence. Note, however, that self-attention requires <span class="math inline">\(O(L^2)\)</span> memory usage for <span class="math inline">\(q^\top k\)</span>, although <a href="https://arxiv.org/abs/2112.05682">Self-attention Does Not Need <span class="math inline">\(O(n^2)\)</span> Memory</a> shows an efficient <span class="math inline">\(O(\sqrt{L})\)</span> implementation. Still, it may be consume more memory thatn simple RNN or CNN.</p>
 <ol start="2" type="1">
-<li>(RNN・CNN等と比較) トークン系列に長期間の依存関係が存在する場合</li>
+<li>(Compared to RNN, CNN, etc.) when there is a long-term dependency in the token series</li>
 </ol>
-<p>CNNやRNNと比べたとき、<span class="math inline">\(q^\top k\)</span>により一層のレイヤーで任意のトークン間の依存関係が表現できるのはAttentionの利点と言えるでしょう。ただし<span class="math inline">\(q^\top k[i, j]\)</span>は2つの埋め込み<span class="math inline">\(e[i], e[j]\)</span>に対して線形な演算のみで得られるため、この2つの埋め込みが何か非線形な関数を介して依存している場合、その関係は一層のAttentionでは表現できません。</p>
-<p>というわけで、一層の線形レイヤーと比較すると、パラメタ数が<span class="math inline">\(L\)</span>に依存しないというメリットはあるものの、実際Attentionを使うともっと色々な関数が学習できるのかというとよくわかりません。もう少し試してみます。</p>
+<p>Compared to CNN and RNN, the advantage of self-attention is that <span class="math inline">\(q^\top k\)</span> can represent arbitrary dependencies between tokens in one layer. However, since <span class="math inline">\(q^\top k[i, j]\)</span> is obtained only by linear operations on the two embeddings <span class="math inline">\(e[i], e[j]\)</span>, if the two embeddings are dependent via some nonlinear function, the relationship cannot be represented by a single self-attention layer.</p>
+<ol start="3" type="1">
+<li>(Compared to RNN) when you want to do fast and parallel batch training</li>
+</ol>
+<p>The operation of computing self-attention, namely the computation of <span class="math inline">\(\textrm{softmax}(q^\top k)\)</span> can be parallelized per query. This is useful when you want to get a parallelized implementation that works fast on single or many GPUs.</p>
+<p>So, although it has the advantage of not depending on <span class="math inline">\(L\)</span> for the number of parameters compared to one linear layer, I am not sure if the self-attention can actually be more expressive or efficient. Let another blog post do some more theoretical stuff, I will try some more.</p>
 </section>
-<section id="隠れ変数がある場合" class="level2">
-<h2 class="anchored" data-anchor-id="隠れ変数がある場合">隠れ変数がある場合</h2>
-<p>以下の方法で天気列を生成します。過去<span class="math inline">\(n\)</span>日間の天気を見て、🌧️の登場回数が<span class="math inline">\(k\)</span>回なら、次の日の天気が🌧️になる確率を<span class="math inline">\(\frac{n - k}{2n}\)</span>とします。☁️、☀️についても同様に確率を割り当てます。この方法で大量に天気列を生成して適当な部分列からデータセットを作ります。</p>
-<div class="cell" data-tags="[]" data-execution_count="96">
+<section id="when-there-are-hidden-variables" class="level2">
+<h2 class="anchored" data-anchor-id="when-there-are-hidden-variables">When there are hidden variables</h2>
+<p>Generate a weather sequence in the following way. Look at the weather for the past <span class="math inline">\(n\)</span> days, and if 🌧️ has appeared <span class="math inline">\(k\)</span> times, let <span class="math inline">\(\frac{n - k}{2n}\)</span> be the probability that the weather for the next day will be 🌧️. Assign probabilities for ☁️ and ☀️ in the same way. Generate a long weather sequence in this way and create a dataset by gathering randomly sampled subsequences.</p>
+<div class="cell" data-tags="[]" data-execution_count="13">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
@@ -739,12 +743,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>generate(ndays_model, <span class="dv">100</span>, generate(markov, <span class="dv">10</span>))                </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="96">
-<pre><code>'☁️☀️☀️☁️☁️☁️☁️🌧️🌧️🌧️☀️☁️☁️☁️☀️☀️☀️☁️☀️🌧️☁️🌧️🌧️🌧️☁️🌧️☀️🌧️☁️☁️☁️☀️🌧️☁️☀️☁️☁️☀️☀️☀️🌧️☁️☁️🌧️☁️☁️☁️☀️🌧️🌧️🌧️🌧️☁️☁️☀️☁️☀️🌧️☀️☁️☁️☀️🌧️🌧️☁️☀️🌧️🌧️☀️☁️🌧️🌧️🌧️☀️☁️☁️☀️☁️☀️☁️☁️🌧️☀️☁️☀️🌧️☀️🌧️🌧️🌧️🌧️☀️🌧️☀️☁️☁️☁️🌧️☁️🌧️☀️☀️☀️☁️☁️☀️🌧️🌧️🌧️🌧️'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>'☁️🌧️🌧️🌧️🌧️🌧️🌧️🌧️☁️☀️☀️☁️☁️🌧️☁️🌧️☀️🌧️☀️☁️☀️☁️☀️☁️☀️☁️☀️🌧️☀️☁️🌧️☀️🌧️☀️☀️🌧️☀️🌧️☁️☁️🌧️☁️☁️☁️☀️🌧️☀️☀️☀️☀️☁️☁️🌧️🌧️🌧️🌧️🌧️☁️☀️☁️☀️☀️☀️☀️🌧️🌧️🌧️🌧️🌧️☀️☁️🌧️☁️☀️☀️☀️☁️☁️☀️🌧️☁️🌧️☁️☀️☀️☁️☁️☁️☁️☁️🌧️☁️🌧️☀️🌧️🌧️☀️☀️☁️🌧️☀️☀️🌧️☀️☁️☀️☀️☁️☁️☀️'</code></pre>
 </div>
 </div>
-<p>生成された天気列はこんな感じです。まず線形モデルを10日モデルで学習させます。この場合隠れ変数はありません。</p>
-<div class="cell" data-tags="[]" data-execution_count="97">
+<p>The generated weather sequence looks like this. First, let’s traing the linear model on a 10-day model. In this case there is no hidden variable.</p>
+<div class="cell" data-tags="[]" data-execution_count="14">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_ndays_dataset(seq_len, size, n: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span>) <span class="op">-&gt;</span> Dataset:</span>
@@ -776,15 +780,15 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="97">
-<pre><code>'Accuracy: 0.3960000276565552'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>'Accuracy: 0.41600000858306885'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>次にAttentionを学習させます。</p>
-<div class="cell" data-tags="[]" data-execution_count="98">
+<p>Train the self-attention layer next.</p>
+<div class="cell" data-tags="[]" data-execution_count="15">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
@@ -802,8 +806,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="98">
-<pre><code>'Accuracy: 0.3710000216960907'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<pre><code>'Accuracy: 0.3630000054836273'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-15-output-2.png" class="img-fluid"></p>
@@ -812,8 +816,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <p><img src="understanding-attention-en_files/figure-html/cell-15-output-3.png" class="img-fluid"></p>
 </div>
 </div>
-<p>Attentionのほうが線形レイヤーより悪くなってしまいました。次に隠れ変数があるモデルとして、先程の10日モデルを15日モデルにしてみます。まず、線形レイヤーを学習させます。</p>
-<div class="cell" data-tags="[]" data-execution_count="99">
+<p>The self-attention is now worse than the linear model. Next, let’s turn the 10-day model into a 15-day model with hidden variables. First, we train the linear layer.</p>
+<div class="cell" data-tags="[]" data-execution_count="16">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_ndays_dataset(SEQ_LEN, <span class="dv">5000</span>, n<span class="op">=</span><span class="dv">15</span>)</span>
@@ -832,15 +836,15 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="99">
-<pre><code>'Accuracy: 0.3790000081062317'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>'Accuracy: 0.34200000762939453'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-16-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>次にAttentionを学習させます。</p>
-<div class="cell" data-tags="[]" data-execution_count="100">
+<p>Then train the self-attention layer.</p>
+<div class="cell" data-tags="[]" data-execution_count="17">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
@@ -858,8 +862,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="100">
-<pre><code>'Accuracy: 0.328000009059906'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<pre><code>'Accuracy: 0.35600000619888306'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-17-output-2.png" class="img-fluid"></p>
@@ -868,12 +872,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <p><img src="understanding-attention-en_files/figure-html/cell-17-output-3.png" class="img-fluid"></p>
 </div>
 </div>
-<p>この場合も結局Attentionのほうが悪くなってしまいました。悲しい。</p>
+<p>Attention is a bit better, but there is no meaningful difference in accuracy.</p>
 </section>
-<section id="非線形ならどうか" class="level2">
-<h2 class="anchored" data-anchor-id="非線形ならどうか">非線形ならどうか</h2>
-<p>隠れ変数があっても線形モデルの方が性能がいいということは、たぶん線形で解けるタスクではどうあがいても線形モデルに勝てないということなのでしょう。なのでもっと難しいデータを考えます。 10日ぶんの天気列の🌧️、☁️、☀️にそれぞれ0, 1, 2を割り当てて作ったベクトルを<span class="math inline">\(y\)</span>とします。また、<span class="math inline">\(\beta = (0, 1, 2, 3, 2, 1, 0, 1, 2, 3)^\top\)</span>とします。このとき、次の日の天気を<span class="math inline">\((y(2 - y)\cdot \beta) \mod 3\)</span>とします。これだと芸がないので一応他の天気も2%くらいの確率で出るようにしておきます。</p>
-<div class="cell" data-tags="[]" data-execution_count="101">
+<section id="what-about-non-linear" class="level2">
+<h2 class="anchored" data-anchor-id="what-about-non-linear">What about non-linear?</h2>
+<p>If the linear model performs better even with hidden variables, it probably means that the task is still linearly solvable. So let’s consider more difficult nonlinear data. Let <span class="math inline">\(y\)</span> be a vector created by assigning 0, 1, and 2 to 🌧️, ☁️, and ☀️ in the 10-day weather sequence, respectively. Also, let <span class="math inline">\(\beta = (0, 1, 2, 3, 2, 1, 0, 1, 2, 3)^\top\)</span>. Let <span class="math inline">\((y(2 - y)\cdot \beta)\mod 3\)</span> be the weather for the next day. To make the data a bit stohcastic, let’s assign other weathers 2% probability.</p>
+<div class="cell" data-tags="[]" data-execution_count="18">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>_BETA <span class="op">=</span> np.tile([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>], (<span class="dv">10</span>,))</span>
@@ -889,7 +893,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prev <span class="op">+</span> _GEN.choice(WEATHERS, p<span class="op">=</span>prob)</span>
 <span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_dotmod_dataset(seq_len, size, n: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10</span>) <span class="op">-&gt;</span> Dataset:</span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    weathers <span class="op">=</span> generate(partial(ndays_mod4_model, n<span class="op">=</span>n), seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span>, generate(markov, n <span class="op">*</span> <span class="dv">2</span>))</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    weathers <span class="op">=</span> generate(partial(dotmod_model, n<span class="op">=</span>n), seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span>, generate(markov, n <span class="op">*</span> <span class="dv">2</span>))</span>
 <span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>    w_list, e_list, nw_list <span class="op">=</span> [], [], []</span>
 <span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(size):</span>
 <span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        start <span class="op">=</span> _GEN.integers(<span class="dv">0</span>, seq_len <span class="op">*</span> size <span class="op">*</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">11</span>)</span>
@@ -902,12 +906,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>generate(dotmod_model, <span class="dv">100</span>, generate(markov, <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="101">
-<pre><code>'☁️🌧️🌧️🌧️🌧️🌧️☁️☁️☀️☀️🌧️☀️☀️☁️☁️☁️☀️🌧️☀️🌧️☀️☀️☀️☀️☁️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️🌧️☀️🌧️☁️☀️☀️☀️☁️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<pre><code>'☁️☁️☀️☀️☀️☀️☀️☀️☁️☁️☀️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️🌧️☀️☁️☀️☁️🌧️🌧️☀️☀️☀️☁️🌧️☀️☁️☁️☁️☁️☀️🌧️☀️🌧️☁️☀️☀️☀️☁️☁️☁️☀️☁️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️☁️☀️☁️🌧️🌧️☀️🌧️☁️🌧️☁️☁️☁️☀️☀️☁️☁️☀️☁️🌧️🌧️☀️☁️☁️☁️🌧️☀️☁️☁️☁️☁️☀️🌧️☀️'</code></pre>
 </div>
 </div>
-<p>ぱっと見ではまるで法則性がわからない天気列が生成できました。これを学習させてみましょう。まずは線形モデルです。</p>
-<div class="cell" data-tags="[]" data-execution_count="102">
+<p>We were able to generate a weather sequence that at a quick glance does not seem to be legal. Let’s try to train it. Let’s start with a linear model.</p>
+<div class="cell" data-tags="[]" data-execution_count="21">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> make_dotmod_dataset(SEQ_LEN, <span class="dv">5000</span>)</span>
@@ -926,15 +930,15 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>linear_accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="102">
-<pre><code>'Accuracy: 0.36500000953674316'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<pre><code>'Accuracy: 0.7440000176429749'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-19-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>次にAttentionを学習してみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="103">
+<p>Suprsingly, the accuracy is quite high. Then let’s train the self-attention layer.</p>
+<div class="cell" data-tags="[]" data-execution_count="22">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> MaskedAttention(<span class="dv">4</span>, D_ATTN, <span class="dv">3</span>, key)</span>
@@ -952,8 +956,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="ss">f"Accuracy: </span><span class="sc">{</span>accuracy(model, test_ds.embeddings, test_ds.next_weather_indices)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="103">
-<pre><code>'Accuracy: 0.33900001645088196'</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<pre><code>'Accuracy: 0.4350000321865082'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <p><img src="understanding-attention-en_files/figure-html/cell-20-output-2.png" class="img-fluid"></p>
@@ -962,12 +966,12 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <p><img src="understanding-attention-en_files/figure-html/cell-20-output-3.png" class="img-fluid"></p>
 </div>
 </div>
-<p>またしてもAttentionのほうがだめという結果になりましたが、このタスクは今までの２つとは違い正答率96%まで上げられるので、両方とも全然だめでした。</p>
+<p>Again, the self-attention was not better. So maybe we can at least say that the self-attention itself is not very good at approximating nonlinear function like modulo.</p>
 </section>
 </section>
-<section id="まとめ" class="level1">
-<h1>まとめ</h1>
-<p>このブログ記事では、Transformerの構成要素であるMultihead Attentionの簡略版であるSingle Attentionについて何をしているのか概観し、いくつか簡単なデータセットでの学習を試みました。結局全タスクで線形関数以下の性能に終わってしまい、メモリ使用量以外のメリットが見えてこなかったというのが正直なところです。MLPも例のscaling lawでスケールするんじゃないかと思えるほどです。表現力という点ではスケールはするんでしょうが。 今後のブログでは、 - MultiHeadの効果 - レイヤーを重ねる効果 - レイヤーノーマリゼーションの効果 - 理論的な論文の紹介 などもやってみようと思います。</p>
+<section id="summary" class="level1">
+<h1>Summary</h1>
+<p>In this blog post, I gave an overview of what the single self-attention, a simplified version of Multihead Attention in Transformer, is doing. I also tried to train it on some simple data sets. It ended up with less than linear function performance on all tasks and honestly could not see any benefit other than memory usage. Now I feel like MLP can be scaled as Transformer scaled in the infamous OpenAI paper. In future blogs, I will also want to try: - The effect of MultiHead Attention - Effects of Layer Normalization - Introduction of theoretical papers - Comparison with convolution, RNN, and linear state space models</p>
 
 
 </section>
