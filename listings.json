@@ -3,6 +3,7 @@
     "listing": "/index.html",
     "items": [
       "/posts/understanding-attention.html",
+      "/posts/understanding-attention-en.html",
       "/posts/sandb-exercise-racetrack.html",
       "/posts/jax-brax-haiku.html",
       "/posts/understanding-what-makes-rl-difficult.html"

@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2025-04-04">
 
-<title>RLog2 - Attentionが何をやっているのか理解しよう</title>
+<title>RLog2 - Understanding what self-attention is doing</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -148,7 +148,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Attentionが何をやっているのか理解しよう</h1>
+      <h1 class="title">Understanding what self-attention is doing</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">ja</div>
                 <div class="quarto-category">NLP</div>
@@ -180,17 +180,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#参考にしたもの" id="toc-参考にしたもの" class="nav-link active" data-scroll-target="#参考にしたもの">参考にしたもの</a></li>
-  <li><a href="#トークン列のエンコーディング" id="toc-トークン列のエンコーディング" class="nav-link" data-scroll-target="#トークン列のエンコーディング">トークン列のエンコーディング</a>
+  <li><a href="#references" id="toc-references" class="nav-link active" data-scroll-target="#references">References</a></li>
+  <li><a href="#encoding-token-sequences" id="toc-encoding-token-sequences" class="nav-link" data-scroll-target="#encoding-token-sequences">Encoding token sequences</a>
   <ul class="collapse">
-  <li><a href="#最初に列があった" id="toc-最初に列があった" class="nav-link" data-scroll-target="#最初に列があった">最初に列があった</a></li>
-  <li><a href="#トークンからベクトルに" id="toc-トークンからベクトルに" class="nav-link" data-scroll-target="#トークンからベクトルに">トークンからベクトルに</a></li>
-  <li><a href="#ついでに位置もベクトルに" id="toc-ついでに位置もベクトルに" class="nav-link" data-scroll-target="#ついでに位置もベクトルに">ついでに位置もベクトルに</a></li>
+  <li><a href="#sequence-of-tokens" id="toc-sequence-of-tokens" class="nav-link" data-scroll-target="#sequence-of-tokens">Sequence of tokens</a></li>
+  <li><a href="#from-a-token-to-a-vector" id="toc-from-a-token-to-a-vector" class="nav-link" data-scroll-target="#from-a-token-to-a-vector">From a token to a vector</a></li>
+  <li><a href="#position-is-also-embedded" id="toc-position-is-also-embedded" class="nav-link" data-scroll-target="#position-is-also-embedded">Position is also embedded</a></li>
   </ul></li>
-  <li><a href="#self-attention" id="toc-self-attention" class="nav-link" data-scroll-target="#self-attention">Self-Attention</a></li>
-  <li><a href="#やってみよう" id="toc-やってみよう" class="nav-link" data-scroll-target="#やってみよう">やってみよう</a>
+  <li><a href="#attention" id="toc-attention" class="nav-link" data-scroll-target="#attention">Attention</a></li>
+  <li><a href="#lets-do-it" id="toc-lets-do-it" class="nav-link" data-scroll-target="#lets-do-it">Let’s do it</a>
   <ul class="collapse">
-  <li><a href="#マルコフモデルの学習" id="toc-マルコフモデルの学習" class="nav-link" data-scroll-target="#マルコフモデルの学習">マルコフモデルの学習</a></li>
+  <li><a href="#training-a-markov-model" id="toc-training-a-markov-model" class="nav-link" data-scroll-target="#training-a-markov-model">Training a Markov model</a></li>
   <li><a href="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" id="toc-独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合" class="nav-link" data-scroll-target="#独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合">独立に発生した過去の複数の事象に依存して将来の出来事が決まる場合</a></li>
   <li><a href="#attentionいらないんじゃ" id="toc-attentionいらないんじゃ" class="nav-link" data-scroll-target="#attentionいらないんじゃ">Attentionいらないんじゃ…</a></li>
   <li><a href="#隠れ変数がある場合" id="toc-隠れ変数がある場合" class="nav-link" data-scroll-target="#隠れ変数がある場合">隠れ変数がある場合</a></li>
@@ -206,40 +206,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたりするようです。親不孝な息子でごめんなさいという感じもします。 ところで、ChatGPTのような言語生成モデルでしばしば利用されているのが、Transformerと呼ばれるニューラルネットワークの構成です。Transformerでは、Multihead Attentionと呼ばれるレイヤーを入力のトークン列に対し繰り返し適用し複雑なモデルを構成します。このブログでは、その簡略版である1レイヤーのAttention(Multiheadではない)に着目し、これが何をしているのかを勉強し、ついでにコードを書いて動かしてみます。</p>
-<section id="参考にしたもの" class="level1">
-<h1>参考にしたもの</h1>
+<p>ChatGPT is getting a lot of buzz these days. I don’t use it much because I don’t like to worry about prompts, but my friend uses it to write papers, and my mom uses it to just talk, which makes me feel a little sorry for being an unfriendly son… A neural network called Transformer is the success of language generative models like ChatGPT. A layer called Multihead Attention is repeatedly applied to a sequence of input tokens to form a complex model. In this blog we will focus on a simplified version of Multihead Attention, Singlehead Self-Attention, study what it does, and try to write some code to run it.</p>
+<section id="references" class="level1">
+<h1>References</h1>
 <ul>
-<li><a href="https://arxiv.org/abs/2207.09238">Formal Algorithms for Transformers</a>
-<ul>
-<li>疑似コードをまとめた論文です。これが一番わかりやすいと思うので、とりあえずこれを見ればいいと思います。他にも<a href="https://jalammar.github.io/illustrated-gpt2/">The Illustrated GPT-2</a>などを見たのですが、よくわかりませんでした。</li>
-</ul></li>
-<li><a href="https://github.com/syuntoku14/Shumi-Note/blob/main/notebooks/NN_transformer.ipynb">Shumi-Note Transformer</a>
-<ul>
-<li>これを見て真似しようと思ったのがこの記事のきっかけです。</li>
-</ul></li>
+<li><a href="https://arxiv.org/abs/2207.09238">Formal Algorithms for Transformers</a></li>
+<li><a href="https://github.com/syuntoku14/Shumi-Note/blob/main/notebooks/NN_transformer.ipynb">Shumi-Note Transformer</a></li>
 </ul>
 </section>
-<section id="トークン列のエンコーディング" class="level1">
-<h1>トークン列のエンコーディング</h1>
-<p>Attentionは、入力としてトークンの列が与えられることを仮定しているので、まずトークン列をネットワークに入力するために前処理します。</p>
-<section id="最初に列があった" class="level2">
-<h2 class="anchored" data-anchor-id="最初に列があった">最初に列があった</h2>
-<p>トークン列というのは文字通りトークンからなる列のことです。トークンは有限集合の要素です。実用上はbyte pair encodingにより得られた部分文字列などがこれに該当しますが、とりあえず気にしなくていいです。トークンの集合を<span class="math inline">\(V\)</span>とし、<span class="math inline">\([Nv] := {1, ..., Nv}\)</span>と番号付けしておきます。トークン列を<span class="math inline">\(x = x[1: l]\)</span>と書きます。また、トークン列の最大の長さを<span class="math inline">\(L\)</span>とします。トークンとして連続値や無限集合は扱えないと思いますが、素人なので何か抜け道があるかどうかは知りません。</p>
+<section id="encoding-token-sequences" class="level1">
+<h1>Encoding token sequences</h1>
+<p>Attention takes a sequence of tokens as an input, so let’s encode tokens first.</p>
+<section id="sequence-of-tokens" class="level2">
+<h2 class="anchored" data-anchor-id="sequence-of-tokens">Sequence of tokens</h2>
+<p>A token sequence is literally a sequence consisting of tokens. A token is an element of a finite set. For practical use, this includes substrings obtained by byte pair encoding, but you don’t need to worry about that for now. Let <span class="math inline">\(V\)</span> be a set of tokens, numbered <span class="math inline">\([Nv] := {1, ... , Nv}\)</span> and number them $[Nv] := {1, …. Write <span class="math inline">\(x = x[1: l]\)</span> for the token sequence. Also, let <span class="math inline">\(L\)</span> be the maximum length of the token sequence.</p>
 </section>
-<section id="トークンからベクトルに" class="level2">
-<h2 class="anchored" data-anchor-id="トークンからベクトルに">トークンからベクトルに</h2>
-<p>適当な<span class="math inline">\(d_e \times Nv\)</span>次元の行列<span class="math inline">\(W_e\)</span>を使って、<span class="math inline">\(v\)</span>番目のトークンから埋め込み（Token embedding）を <span class="math inline">\(e = W_e[:, v]\)</span>により得ます。これは<span class="math inline">\(d_e\)</span>次元のベクトルになります。なお、numpy風に<span class="math inline">\(i\)</span>番目の行ベクトルを<span class="math inline">\(W[i, :]\)</span>、<span class="math inline">\(j\)</span>番目の列ベクトルを<span class="math inline">\(W[:, j]\)</span>と書いています。この行列<span class="math inline">\(W_e\)</span>は勾配降下により学習されるようです。</p>
+<section id="from-a-token-to-a-vector" class="level2">
+<h2 class="anchored" data-anchor-id="from-a-token-to-a-vector">From a token to a vector</h2>
+<p>Using a <span class="math inline">\(d_e \times Nv\)</span>-dimensional matrix <span class="math inline">\(W_e\)</span>, the token embedding is obtained from the <span class="math inline">\(v\)</span>th token by <span class="math inline">\(e = W_e[:, v]\)</span>. This will be a <span class="math inline">\(d_e\)</span>-dimensional vector. Note that we write <span class="math inline">\(W[i, :]\)</span> for the <span class="math inline">\(i\)</span>-th row vector and <span class="math inline">\(W[:, j]\)</span> for the <span class="math inline">\(j\)</span>-th column vector in the numpy style. This matrix <span class="math inline">\(W_e\)</span> seems to be learned by gradient descent.</p>
 </section>
-<section id="ついでに位置もベクトルに" class="level2">
-<h2 class="anchored" data-anchor-id="ついでに位置もベクトルに">ついでに位置もベクトルに</h2>
-<p>適当な<span class="math inline">\(d_p \times L\)</span>次元の行列<span class="math inline">\(W_p\)</span>を使って、トークン列中の<span class="math inline">\(l\)</span>番目にトークンがあるという情報から、位置埋め込み（Positional embedding）を <span class="math inline">\(p = W_p[:, l]\)</span>により得ます。これも<span class="math inline">\(d_e\)</span>次元のベクトルになります。正直なんの意味があるのかよくわからないのですが、これを先程のトークン埋め込みに足してトークン列<span class="math inline">\(x\)</span>の<span class="math inline">\(t\)</span>番目のトークン<span class="math inline">\(x[t]\)</span>に対する埋め込みを<span class="math inline">\(e = W_e[:, x[t]] + W_p[:, t]\)</span>によって得ます。これ足して大丈夫なのかな？って思うんですが。 位置埋め込みは、学習されることもあるようですが、Transformerが最初に提案された<a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>の論文では、以下のように構成されています。 <span class="math display">\[
+<section id="position-is-also-embedded" class="level2">
+<h2 class="anchored" data-anchor-id="position-is-also-embedded">Position is also embedded</h2>
+<p>Using a <span class="math inline">\(d_p \times L\)</span>-dimensional matrix <span class="math inline">\(W_p\)</span>, a positional embedding is obtained by <span class="math inline">\(p = W_p[:, l]\)</span> from the information that there is a token at <span class="math inline">\(l\)</span>th place in the token sequence. This is also a vector with length <span class="math inline">\(d_e\)</span>. To be honest, I am not sure what it means, but we can add this to the token embedding described earlier to obtain the embedding for the <span class="math inline">\(t\)</span>th token <span class="math inline">\(x[t]\)</span> in the token sequence <span class="math inline">\(x\)</span> by <span class="math inline">\(e = W_e[:, x[t]] + W_p[:, t]\)</span>. Is it safe to add this? I don’t know. The position embedding may be learned, but in the paper <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>, where Transformer was first proposed, it is constructed as follows.</p>
+<p><span class="math display">\[
 \begin{align*}
 W_p[2i - 1, t] &amp;= \sin (\frac{t}{L^{2i / d_e}}) \\
 W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 &amp;~~~~~(0 &lt; 2i \leq d_e)
 \end{align*}
-\]</span> これを<span class="math inline">\(L=50, d_e = 5\)</span>として可視化してみましょう。</p>
+\]</span> Let’s visualize it with<span class="math inline">\(L=50, d_e = 5\)</span>.</p>
 <div class="cell" data-tags="[]" data-execution_count="1">
 <details>
 <summary>Code</summary>
@@ -264,28 +259,28 @@ W_p[2i, t] &amp;= \cos (\frac{t}{L^{2i / d_e}}) \\
 <pre><code>&lt;matplotlib.legend.Legend at 0x7f9028bcbee0&gt;</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>というわけで、この埋めこみは各成分ごとに異なる周波数での単語を埋め込むようです。これにより、短いコンテキストの中での位置も同時に考慮できるのかな。</p>
+<p>So this embedding seems to embed words at different frequencies for each component. I suspect that this allows us to consider the position in a short context at the same time.</p>
 </section>
 </section>
-<section id="self-attention" class="level1">
-<h1>Self-Attention</h1>
-<p>Transformerの主要な構成要素になるのがSelf-Attentionです。Self-Attentionでは、入力されたトークン列中のすべてのトークンの組み合わせについて、そいつらの組み合わせがどれくらい重要なのかというモデル化を行います。具体的に、単一クエリに対するAttentionでは、現在のトークンから得た埋め込み<span class="math inline">\(e_t\)</span>と<span class="math inline">\(x\)</span>中のすべてのトークンの埋め込み<span class="math inline">\(e_0, e_1, ..., e_{Nv} \in E\)</span>に対し、以下のような操作を行います。 <span class="math display">\[
+<section id="attention" class="level1">
+<h1>Attention</h1>
+<p>The main component of the Transformer is <em>Self-Attention</em>, which models the importance of every combination of tokens in the input token sequence. Specifically, Self-Attention for a single query uses the embedding <span class="math inline">\(e_t\)</span> from the current token and the embeddings $e_0, e_1, …, of all tokens in <span class="math inline">\(x\)</span>. , e_{Nv} E$, we perform: <span class="math display">\[
 \begin{align*}
 q_t &amp;\leftarrow W_q e_t + b_q \\
 k_{t'} &amp;\leftarrow W_k e_{t'} + b_k,~\forall e_{t'} \in E \\
 v_{t'} &amp;\leftarrow W_v e_{t'} + b_v,~\forall e_{t'} \in E \\
 \alpha_{t'} &amp;\leftarrow \frac{\exp(q_t^\top k_{t'} / \sqrt{d_{\textrm{attn}}})}{\sum_u \exp(q_t^\top k_{t'} / \sqrt{d_{\textrm{attn}}})},~\forall e_{t'} \in E \\
-v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
+v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 \end{align*}
-\]</span> 埋め込みの次元を<span class="math inline">\(d_\textrm{in}\)</span>、出力の次元と<span class="math inline">\(d_\textrm{out}\)</span>とすると、<span class="math inline">\(W_q, Q_k\)</span>は<span class="math inline">\(d_\textrm{attn} \times e\)</span>の行列、<span class="math inline">\(W_q, Q_k\)</span>は<span class="math inline">\(d_\textrm{out} \times d_\textrm{in}\)</span>の行列、<span class="math inline">\(b_*\)</span>はベクトル（バイアス項）です。ここで、<span class="math inline">\(q^\top k_{t'}\)</span>の値でソフトマックスをとって<span class="math inline">\(v\)</span>にマスクをかけるので、これは現在のトークンと<span class="math inline">\(t'\)</span>番目のトークンが「どれくらい対応しているか」を表していてほしいです。<span class="math inline">\(v_{t'}\)</span>が何を表しているかはタスクによって異なると思いますが、<span class="math inline">\(t'\)</span>番目のトークンの埋め込みに線形に関係する値が入っているはずです。このトークン列に後ろ向きの因果関係がない場合（あるトークン<span class="math inline">\(x[t]\)</span>が、任意の未来のトークン<span class="math inline">\(x[t']~\textrm{where}~t &lt; t'\)</span>に依存しない場合）は、<span class="math inline">\(\alpha_{t'}\)</span>にマスクをかける(<span class="math inline">\(\alpha_{t'}[i] = 0 ~\textrm{if}~t &lt; i\)</span>)こともあります。なので、未来を予測する際にはこのマスクをかけるのが一般的なようです。</p>
-<p>実際に、時系列から何か（次の単語、ラベルなど）を予測する際には、この単一クエリに対するAttentionを長さ<span class="math inline">\(T\)</span>の系列内のすべてのトークンに対して計算し、<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列<span class="math inline">\(\tilde{V}\)</span>を得ます。</p>
+\]</span> Let <span class="math inline">\(d_\textrm{in}\)</span> be the length of the embedding and <span class="math inline">\(d_\textrm{out}\)</span> the length of the output vector, <span class="math inline">\(W_q, Q_k\)</span> is the <span class="math inline">\(d_\textrm{attn} \times e\)</span> matrix, <span class="math inline">\(W_q, Q_k\)</span> is the <span class="math inline">\(d_\textrm{out} \times d_\textrm{ in}\)</span> matrices, and <span class="math inline">\(b_q, b_k, b_v\)</span> are vectors with proper shapes. Here, we want this to represent “how well the current token corresponds” to the <span class="math inline">\(t'\)</span>th token, since we will mask <span class="math inline">\(v\)</span> by the probability marice obtained by applying softmax to <span class="math inline">\(q^\top k_{t'}\)</span>. What <span class="math inline">\(v_{t'}\)</span> represents will vary from task to task, but it should contain values that are linearly related to the embedding of the <span class="math inline">\(t'\)</span>th token. If there is no backward causality in this token sequence (a token <span class="math inline">\(x[t]\)</span> does not depend on any future token <span class="math inline">\(x[t']~\textrm{where}~t &lt; t'\)</span>), <span class="math inline">\(\alpha_{t'}\)</span> is often masked (<span class="math inline">\(\alpha_{t'}[i] = 0 ~\textrm{if}~t &lt; i\)</span>). It seems common to apply this mask when predicting the future.</p>
+<p>In practice, when predicting something (next word, label, etc.) from a time series, this Attention for single query is computed for all tokens in the series of length <span class="math inline">\(T\)</span> to obtain a matrix <span class="math inline">\(\tilde{V}\)</span> with shape <span class="math inline">\(d_textrm{out} \times T\)</span>.</p>
 </section>
-<section id="やってみよう" class="level1">
-<h1>やってみよう</h1>
-<p>とりあえずこれを学習させてみましょう。今回は<a href="https://jax.readthedocs.io/en/latest/">jax</a>と<a href="https://docs.kidger.site/equinox/">equinox</a>を使ってモデルを書いてみます。</p>
+<section id="lets-do-it" class="level1">
+<h1>Let’s do it</h1>
+<p>Let’s train this self-attention layer. This time, I use <a href="https://jax.readthedocs.io/en/latest/">jax</a> and <a href="https://docs.kidger.site/equinox/">equinox</a>.</p>
 <div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
@@ -339,9 +334,9 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>これを学習させてみましょう。トークンとして、天気🌧️・☁️・☀️を考えます。この3つの記号に対し適当な埋め込みを与えて、次の日の天気を学習させてみます。一般的にTransformerで用いられる方法とは全く違いますが、なるべく簡単なネットワークで学習できるように、以下のような要素数4のベクトルを埋め込みとします。 - <span class="math inline">\(e[0]\)</span>: 天気が🌧️なら1、それ以外のときは0 - <span class="math inline">\(e[1]\)</span>: 天気が☁️なら同上 - <span class="math inline">\(e[2]\)</span>: 天気が☀️なら同上 - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span>(位置埋め込み)</p>
-<p>最大文字列長は20にします。</p>
-<div class="cell" data-tags="[]" data-execution_count="3">
+<p>Let’s make this a learning experience. Consider the weather 🌧️, ☁️, and ☀️ as tokens. Let’s give the appropriate embedding to these three symbols and let them learn the weather for the next day. Although this method is completely different from the method generally used in Transformer, we will use a vector with 4 elements as the embedding so that it can be learned with as simple a network as possible, as shown below. - <span class="math inline">\(e[0]\)</span>: 1 if the weather is 🌧️, 0 otherwise - <span class="math inline">\(e[1]\)</span>: 1 if the weather is ☁️, 0 otherwise - <span class="math inline">\(e[2]\)</span>: 1 if the weather is ☀️, 0 otherwise - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span> (position embedding)</p>
+<p>Let the maximum string length <span class="math inline">\(L\)</span> 20.</p>
+<div class="cell" data-tags="[]">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WEATHERS <span class="op">=</span> [<span class="st">"🌧️"</span>, <span class="st">"☁️"</span>, <span class="st">"☀️"</span>]</span>
@@ -357,9 +352,9 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<section id="マルコフモデルの学習" class="level2">
-<h2 class="anchored" data-anchor-id="マルコフモデルの学習">マルコフモデルの学習</h2>
-<p>まず簡単なモデルで天気を生成してみます。<strong>次の日の天気は、前の日の天気にもとづいて確率的に決まる</strong>ことにしましょう。🌧️・☁️・☀️がマルチバイト文字であることに注意して、以下のように実装します。</p>
+<section id="training-a-markov-model" class="level2">
+<h2 class="anchored" data-anchor-id="training-a-markov-model">Training a Markov model</h2>
+<p>Let’s start with a simple model to generate the weather. <strong>Let’s assume that the next day’s weather is stochastically determined</strong> based on the previous day’s weather. Note that 🌧️, ☁️, and ☀️ are multibyte characters, and implement the following.</p>
 <div class="cell" data-tags="[]" data-execution_count="4">
 <details>
 <summary>Code</summary>
@@ -417,7 +412,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
         [0.05, 0.1 , 0.15, 0.2 , 0.25, 0.3 , 0.35, 0.4 , 0.45, 0.5 ]]))</code></pre>
 </div>
 </div>
-<p>こんな感じです。いま、次の日の天気だけ予測したいので、モデルの出力は集合{🌧️・☁️・☀️}上での確率分布が適切でしょう。Attentionは長さ<span class="math inline">\(T\)</span>の埋め込み列に対して長さ<span class="math inline">\(d_\textrm{out} \times T\)</span>の行列をかえします。なので、<span class="math inline">\(d_\textrm{out} = 3\)</span>とし、Attentionの出力<span class="math inline">\(\tilde{V}\)</span>に対してソフトマックス関数を適用し、<span class="math inline">\(P_t = \textrm{softmax}(\tilde{V}[:, t])\)</span>とします。このとき、<span class="math inline">\(P_t\)</span>の各要素が次の日🌧️・☁️・☀️になる確率を表すとして、モデル化します。これを、対数尤度の和<span class="math inline">\(\sum_t \log P_t(\textrm{next weather})\)</span>を最大化するように学習しましょう。学習のコードを定義します。</p>
+<p>The generated weathers look like this. Since we now only want to predict the weather for the next day, the output of the model should be a probability distribution over a set {🌧️, ☁️, ☀️}. Since Self-Attention will return a <span class="math inline">\(d_\textrm{out} \times T\)</span> matrix for an embedded column of length <span class="math inline">\(T\)</span>, we set <span class="math inline">\(d_\textrm{out} = 3\)</span> and apply the softmax function to Attention’s output <span class="math inline">\(\tilde{V}\)</span> to obtain <span class="math inline">\(P_t = \textrm{softmax}(\tilde{V}[:, t])\)</span>. We model each element of <span class="math inline">\(P_t\)</span> as representing the probability that it will be on the next day 🌧️, ☁️, or ☀️. Let this be trained to maximize the sum of log-likelihood <span class="math inline">\(\sum_t \log P_t(\textrm{next weather})\)</span>.</p>
 <div class="cell" data-tags="[]" data-execution_count="5">
 <details>
 <summary>Code</summary>
@@ -478,7 +473,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model, key, loss_list, eval_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>これを実際に走らせてみます。適当に、Attentionの次元を6、天気列の長さを10にします。</p>
+<p>Let’s run it. I use <span class="math inline">\(6\)</span> for <span class="math inline">\(d_textrm{attn}\)</span> and <span class="math inline">\(10\)</span> for the sequence length <span class="math inline">\(T\)</span>.</p>
 <div class="cell" data-tags="[]" data-execution_count="90">
 <details>
 <summary>Code</summary>
@@ -509,11 +504,11 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.49800002574920654'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-7-output-2.png" class="img-fluid"></p>
 </div>
 </div>
-<p>100エポックあたりでロスが落ちなくなっているので収束はしていそうです。実際に何を学習したのか確認してみましょう。とりあえず天気を生成してみます。こんなもの見ても何もわからないのですが、生成の流れを確認しておくにはいいかなと。ビームサーチが使われることが多いようですが、面倒なので今回はもっと簡単な方法を使います。☁️からスタートして、カテゴリカル分布から次の天気をサンプルし、どんどん足していくことにします。</p>
-<div class="cell" data-tags="[]" data-execution_count="91">
+<p>The loss is no longer dropping around 100 epochs, so it seemes to have converged. Let’s see what has actually been learned. For now, let’s try generating weather. This is not very meaningful in this case, but I thought it would be good to learn the generative process. It seems that the beam search is often used, but since it’s complex, I use a simpler method this time. Starting from ☁️, we sample the next weather from the categorical distribution, and keep adding to it.</p>
+<div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_from_model(</span>
@@ -543,8 +538,8 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>generated, key <span class="op">=</span> generate_from_model(model, key, <span class="dv">20</span>)</span>
 <span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>generated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="91">
-<pre><code>'☁️🌧️🌧️☀️🌧️☁️🌧️☁️☀️☀️☀️☁️☀️☀️☀️☀️☀️☁️☁️☀️☁️'</code></pre>
+<div class="cell-output cell-output-error">
+<pre><code>NameError: name 'eqx' is not defined</code></pre>
 </div>
 </div>
 <p>こんな感じになりました。当たり前ですがこれを見たところで何もわからないですね。次に、テストデータ中の適当なデータに対しAttentionの中身を可視化してみます。</p>
@@ -582,7 +577,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>visualize_attn(ax2, model, test_ds, <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
 </div>
 </div>
 <p>matplotlibでカラー絵文字が使えなかったのでモノクロの絵文字にしました。というわけで、 1. 直前の天気→直前の天気 のAttentionが最も大きい 2. 他の日の天気→直前の天気 のAttentionも大きい 3. 他はほとんど関係ない</p>
@@ -652,10 +647,10 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.33800002932548523'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-11-output-3.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-11-output-3.png" class="img-fluid"></p>
 </div>
 </div>
 <p>損失は小さくなっていますがAccuracyが悪くまたAttentionの出方も微妙ですね。一応1・48日目にも注意がいっていますが、先ほどの実験と同じく最後の日の注意が大きめに出ていますね。</p>
@@ -711,7 +706,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.37700000405311584'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-12-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-12-output-2.png" class="img-fluid"></p>
 </div>
 </div>
 <p>普通にこっちのほうが良さそうですね…。では、Attentionはどういう時に役に立つのでしょうか。</p>
@@ -785,7 +780,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.3960000276565552'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
 </div>
 </div>
 <p>次にAttentionを学習させます。</p>
@@ -811,10 +806,10 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.3710000216960907'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-15-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-15-output-2.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-15-output-3.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-15-output-3.png" class="img-fluid"></p>
 </div>
 </div>
 <p>Attentionのほうが線形レイヤーより悪くなってしまいました。次に隠れ変数があるモデルとして、先程の10日モデルを15日モデルにしてみます。まず、線形レイヤーを学習させます。</p>
@@ -841,7 +836,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.3790000081062317'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-16-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-16-output-2.png" class="img-fluid"></p>
 </div>
 </div>
 <p>次にAttentionを学習させます。</p>
@@ -867,10 +862,10 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.328000009059906'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-17-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-17-output-2.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-17-output-3.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-17-output-3.png" class="img-fluid"></p>
 </div>
 </div>
 <p>この場合も結局Attentionのほうが悪くなってしまいました。悲しい。</p>
@@ -935,7 +930,7 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.36500000953674316'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-19-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-19-output-2.png" class="img-fluid"></p>
 </div>
 </div>
 <p>次にAttentionを学習してみます。</p>
@@ -961,10 +956,10 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <pre><code>'Accuracy: 0.33900001645088196'</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-20-output-2.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-20-output-2.png" class="img-fluid"></p>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-attention_files/figure-html/cell-20-output-3.png" class="img-fluid"></p>
+<p><img src="understanding-attention-en_files/figure-html/cell-20-output-3.png" class="img-fluid"></p>
 </div>
 </div>
 <p>またしてもAttentionのほうがだめという結果になりましたが、このタスクは今までの２つとは違い正答率96%まで上げられるので、両方とも全然だめでした。</p>
