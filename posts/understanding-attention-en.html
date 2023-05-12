@@ -219,7 +219,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Attention takes a sequence of tokens as an input, so let’s encode tokens first.</p>
 <section id="sequence-of-tokens" class="level2">
 <h2 class="anchored" data-anchor-id="sequence-of-tokens">Sequence of tokens</h2>
-<p>A token sequence is literally a sequence consisting of tokens. A token is an element of a finite set. For practical use, this includes substrings obtained by byte pair encoding, but you don’t need to worry about that for now. Let <span class="math inline">\(V\)</span> be a set of tokens, numbered <span class="math inline">\([Nv] := {1, ... , Nv}\)</span> and number them $[Nv] := {1, …. Write <span class="math inline">\(x = x[1: l]\)</span> for the token sequence. Also, let <span class="math inline">\(L\)</span> be the maximum length of the token sequence.</p>
+<p>A token sequence is literally a sequence consisting of tokens. A token is an element of a finite set. For practical use, this includes substrings obtained by byte pair encoding, but you don’t need to worry about that for now. Let <span class="math inline">\(V\)</span> be a set of tokens, and number them <span class="math inline">\([Nv] := {1, ... , Nv}\)</span>. Write <span class="math inline">\(x = x[1: l]\)</span> for the token sequence. Also, let <span class="math inline">\(L\)</span> be the maximum length of the token sequence.</p>
 </section>
 <section id="from-a-token-to-a-vector" class="level2">
 <h2 class="anchored" data-anchor-id="from-a-token-to-a-vector">From a token to a vector</h2>
@@ -334,7 +334,13 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Let’s make this a learning experience. Consider the weather 🌧️, ☁️, and ☀️ as tokens. Let’s give the appropriate embedding to these three symbols and let them learn the weather for the next day. Although this method is completely different from the method generally used in Transformer, we will use a vector with 4 elements as the embedding so that it can be learned with as simple a network as possible, as shown below. - <span class="math inline">\(e[0]\)</span>: 1 if the weather is 🌧️, 0 otherwise - <span class="math inline">\(e[1]\)</span>: 1 if the weather is ☁️, 0 otherwise - <span class="math inline">\(e[2]\)</span>: 1 if the weather is ☀️, 0 otherwise - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span> (position embedding)</p>
+<p>Let’s make this a learning experience. Consider the weather 🌧️, ☁️, and ☀️ as tokens. Let’s give the appropriate embedding to these three symbols and let them learn the weather for the next day. Although this method is completely different from the method generally used in Transformer, we will use a vector with 4 elements as the embedding so that it can be learned with as simple a network as possible, as shown below.</p>
+<ul>
+<li><span class="math inline">\(e[0]\)</span>: 1 if the weather is 🌧️, 0 otherwise</li>
+<li><span class="math inline">\(e[1]\)</span>: 1 if the weather is ☁️, 0 otherwise</li>
+<li><span class="math inline">\(e[2]\)</span>: 1 if the weather is ☀️, 0 otherwise</li>
+<li><span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span> (position embedding)</li>
+</ul>
 <p>Let the maximum string length <span class="math inline">\(L\)</span> 20.</p>
 <div class="cell" data-tags="[]" data-execution_count="3">
 <details>
@@ -971,7 +977,13 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}.
 </section>
 <section id="summary" class="level1">
 <h1>Summary</h1>
-<p>In this blog post, I gave an overview of what the single self-attention, a simplified version of Multihead Attention in Transformer, is doing. I also tried to train it on some simple data sets. It ended up with less than linear function performance on all tasks and honestly could not see any benefit other than memory usage. Now I feel like MLP can be scaled as Transformer scaled in the infamous OpenAI paper. In future blogs, I will also want to try: - The effect of MultiHead Attention - Effects of Layer Normalization - Introduction of theoretical papers - Comparison with convolution, RNN, and linear state space models</p>
+<p>In this blog post, I gave an overview of what the single self-attention, a simplified version of Multihead Attention in Transformer, is doing. I also tried to train it on some simple data sets. It ended up with less than linear function performance on all tasks and honestly could not see any benefit other than memory usage. Now I feel like MLP can be scaled as Transformer scaled in the infamous OpenAI paper. In future blogs, I will also want to try:</p>
+<ul>
+<li>The effect of MultiHead Attention</li>
+<li>Effects of Layer Normalization</li>
+<li>Introduction of theoretical papers</li>
+<li>Comparison with convolution, RNN, and linear state space models</li>
+</ul>
 
 
 </section>

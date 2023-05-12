@@ -339,7 +339,13 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> v <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>これを学習させてみましょう。トークンとして、天気🌧️・☁️・☀️を考えます。この3つの記号に対し適当な埋め込みを与えて、次の日の天気を学習させてみます。一般的にTransformerで用いられる方法とは全く違いますが、なるべく簡単なネットワークで学習できるように、以下のような要素数4のベクトルを埋め込みとします。 - <span class="math inline">\(e[0]\)</span>: 天気が🌧️なら1、それ以外のときは0 - <span class="math inline">\(e[1]\)</span>: 天気が☁️なら同上 - <span class="math inline">\(e[2]\)</span>: 天気が☀️なら同上 - <span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span>(位置埋め込み)</p>
+<p>これを学習させてみましょう。トークンとして、天気🌧️・☁️・☀️を考えます。この3つの記号に対し適当な埋め込みを与えて、次の日の天気を学習させてみます。一般的にTransformerで用いられる方法とは全く違いますが、なるべく簡単なネットワークで学習できるように、以下のような要素数4のベクトルを埋め込みとします。</p>
+<ul>
+<li><span class="math inline">\(e[0]\)</span>: 天気が🌧️なら1、それ以外のときは0</li>
+<li><span class="math inline">\(e[1]\)</span>: 天気が☁️なら同上</li>
+<li><span class="math inline">\(e[2]\)</span>: 天気が☀️なら同上</li>
+<li><span class="math inline">\(e[3]\)</span>: <span class="math inline">\(t/L\)</span>(位置埋め込み)</li>
+</ul>
 <p>最大文字列長は20にします。</p>
 <div class="cell" data-tags="[]" data-execution_count="3">
 <details>
@@ -972,7 +978,14 @@ v_\textrm{attr} &amp;\leftarrow \sum_{t = 1}^T \alpha_{t'} v_{t'}
 </section>
 <section id="まとめ" class="level1">
 <h1>まとめ</h1>
-<p>このブログ記事では、Transformerの構成要素であるMultihead Attentionの簡略版であるSingle Attentionについて何をしているのか概観し、いくつか簡単なデータセットでの学習を試みました。結局全タスクで線形関数以下の性能に終わってしまい、メモリ使用量以外のメリットが見えてこなかったというのが正直なところです。MLPも例のscaling lawでスケールするんじゃないかと思えるほどです。表現力という点ではスケールはするんでしょうが。 今後のブログでは、 - MultiHeadの効果 - レイヤーを重ねる効果 - レイヤーノーマリゼーションの効果 - 理論的な論文の紹介 などもやってみようと思います。</p>
+<p>このブログ記事では、Transformerの構成要素であるMultihead Attentionの簡略版であるSingle Attentionについて何をしているのか概観し、いくつか簡単なデータセットでの学習を試みました。結局全タスクで線形関数以下の性能に終わってしまい、メモリ使用量以外のメリットが見えてこなかったというのが正直なところです。MLPも例のscaling lawでスケールするんじゃないかと思えるほどです。表現力という点ではスケールはするんでしょうが。 今後のブログでは、</p>
+<ul>
+<li>MultiHeadの効果</li>
+<li>レイヤーを重ねる効果</li>
+<li>レイヤーノーマリゼーションの効果</li>
+<li>理論的な論文の紹介</li>
+</ul>
+<p>などもやってみようと思います。</p>
 
 
 </section>
