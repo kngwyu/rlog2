@@ -4,3 +4,4 @@
 **/.virtual_documents/
 .venv/
 requirements/*.txt
+/data/

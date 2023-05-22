@@ -1,4 +1,5 @@
 -r jupyter.in
+-r nwb.in
 distrax
 equinox
 jax
