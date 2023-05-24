@@ -99,6 +99,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }
 </script>
 <script async="" src="https://hypothes.is/embed.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+<script src="https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js" crossorigin="anonymous"></script>
 
 
 <link rel="stylesheet" href="../styles.css">
@@ -182,16 +186,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><a href="https://www.nwb.org/">NWB (Neurodata Without Borders)</a> is a data format proposed to become a data standard for neurophysiology.</p>
-<div class="cell" data-tags="[]" data-execution_count="2">
+<div class="cell" data-tags="[]" data-execution_count="11">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dandi.download <span class="im">import</span> download <span class="im">as</span> dandi_download</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">"../data/neurons_detect_cognitive_boundaries"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dandi.download <span class="im">import</span> download <span class="im">as</span> dandi_download</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nwbwidgets <span class="im">import</span> nwb2widget</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pynwb</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">"../data/nwb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="8">
+<p>Let’s download data.</p>
+<div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> DATA_DIR.exists():</span>
@@ -199,29 +208,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    dandi_download(<span class="st">"DANDI:000207/0.220216.0323"</span>, output_dir<span class="op">=</span>DATA_DIR)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>PATH                                          SIZE     DONE           DONE% CHECKSUM STATUS          MESSAGE   
-000207/dandiset.yaml                                                                 done            updated   
-000207/sub-16/sub-16_ses-16_ecephys+image.nwb 2.7 MB   2.7 MB          100%    ok    done                      
-000207/sub-11/sub-11_ses-11_ecephys+image.nwb 1.4 MB   1.4 MB          100%    ok    done                      
-000207/sub-1/sub-1_ses-1_ecephys+image.nwb    5.2 MB   5.2 MB          100%    ok    done                      
-000207/sub-10/sub-10_ses-10_ecephys+image.nwb 1.5 MB   1.5 MB          100%    ok    done                      
-000207/sub-18/sub-18_ses-18_ecephys+image.nwb 3.5 MB   3.5 MB          100%    ok    done                      
-000207/sub-13/sub-13_ses-13_ecephys+image.nwb 2.2 MB   2.2 MB          100%    ok    done                      
-000207/sub-14/sub-14_ses-14_ecephys+image.nwb 2.9 MB   2.9 MB          100%    ok    done                      
-000207/sub-12/sub-12_ses-12_ecephys+image.nwb 2.5 MB   2.5 MB          100%    ok    done                      
-000207/sub-15/sub-15_ses-15_ecephys+image.nwb 4.9 MB   4.9 MB          100%    ok    done                      
-000207/sub-17/sub-17_ses-17_ecephys+image.nwb 4.3 MB   4.3 MB          100%    ok    done                      
-000207/sub-19/sub-19_ses-19_ecephys+image.nwb 1.7 MB   1.7 MB          100%    ok    done                      
-000207/sub-2/sub-2_ses-2_ecephys+image.nwb    2.9 MB   2.9 MB          100%    ok    done                      
-000207/sub-3/sub-3_ses-3_ecephys+image.nwb    2.1 MB   2.1 MB          100%    ok    done                      
-000207/sub-4/sub-4_ses-4_ecephys+image.nwb    2.1 MB   2.1 MB          100%    ok    done                      
-000207/sub-6/sub-6_ses-6_ecephys+image.nwb    1.4 MB   1.4 MB          100%    ok    done                      
-000207/sub-9/sub-9_ses-9_ecephys+image.nwb    2.0 MB   2.0 MB          100%    ok    done                      
-000207/sub-8/sub-8_ses-8_ecephys+image.nwb    3.0 MB   3.0 MB          100%    ok    done                      
-000207/sub-5/sub-5_ses-5_ecephys+image.nwb    1.8 MB   1.8 MB          100%    ok    done                      
-000207/sub-7/sub-7_ses-7_ecephys+image.nwb    2.4 MB   2.4 MB          100%    ok    done                      
-Summary:                                      50.3 MB  50.3 MB                       20 done         1 updated 
-                                                       100.00%                                                 </code></pre>
+<pre><code>PATH                                          SIZE     DONE            DONE% CHECKSUM STATUS          MESSAGE   
+000207/dandiset.yaml                                                                  done            updated   
+000207/sub-16/sub-16_ses-16_ecephys+image.nwb 2.7 MB   2.7 MB           100%    ok    done                      
+000207/sub-11/sub-11_ses-11_ecephys+image.nwb 1.4 MB   1.4 MB           100%    ok    done                      
+000207/sub-1/sub-1_ses-1_ecephys+image.nwb    5.2 MB   5.2 MB           100%    ok    done                      
+000207/sub-10/sub-10_ses-10_ecephys+image.nwb 1.5 MB   1.5 MB           100%    ok    done                      
+000207/sub-18/sub-18_ses-18_ecephys+image.nwb 3.5 MB   3.5 MB           100%    ok    done                      
+000207/sub-13/sub-13_ses-13_ecephys+image.nwb 2.2 MB   2.2 MB           100%    ok    done                      
+000207/sub-14/sub-14_ses-14_ecephys+image.nwb 2.9 MB   2.9 MB           100%    ok    done                      
+000207/sub-12/sub-12_ses-12_ecephys+image.nwb 2.5 MB   2.5 MB           100%    ok    done                      
+000207/sub-15/sub-15_ses-15_ecephys+image.nwb 4.9 MB   4.9 MB           100%    ok    done                      
+000207/sub-17/sub-17_ses-17_ecephys+image.nwb 4.3 MB   4.3 MB           100%    ok    done                      
+000207/sub-19/sub-19_ses-19_ecephys+image.nwb 1.7 MB   1.7 MB           100%    ok    done                      
+000207/sub-2/sub-2_ses-2_ecephys+image.nwb    2.9 MB   2.9 MB           100%    ok    done                      
+000207/sub-3/sub-3_ses-3_ecephys+image.nwb    2.1 MB   2.1 MB           100%    ok    done                      
+000207/sub-4/sub-4_ses-4_ecephys+image.nwb    2.1 MB   2.1 MB           100%    ok    done                      
+000207/sub-6/sub-6_ses-6_ecephys+image.nwb    1.4 MB   1.4 MB           100%    ok    done                      
+000207/sub-9/sub-9_ses-9_ecephys+image.nwb    2.0 MB   2.0 MB           100%    ok    done                      
+000207/sub-8/sub-8_ses-8_ecephys+image.nwb    3.0 MB   3.0 MB           100%    ok    done                      
+000207/sub-5/sub-5_ses-5_ecephys+image.nwb    1.8 MB   1.8 MB           100%    ok    done                      
+000207/sub-7/sub-7_ses-7_ecephys+image.nwb    2.4 MB   2.4 MB           100%    ok    done                      
+Summary:                                      50.3 MB  50.3 MB                        20 done         1 updated 
+                                                       100.00%                                                  </code></pre>
+</div>
+</div>
+<p>It looks like that the data is downloaded under <code>000207</code> directory in the data directory I specified. Let’s prepare a convenient function for reading the data.</p>
+<div class="cell" data-tags="[]" data-execution_count="14">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_nwb(session_id: <span class="bu">int</span>) <span class="op">-&gt;</span> pynwb.NWBFile:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    path <span class="op">=</span> DATA_DIR.joinpath(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"000207/sub-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">/sub-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">_ses-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">_ecephys+image.nwb"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pynwb.NWBHDF5IO(path, mode<span class="op">=</span><span class="st">"r"</span>).read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Let’s load an NWB file and show it via widget.</p>
+<div class="cell" data-tags="[]" data-execution_count="15">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>nwb2widget(load_nwb(<span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"bb391a2409134ae58fda5a0847353c6a","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
 </div>
 </div>
 
