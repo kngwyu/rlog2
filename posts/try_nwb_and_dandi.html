@@ -186,17 +186,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><a href="https://www.nwb.org/">NWB (Neurodata Without Borders)</a> is a data format proposed to become a data standard for neurophysiology.</p>
-<div class="cell" data-tags="[]" data-execution_count="11">
+<div class="cell" data-tags="[]" data-execution_count="50">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dandi.download <span class="im">import</span> download <span class="im">as</span> dandi_download</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nwbwidgets <span class="im">import</span> nwb2widget</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pynwb</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pynwb</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dandi.download <span class="im">import</span> download <span class="im">as</span> dandi_download</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nwbwidgets <span class="im">import</span> nwb2widget</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">"../data/nwb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">"../data/nwb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Let’s download data.</p>
@@ -234,26 +235,207 @@ Summary:                                      50.3 MB  50.3 MB                  
 </div>
 </div>
 <p>It looks like that the data is downloaded under <code>000207</code> directory in the data directory I specified. Let’s prepare a convenient function for reading the data.</p>
-<div class="cell" data-tags="[]" data-execution_count="14">
+<div class="cell" data-tags="[]" data-execution_count="4">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_nwb(session_id: <span class="bu">int</span>) <span class="op">-&gt;</span> pynwb.NWBFile:</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    path <span class="op">=</span> DATA_DIR.joinpath(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"000207/sub-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">/sub-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">_ses-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">_ecephys+image.nwb"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pynwb.NWBHDF5IO(path, mode<span class="op">=</span><span class="st">"r"</span>).read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Load an NWB file. session_id should be an integer from 1 to 19."""</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    path <span class="op">=</span> DATA_DIR.joinpath(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"000207/sub-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">/sub-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">_ses-</span><span class="sc">{</span>session_id<span class="sc">}</span><span class="ss">_ecephys+image.nwb"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pynwb.NWBHDF5IO(path, mode<span class="op">=</span><span class="st">"r"</span>).read()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Let’s load an NWB file and show it via widget.</p>
-<div class="cell" data-tags="[]" data-execution_count="15">
+<p>While I already roughly read the paper, I have no idea what these files contain. To help me check the data content, NWB provides a separated package called <a href="https://nwb-overview.readthedocs.io/en/latest/tools/nwbwidgets/nwbwidgets.html">nwbwidgets</a> that creates an interactive <a href="https://ipywidgets.readthedocs.io/en/stable/">Jupyter Widgets</a>. Let’s load a data and visualize it.</p>
+<div class="cell" data-tags="[]" data-execution_count="56">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>nwb2widget(load_nwb(<span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>nwb2widget(nwb10)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="15">
+<div class="cell-output cell-output-stderr">
+<pre><code>/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
+  warn(error_msg)
+/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
+  warn(error_msg)</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="56">
 <script type="application/vnd.jupyter.widget-view+json">
-{"model_id":"bb391a2409134ae58fda5a0847353c6a","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+{"model_id":"9d13011caf6547b59121913ef4f4c298","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
 </script>
+</div>
+</div>
+<p>It didn’t helped me understand the data much…, but at least, I now know that <code>units/Session Raster</code> shows me a raster plot of the spiking data. So I guess that the actual spiking data is under <code>units</code>.</p>
+<div class="cell" data-tags="[]" data-execution_count="5">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
+  warn(error_msg)
+/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
+  warn(error_msg)</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="10">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>nwb10.stimulus</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>{'StimulusPresentation_encoding': StimulusPresentation_encoding pynwb.image.OpticalSeries at 0x140040236018640
+ Fields:
+   comments: no comments
+   conversion: 1.0
+   data: &lt;HDF5 dataset "data": shape (2, 2, 2), type "&lt;f8"&gt;
+   description: no description
+   dimension: &lt;HDF5 dataset "dimension": shape (3,), type "&lt;i4"&gt;
+   distance: 0.7
+   external_file: &lt;HDF5 dataset "external_file": shape (90,), type "|O"&gt;
+   field_of_view: &lt;HDF5 dataset "field_of_view": shape (3,), type "&lt;f8"&gt;
+   format: external
+   interval: 1
+   offset: 0.0
+   orientation: lower left
+   resolution: -1.0
+   starting_frame: [0]
+   timestamps: &lt;HDF5 dataset "timestamps": shape (90,), type "&lt;f8"&gt;
+   timestamps_unit: seconds
+   unit: meters}</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="14">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>nwb10.stimulus[<span class="st">"StimulusPresentation_encoding"</span>].data[:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>array([[[nan, nan],
+        [nan, nan]],
+
+       [[nan, nan],
+        [nan, nan]]])</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="20">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>nwb10.electrode_groups[<span class="st">"NLX-microwires-137"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<pre><code>NLX-microwires-137 pynwb.ecephys.ElectrodeGroup at 0x140040256734864
+Fields:
+  description: Microwire
+  device: NLX-microwires-137 pynwb.device.Device at 0x140040248428240
+Fields:
+  description: Recordings were performed with Macro-Micro Hybrid Depth Electrodes with Behnke Fried/Micro Inner Wire Bundle in which each individual microwire has a diameter of 40 microns. Likwise, each Depth Electrode has 8 microwires.
+
+  location: hippocampus_left</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="23">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>nwb10.acquisition[<span class="st">"events"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<pre><code>events pynwb.base.TimeSeries at 0x140040248427088
+Fields:
+  comments: no comments
+  conversion: 1.0
+  data: &lt;HDF5 dataset "data": shape (1720,), type "|i1"&gt;
+  description: The events coorespond to the TTL markers for each trial. For the encoding trials, the TTL markers are the following: 61 = start of the experiment, 1 = stimulus ON, 2 = stimulus OFF, 11 = Fix Cross, 3 = Probe, 4 = Response, 60 = End of Experiment
+  interval: 1
+  offset: 0.0
+  resolution: -1.0
+  timestamps: &lt;HDF5 dataset "timestamps": shape (1720,), type "&lt;f8"&gt;
+  timestamps_unit: seconds
+  unit: NA</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="36">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>nwb10.units.spike_times.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="36">
+<pre><code>(140083,)</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="45">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="45">
+<pre><code>encoding_table pynwb.epoch.TimeIntervals at 0x140040235456336
+Fields:
+  colnames: ['start_time' 'stop_time' 'fixcross_time' 'ExperimentID' 'boundary1_time'
+ 'boundary2_time' 'boundary3_time' 'stimCategory' 'Clip_name']
+  columns: (
+    start_time &lt;class 'hdmf.common.table.VectorData'&gt;,
+    stop_time &lt;class 'hdmf.common.table.VectorData'&gt;,
+    fixcross_time &lt;class 'hdmf.common.table.VectorData'&gt;,
+    ExperimentID &lt;class 'hdmf.common.table.VectorData'&gt;,
+    boundary1_time &lt;class 'hdmf.common.table.VectorData'&gt;,
+    boundary2_time &lt;class 'hdmf.common.table.VectorData'&gt;,
+    boundary3_time &lt;class 'hdmf.common.table.VectorData'&gt;,
+    stimCategory &lt;class 'hdmf.common.table.VectorData'&gt;,
+    Clip_name &lt;class 'hdmf.common.table.VectorData'&gt;
+  )
+  description: intervals for the encoding task
+  id: id &lt;class 'hdmf.common.table.ElementIdentifiers'&gt;</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="53">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>].start_time[:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="53">
+<pre><code>array([  1.1404295 ,  10.3158655 ,  19.339164  ,  28.46748775,
+        37.1526995 ,  45.7848485 ,  63.089899  ,  72.43824325,
+        81.59445025,  90.73273125, 100.12601775, 109.18814375,
+       117.742145  , 130.40028475, 139.3834105 , 148.41635425,
+       157.401228  , 166.6578065 , 175.64558475, 190.36648875,
+       199.416104  , 208.399781  , 217.6347525 , 226.47758275,
+       240.78742875, 249.87464425, 259.25654825, 268.48181725,
+       277.56536225, 286.59772075, 297.8551905 , 306.9603105 ,
+       316.18439125, 324.778364  , 334.02651475, 343.16366225,
+       351.05137575, 361.909297  , 370.9656565 , 379.90795275,
+       388.7606235 , 397.03696475, 415.75064375, 425.3681415 ,
+       434.79651175, 443.99076425, 453.228418  , 467.71653775,
+       476.6149805 , 485.5766605 , 494.54777925, 503.621363  ,
+       511.8541325 , 521.16817025, 536.9280785 , 546.0343685 ,
+       554.89148425, 564.18862   , 573.25371625, 582.3744625 ,
+       591.3386365 , 605.2981825 , 614.2894705 , 623.66966825,
+       632.621469  , 641.6453365 , 651.1447835 , 660.21841825,
+       679.7478625 , 688.7830155 , 697.89276725, 706.878304  ,
+       715.039039  , 723.9574    , 737.83691   , 746.84736975,
+       755.908475  , 765.0490425 , 774.279795  , 788.832249  ,
+       797.8880235 , 806.81638   , 815.94920675, 824.81630175,
+       838.13403725, 846.74845825, 855.729199  , 864.8038085 ,
+       874.01746025, 883.893121  ])</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="54">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>nwb10.units</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="54">
+<pre><code>units pynwb.misc.Units at 0x140040234099600
+Fields:
+  colnames: ['spike_times' 'electrodes']
+  columns: (
+    spike_times_index &lt;class 'hdmf.common.table.VectorIndex'&gt;,
+    spike_times &lt;class 'hdmf.common.table.VectorData'&gt;,
+    electrodes &lt;class 'hdmf.common.table.DynamicTableRegion'&gt;
+  )
+  description: units table
+  id: id &lt;class 'hdmf.common.table.ElementIdentifiers'&gt;
+  waveform_unit: volts</code></pre>
 </div>
 </div>
 
