@@ -1,4 +1,4 @@
 dandi
 nwbwidgets
 scipy
-pynwb
+pynwb >= 2.3
