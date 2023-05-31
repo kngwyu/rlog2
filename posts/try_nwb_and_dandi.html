@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.3.361">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -90,7 +90,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 <script type="application/json" class="js-hypothesis-config">
@@ -186,7 +187,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><a href="https://www.nwb.org/">NWB (Neurodata Without Borders)</a> is a data format proposed to become a data standard for neurophysiology.</p>
-<div class="cell" data-tags="[]" data-execution_count="50">
+<div class="cell" data-tags="[]" data-execution_count="1">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
@@ -235,7 +236,7 @@ Summary:                                      50.3 MB  50.3 MB                  
 </div>
 </div>
 <p>It looks like that the data is downloaded under <code>000207</code> directory in the data directory I specified. Let’s prepare a convenient function for reading the data.</p>
-<div class="cell" data-tags="[]" data-execution_count="4">
+<div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_nwb(session_id: <span class="bu">int</span>) <span class="op">-&gt;</span> pynwb.NWBFile:</span>
@@ -247,44 +248,38 @@ Summary:                                      50.3 MB  50.3 MB                  
 </details>
 </div>
 <p>While I already roughly read the paper, I have no idea what these files contain. To help me check the data content, NWB provides a separated package called <a href="https://nwb-overview.readthedocs.io/en/latest/tools/nwbwidgets/nwbwidgets.html">nwbwidgets</a> that creates an interactive <a href="https://ipywidgets.readthedocs.io/en/stable/">Jupyter Widgets</a>. Let’s load a data and visualize it.</p>
-<div class="cell" data-tags="[]" data-execution_count="56">
+<div class="cell" data-tags="[]" data-execution_count="3">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>nwb2widget(nwb10)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stderr">
-<pre><code>/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
+<pre><code>/home/yu/Documents/rlog2/.venv/lib/python3.10/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
   warn(error_msg)
-/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
+/home/yu/Documents/rlog2/.venv/lib/python3.10/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
   warn(error_msg)</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="56">
+<div class="cell-output cell-output-display" data-execution_count="3">
 <script type="application/vnd.jupyter.widget-view+json">
-{"model_id":"9d13011caf6547b59121913ef4f4c298","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+{"model_id":"74292327e2344a5499b07c8bad50bfc4","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
 </script>
 </div>
 </div>
 <p>It didn’t helped me understand the data much…, but at least, I now know that <code>units/Session Raster</code> shows me a raster plot of the spiking data. So I guess that the actual spiking data is under <code>units</code>.</p>
-<div class="cell" data-tags="[]" data-execution_count="5">
+<div class="cell" data-tags="[]" data-execution_count="4">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-stderr">
-<pre><code>/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
-  warn(error_msg)
-/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
-  warn(error_msg)</code></pre>
 </div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="10">
+<div class="cell" data-tags="[]" data-execution_count="5">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>nwb10.stimulus</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>nwb10.stimulus</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="10">
-<pre><code>{'StimulusPresentation_encoding': StimulusPresentation_encoding pynwb.image.OpticalSeries at 0x140040236018640
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>{'StimulusPresentation_encoding': StimulusPresentation_encoding pynwb.image.OpticalSeries at 0x140540062821696
  Fields:
    comments: no comments
    conversion: 1.0
@@ -305,23 +300,10 @@ Summary:                                      50.3 MB  50.3 MB                  
    unit: meters}</code></pre>
 </div>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="14">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>nwb10.stimulus[<span class="st">"StimulusPresentation_encoding"</span>].data[:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="14">
-<pre><code>array([[[nan, nan],
-        [nan, nan]],
-
-       [[nan, nan],
-        [nan, nan]]])</code></pre>
-</div>
-</div>
 <div class="cell" data-tags="[]" data-execution_count="20">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>nwb10.electrode_groups[<span class="st">"NLX-microwires-137"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>nwb10.electrode_groups[<span class="st">"NLX-microwires-137"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="20">
 <pre><code>NLX-microwires-137 pynwb.ecephys.ElectrodeGroup at 0x140040256734864
@@ -337,7 +319,7 @@ Fields:
 <div class="cell" data-tags="[]" data-execution_count="23">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>nwb10.acquisition[<span class="st">"events"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>nwb10.acquisition[<span class="st">"events"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="23">
 <pre><code>events pynwb.base.TimeSeries at 0x140040248427088
@@ -357,7 +339,7 @@ Fields:
 <div class="cell" data-tags="[]" data-execution_count="36">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>nwb10.units.spike_times.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nwb10.units.spike_times.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="36">
 <pre><code>(140083,)</code></pre>
@@ -366,7 +348,7 @@ Fields:
 <div class="cell" data-tags="[]" data-execution_count="45">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="45">
 <pre><code>encoding_table pynwb.epoch.TimeIntervals at 0x140040235456336
@@ -391,7 +373,7 @@ Fields:
 <div class="cell" data-tags="[]" data-execution_count="53">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>].start_time[:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>].start_time[:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="53">
 <pre><code>array([  1.1404295 ,  10.3158655 ,  19.339164  ,  28.46748775,
@@ -422,7 +404,7 @@ Fields:
 <div class="cell" data-tags="[]" data-execution_count="54">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>nwb10.units</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>nwb10.units</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="54">
 <pre><code>units pynwb.misc.Units at 0x140040234099600
