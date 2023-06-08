@@ -178,7 +178,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#download-the-data" id="toc-download-the-data" class="nav-link active" data-scroll-target="#download-the-data">Download the data</a></li>
+  <li><a href="#visualize-the-spikes" id="toc-visualize-the-spikes" class="nav-link" data-scroll-target="#visualize-the-spikes">Visualize the spikes</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
@@ -186,8 +193,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p><a href="https://www.nwb.org/">NWB (Neurodata Without Borders)</a> is a data format proposed to become a data standard for neurophysiology.</p>
-<div class="cell" data-tags="[]" data-execution_count="1">
+<p><a href="https://www.nwb.org/">NWB (Neurodata Without Borders)</a> is a data format proposed to become a data standard for neurophysiology. In this blog post, I’ll try to use it and demonstorate how to load the data and to work on the data.</p>
+<section id="download-the-data" class="level1">
+<h1>Download the data</h1>
+<p>Here, I try to download the data used in the paper titled <a href="https://www.nature.com/articles/s41593-022-01020-w">Neurons detect cognitive boundaries to structure episodic memories in humans</a>. I didn’t have the strong reason to choose it… I just thought human data is more familiar to me than some other animal data. In this paper, the authors say:</p>
+<blockquote class="blockquote">
+<p>We recorded single-neuron activity from individuals with drug-resistant epilepsy implanted with depth electrodes while testing their memory for the content of video clips with two kinds of embedded cognitive boundaries: soft boundaries (SBs) and hard boundaries (HBs). SBs are episodic transitions between related events within the same movie, while HBs are episodic transitions between two unrelated movies.</p>
+</blockquote>
+<p>So their participants are already implanted with electrodes, and they measured participant’s neural activity during watching some videos they provided. The group of video clips have two categories: soft and hard boundary. The video set with soft boundary has video clips only from the same movie, and the video set with hard boundary has video clips from several random movies. I don’t know how these setups matter, but let’s see the data. We can find lots of open NWB data (319 now) on <a href="https://dandiarchive.org/">dandi archive</a>. We can download dandi data from the <a href="https://dandiarchive.org/dandiset/000207/">web page</a> directly or using the <a href="https://dandi.readthedocs.io/en/latest/">CLI</a> that you can download from PyPI. Here I use the Python API packed with the CLU instead, because this post is entirely written on a Jupyter notebook…</p>
+<div class="cell" data-tags="[]" data-execution_count="16">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
@@ -195,8 +209,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pynwb</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dandi.download <span class="im">import</span> download <span class="im">as</span> dandi_download</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nwbwidgets <span class="im">import</span> nwb2widget</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nwbwidgets <span class="im">import</span> nwb2widget</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">"../data/nwb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -235,8 +249,8 @@ Summary:                                      50.3 MB  50.3 MB                  
                                                        100.00%                                                  </code></pre>
 </div>
 </div>
-<p>It looks like that the data is downloaded under <code>000207</code> directory in the data directory I specified. Let’s prepare a convenient function for reading the data.</p>
-<div class="cell" data-tags="[]" data-execution_count="2">
+<p>It looks like that the data is downloaded under <code>000207</code> directory in the data directory I specified, and there are 19 subdirectories for each participant. Let’s prepare a convenient function for reading the data.</p>
+<div class="cell" data-tags="[]" data-execution_count="3">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_nwb(session_id: <span class="bu">int</span>) <span class="op">-&gt;</span> pynwb.NWBFile:</span>
@@ -248,166 +262,33 @@ Summary:                                      50.3 MB  50.3 MB                  
 </details>
 </div>
 <p>While I already roughly read the paper, I have no idea what these files contain. To help me check the data content, NWB provides a separated package called <a href="https://nwb-overview.readthedocs.io/en/latest/tools/nwbwidgets/nwbwidgets.html">nwbwidgets</a> that creates an interactive <a href="https://ipywidgets.readthedocs.io/en/stable/">Jupyter Widgets</a>. Let’s load a data and visualize it.</p>
-<div class="cell" data-tags="[]" data-execution_count="3">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>nwb2widget(nwb10)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stderr">
-<pre><code>/home/yu/Documents/rlog2/.venv/lib/python3.10/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
-  warn(error_msg)
-/home/yu/Documents/rlog2/.venv/lib/python3.10/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
-  warn(error_msg)</code></pre>
-</div>
-<div class="cell-output cell-output-display" data-execution_count="3">
-<script type="application/vnd.jupyter.widget-view+json">
-{"model_id":"74292327e2344a5499b07c8bad50bfc4","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
-</script>
-</div>
-</div>
-<p>It didn’t helped me understand the data much…, but at least, I now know that <code>units/Session Raster</code> shows me a raster plot of the spiking data. So I guess that the actual spiking data is under <code>units</code>.</p>
 <div class="cell" data-tags="[]" data-execution_count="4">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>matplotlib widget</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>nwb10 <span class="op">=</span> load_nwb(<span class="dv">10</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>nwb2widget(nwb10)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': The number of frame indices in 'starting_frame' should have the same length as 'external_file'.
+  warn(error_msg)
+/home/yuji/Documents/rlog2/.venv/lib/python3.11/site-packages/pynwb/core.py:47: UserWarning: OpticalSeries 'StimulusPresentation_encoding': Either external_file or data must be specified (not None), but not both.
+  warn(error_msg)</code></pre>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="5">
+<div class="cell-output cell-output-display" data-execution_count="4">
+<script type="application/vnd.jupyter.widget-view+json">
+{"model_id":"3ee0189be3cf4931bb4e8b8dd7b9f35c","version_major":2,"version_minor":0,"quarto_mimetype":"application/vnd.jupyter.widget-view+json"}
+</script>
+</div>
+</div>
+<p>It didn’t helped me understand the data much…, but at least, I now know that <code>units/Session Raster</code> shows me a raster plot of the spiking data. So, how can I analyze these data? And, how can I get the raw array of spikes? Let’s just print out the <code>units</code>.</p>
+<div class="cell" data-tags="[]" data-execution_count="6">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>nwb10.stimulus</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>nwb10.units</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="5">
-<pre><code>{'StimulusPresentation_encoding': StimulusPresentation_encoding pynwb.image.OpticalSeries at 0x140540062821696
- Fields:
-   comments: no comments
-   conversion: 1.0
-   data: &lt;HDF5 dataset "data": shape (2, 2, 2), type "&lt;f8"&gt;
-   description: no description
-   dimension: &lt;HDF5 dataset "dimension": shape (3,), type "&lt;i4"&gt;
-   distance: 0.7
-   external_file: &lt;HDF5 dataset "external_file": shape (90,), type "|O"&gt;
-   field_of_view: &lt;HDF5 dataset "field_of_view": shape (3,), type "&lt;f8"&gt;
-   format: external
-   interval: 1
-   offset: 0.0
-   orientation: lower left
-   resolution: -1.0
-   starting_frame: [0]
-   timestamps: &lt;HDF5 dataset "timestamps": shape (90,), type "&lt;f8"&gt;
-   timestamps_unit: seconds
-   unit: meters}</code></pre>
-</div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="20">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>nwb10.electrode_groups[<span class="st">"NLX-microwires-137"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="20">
-<pre><code>NLX-microwires-137 pynwb.ecephys.ElectrodeGroup at 0x140040256734864
-Fields:
-  description: Microwire
-  device: NLX-microwires-137 pynwb.device.Device at 0x140040248428240
-Fields:
-  description: Recordings were performed with Macro-Micro Hybrid Depth Electrodes with Behnke Fried/Micro Inner Wire Bundle in which each individual microwire has a diameter of 40 microns. Likwise, each Depth Electrode has 8 microwires.
-
-  location: hippocampus_left</code></pre>
-</div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="23">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>nwb10.acquisition[<span class="st">"events"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="23">
-<pre><code>events pynwb.base.TimeSeries at 0x140040248427088
-Fields:
-  comments: no comments
-  conversion: 1.0
-  data: &lt;HDF5 dataset "data": shape (1720,), type "|i1"&gt;
-  description: The events coorespond to the TTL markers for each trial. For the encoding trials, the TTL markers are the following: 61 = start of the experiment, 1 = stimulus ON, 2 = stimulus OFF, 11 = Fix Cross, 3 = Probe, 4 = Response, 60 = End of Experiment
-  interval: 1
-  offset: 0.0
-  resolution: -1.0
-  timestamps: &lt;HDF5 dataset "timestamps": shape (1720,), type "&lt;f8"&gt;
-  timestamps_unit: seconds
-  unit: NA</code></pre>
-</div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="36">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>nwb10.units.spike_times.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="36">
-<pre><code>(140083,)</code></pre>
-</div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="45">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="45">
-<pre><code>encoding_table pynwb.epoch.TimeIntervals at 0x140040235456336
-Fields:
-  colnames: ['start_time' 'stop_time' 'fixcross_time' 'ExperimentID' 'boundary1_time'
- 'boundary2_time' 'boundary3_time' 'stimCategory' 'Clip_name']
-  columns: (
-    start_time &lt;class 'hdmf.common.table.VectorData'&gt;,
-    stop_time &lt;class 'hdmf.common.table.VectorData'&gt;,
-    fixcross_time &lt;class 'hdmf.common.table.VectorData'&gt;,
-    ExperimentID &lt;class 'hdmf.common.table.VectorData'&gt;,
-    boundary1_time &lt;class 'hdmf.common.table.VectorData'&gt;,
-    boundary2_time &lt;class 'hdmf.common.table.VectorData'&gt;,
-    boundary3_time &lt;class 'hdmf.common.table.VectorData'&gt;,
-    stimCategory &lt;class 'hdmf.common.table.VectorData'&gt;,
-    Clip_name &lt;class 'hdmf.common.table.VectorData'&gt;
-  )
-  description: intervals for the encoding task
-  id: id &lt;class 'hdmf.common.table.ElementIdentifiers'&gt;</code></pre>
-</div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="53">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>nwb10.intervals[<span class="st">"encoding_table"</span>].start_time[:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="53">
-<pre><code>array([  1.1404295 ,  10.3158655 ,  19.339164  ,  28.46748775,
-        37.1526995 ,  45.7848485 ,  63.089899  ,  72.43824325,
-        81.59445025,  90.73273125, 100.12601775, 109.18814375,
-       117.742145  , 130.40028475, 139.3834105 , 148.41635425,
-       157.401228  , 166.6578065 , 175.64558475, 190.36648875,
-       199.416104  , 208.399781  , 217.6347525 , 226.47758275,
-       240.78742875, 249.87464425, 259.25654825, 268.48181725,
-       277.56536225, 286.59772075, 297.8551905 , 306.9603105 ,
-       316.18439125, 324.778364  , 334.02651475, 343.16366225,
-       351.05137575, 361.909297  , 370.9656565 , 379.90795275,
-       388.7606235 , 397.03696475, 415.75064375, 425.3681415 ,
-       434.79651175, 443.99076425, 453.228418  , 467.71653775,
-       476.6149805 , 485.5766605 , 494.54777925, 503.621363  ,
-       511.8541325 , 521.16817025, 536.9280785 , 546.0343685 ,
-       554.89148425, 564.18862   , 573.25371625, 582.3744625 ,
-       591.3386365 , 605.2981825 , 614.2894705 , 623.66966825,
-       632.621469  , 641.6453365 , 651.1447835 , 660.21841825,
-       679.7478625 , 688.7830155 , 697.89276725, 706.878304  ,
-       715.039039  , 723.9574    , 737.83691   , 746.84736975,
-       755.908475  , 765.0490425 , 774.279795  , 788.832249  ,
-       797.8880235 , 806.81638   , 815.94920675, 824.81630175,
-       838.13403725, 846.74845825, 855.729199  , 864.8038085 ,
-       874.01746025, 883.893121  ])</code></pre>
-</div>
-</div>
-<div class="cell" data-tags="[]" data-execution_count="54">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>nwb10.units</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="54">
-<pre><code>units pynwb.misc.Units at 0x140040234099600
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>units pynwb.misc.Units at 0x140382092456016
 Fields:
   colnames: ['spike_times' 'electrodes']
   columns: (
@@ -420,8 +301,67 @@ Fields:
   waveform_unit: volts</code></pre>
 </div>
 </div>
+<p>I found that it is an instance of <a href="https://pynwb.readthedocs.io/en/stable/pynwb.misc.html"><code>Units</code></a> class, which represents event times of observed units. It provides us a convenient method <code>get_unit_spike_times(unit: int | Sequence[int])</code>, which returns a <code>NumPy</code> array represents the spike timing of given a unit of units.</p>
+<div class="cell" data-tags="[]" data-execution_count="11">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>nwb10.units.get_unit_spike_times(<span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<pre><code>array([6.57545000e-02, 2.23144750e-01, 6.55594500e-01, ...,
+       2.88324675e+03, 2.88364036e+03, 2.88391571e+03])</code></pre>
+</div>
+</div>
+<p>Or, we can just access contents by <code>units["spike_times"][unit]</code>.</p>
+</section>
+<section id="visualize-the-spikes" class="level1">
+<h1>Visualize the spikes</h1>
+<p>I found a nice example of plotting it in the <a href="https://pynwb.readthedocs.io/en/stable/tutorials/general/read_basics.html#visualize-spiking-activity-relative-to-stimulus-onset">pynwb document</a></p>
+<div class="cell" data-tags="[]" data-execution_count="15">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>before <span class="op">=</span> <span class="fl">1.0</span>  <span class="co"># in seconds</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>after <span class="op">=</span> <span class="fl">3.0</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_spikes(units: <span class="bu">list</span>[<span class="bu">int</span>]) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> unit <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3</span>):</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        unit_spike_times <span class="op">=</span> nwbfile.units[<span class="st">"spike_times"</span>][unit]</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        trial_spikes <span class="op">=</span> []</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> time <span class="kw">in</span> stim_on_times:</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Compute spike times relative to stimulus onset</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>            aligned_spikes <span class="op">=</span> unit_spike_times <span class="op">-</span> time</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Keep only spike times in a given time window around the stimulus onset</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>            aligned_spikes <span class="op">=</span> aligned_spikes[</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>                (<span class="op">-</span>before <span class="op">&lt;</span> aligned_spikes) <span class="op">&amp;</span> (aligned_spikes <span class="op">&lt;</span> after)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>            trial_spikes.append(aligned_spikes)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">1</span>, sharex<span class="op">=</span><span class="st">"all"</span>)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>        plt.xlabel(<span class="st">"time (s)"</span>)</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>        axs[<span class="dv">0</span>].eventplot(trial_spikes)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>        axs[<span class="dv">0</span>].set_ylabel(<span class="st">"trial"</span>)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>        axs[<span class="dv">0</span>].set_title(<span class="st">"unit </span><span class="sc">{}</span><span class="st">"</span>.<span class="bu">format</span>(unit))</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>        axs[<span class="dv">0</span>].axvline(<span class="dv">0</span>, color<span class="op">=</span>[<span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>])</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>        axs[<span class="dv">1</span>].hist(np.hstack(trial_spikes), <span class="dv">30</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<pre><code>(27,)</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="18">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>nwb10.units[<span class="st">"spike_times"</span>][<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<pre><code>array([6.57545000e-02, 2.23144750e-01, 6.55594500e-01, ...,
+       2.88324675e+03, 2.88364036e+03, 2.88391571e+03])</code></pre>
+</div>
+</div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
