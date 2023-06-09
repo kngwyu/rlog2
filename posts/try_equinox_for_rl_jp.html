@@ -183,6 +183,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#jaxにできることとできないこと" id="toc-jaxにできることとできないこと" class="nav-link active" data-scroll-target="#jaxにできることとできないこと">Jaxにできることとできないこと</a></li>
   <li><a href="#init-applyアプローチによるパラメタ管理" id="toc-init-applyアプローチによるパラメタ管理" class="nav-link" data-scroll-target="#init-applyアプローチによるパラメタ管理">init-applyアプローチによるパラメタ管理</a></li>
+  <li><a href="#equinoxの特徴" id="toc-equinoxの特徴" class="nav-link" data-scroll-target="#equinoxの特徴">equinoxの特徴</a></li>
   </ul>
 </nav>
     </div>
@@ -200,7 +201,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>JAX is Autograd and XLA, brought together for high-performance numerical computing.</p>
 </blockquote>
 <p><a href="https://www.tensorflow.org/xla">XLA</a>というのは、Tensorflowのバックエンドとして開発された深層学習用の中間言語で、CPU/GPU用に数値計算コードを最適化してくれます。Jaxは、numpyライクなシンタックスのコードをXLAに変換することで、「numpyコードを高速にjitコンパイルすること」を可能にしています。では、Autogradというのはなんでしょうか？これは、jaxの開発者が以前に開発していたライブラリの名前でもありますが、自動微分全般のことを指すと考えていいでしょう。自分で勾配逆伝播のコードを書かなくても、jaxでは損失関数の各パラメタにおいての偏微分を勝手に計算してくれます。試しに、<span class="math inline">\(f(x, y) = x^2 + y\)</span>の偏微分を計算してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="10">
+<div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
@@ -213,7 +214,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> jnp.array([<span class="dv">5</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">2</span>], dtype<span class="op">=</span>jnp.float32)</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>jax.grad(f, argnums<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">1</span>))(x, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="10">
+<div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>(Array([ 6.,  8., 10., 12., 14.], dtype=float32),
  Array([1., 1., 1., 1., 1.], dtype=float32))</code></pre>
 </div>
@@ -223,7 +224,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="init-applyアプローチによるパラメタ管理" class="level1">
 <h1>init-applyアプローチによるパラメタ管理</h1>
 <p>stax, haiku, flaxでは、この「パラメタ管理の問題」を、「init-applyアプローチ」により解決しています。このアプローチは以下のようにまとめられます。 1. モデルはパラメータを持たない 2. モデルは<code>init</code>と<code>apply</code>の2つの関数を持つ - <code>init</code>は、入力例を受け取ってパラメタを初期化し、最初のパラメータを返す - <code>apply</code>は、入力とパラメタを受け取り、モデルの計算結果を返す</p>
-<p>なので、flaxやhaikuのAPIは以下のような感じになります。flaxでは<code>__call__</code>を使うがhaikuはPyTorchと同じ<code>forward</code>を使う、<code>flax</code>のModuleは <a href="https://docs.python.org/ja/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a>デコレータにより定義されたクラスと同じような性質を持つなどの違いがありますが、まあそれくらいで、大して違いはないです。以下僕がflaxとhaikuの間をとって書いた適当な疑似コードです</p>
+<p>なので、flaxやhaikuのAPIは以下のような感じになります。flaxでは<code>__call__</code>を使うがhaikuはPyTorchと同じ<code>forward</code>を使う、<code>flax</code>のModuleは <a href="https://docs.python.org/ja/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a>デコレータにより定義されたクラスと同じような性質を持つなどの違いがありますが、まあそれくらいで、大して違いはないです。以下僕がflaxとhaikuの間をとって書いた適当な疑似コードです。</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(Module):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> x.shape[<span class="dv">0</span>]</span>
@@ -240,12 +241,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Linear/~/b"</span>: [...],</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>stax</code>はただのreference implementationなのでこのような機能がなく、かわりに、数のレイヤーを組み合わせるコンビネーターを提供しています。ではこのアプローチにはどのようなメリット、デメリットがあるでしょうか。</p>
-<div class="cell">
+<p><strong>メリット</strong> - Moduleを初期化する際に入力されるArrayのshapeを指定しなくていい - Moduleの定義は<code>init</code>と<code>apply</code>という2つの関数を定義するだけで、パラメタは<code>init</code>が呼ばれた際に初期化されるため。 - 関数とデータを分離できる - Moduleは変更可能な変数を持たず、パラメタと完全に別に扱われるので、見通しがよくなる - <code>init</code>、<code>apply</code>に<code>jit</code>や<code>vmap</code>などの関数デコレータを適用するコードが自然に書ける</p>
+<p><strong>デメリット</strong> - Moduleは冗長 - Moduleは「出力の次元」などの「モデルに関する設定」を持っているだけ - これらは<code>Config</code>など専用のクラスで管理されることが多く、<code>Config</code>と<code>Module</code>を両方持つのは冗長 - パラメタの要素のアクセスに型検査をするのが難しい - 例えばhaikuなら<code>params["Linear/~/w"]</code>のようにしてパラメタの各要素にアクセスするが、これは<code>pyright</code>や<code>mypy</code>のような静的型検査ツールにより検査されないので、実行時エラーを起こしやすい - あまりオブジェクト指向的ではない - (特にflax, haiku)仕組みがわかりにくい</p>
+<p>こんなところでしょうか。</p>
+</section>
+<section id="equinoxの特徴" class="level1">
+<h1>equinoxの特徴</h1>
+<p>equinoxの特徴は、init-applyアプローチと異なり、「よりオブジェクト指向的な」（または、PyTorchに近い）インターフェースを志向している点にあります。 ドキュメントのトップページにある<a href="https://docs.kidger.site/equinox/#quick-example">Quick example</a>を見てみましょう。</p>
+<div class="cell" data-execution_count="63">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(eqx.Module):</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    weight: jax.Array</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    bias: jax.Array</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, in_size, out_size, key):</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        wkey, bkey <span class="op">=</span> jax.random.split(key)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.weight <span class="op">=</span> jax.random.normal(wkey, (out_size, in_size))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.bias <span class="op">=</span> jax.random.normal(bkey, (out_size,))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x):</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.weight <span class="op">@</span> x <span class="op">+</span> <span class="va">self</span>.bias</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.jit</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">@jax.grad</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss_fn(model, x, y):</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    pred_y <span class="op">=</span> jax.vmap(model)(x)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jax.numpy.mean((y <span class="op">-</span> pred_y) <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>batch_size, in_size, out_size <span class="op">=</span> <span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">3</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> Linear(in_size, out_size, key<span class="op">=</span>jax.random.PRNGKey(<span class="dv">0</span>))</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> jax.numpy.zeros((batch_size, in_size))</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> jax.numpy.zeros((batch_size, out_size))</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>grads <span class="op">=</span> loss_fn(model, x, y)</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Model weight?"</span>, model.weight)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Grad?"</span>, grads)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Model weight? [[0.59902626 0.2172144 ]
+ [0.660603   0.03266738]
+ [1.2164948  1.1940813 ]]
+Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 </div>
+</div>
+<p>ここで、equinoxが他の「</p>
 
 
 </section>
