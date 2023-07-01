@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.361">
+<meta name="generator" content="quarto-1.3.433">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -184,6 +184,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#jaxにできることとできないこと" id="toc-jaxにできることとできないこと" class="nav-link active" data-scroll-target="#jaxにできることとできないこと">Jaxにできることとできないこと</a></li>
   <li><a href="#init-applyアプローチによるパラメタ管理" id="toc-init-applyアプローチによるパラメタ管理" class="nav-link" data-scroll-target="#init-applyアプローチによるパラメタ管理">init-applyアプローチによるパラメタ管理</a></li>
   <li><a href="#equinoxの特徴" id="toc-equinoxの特徴" class="nav-link" data-scroll-target="#equinoxの特徴">equinoxの特徴</a></li>
+  <li><a href="#強化学習してみる" id="toc-強化学習してみる" class="nav-link" data-scroll-target="#強化学習してみる">強化学習してみる</a></li>
+  <li><a href="#dqnを試してみる" id="toc-dqnを試してみる" class="nav-link" data-scroll-target="#dqnを試してみる">DQNを試してみる</a></li>
   </ul>
 </nav>
     </div>
@@ -193,14 +195,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>最近<a href="https://docs.kidger.site/equinox/">equinox</a>という<a href="https://jax.readthedocs.io/en/latest/">jax</a>ベースの深層学習モデルを定義するライブラリを使ってみたのですが、これが中々いいと思ったので紹介ついでに強化学習してみます。他のjaxベースのライブラリにはDeepmindの<a href="">haiku</a>やGoogle Researchの<a href="">flax</a>があります。この2つは兄弟みたいなもので、実際のところあまり変わりはありません。というのも、jaxには試験的に書かれた<a href="https://jax.readthedocs.io/en/latest/jax.example_libraries.stax.html">stax</a>というモデル定義用ライブラリがあり、haikuもflaxもstaxをベースにしているからです。equinoxのドキュメントにある<a href="https://docs.kidger.site/equinox/examples/init_apply/">Compatibility with init-apply libraries</a>というページでは、これらのライブラリのやり方を「init-applyアプローチ」と呼んで軽く説明しているのですが、僕もこれについて簡単な説明を試みてみます。</p>
+<p>最近<a href="https://docs.kidger.site/equinox/">equinox</a>という<a href="https://jax.readthedocs.io/en/latest/">jax</a>ベースの深層学習モデルを定義するライブラリを使ってみたのですが、これが中々いいと思ったので紹介ついでに強化学習してみます。他のjaxベースのライブラリにはDeepmindの<a href="">haiku</a>やGoogle Researchの<a href="">flax</a>があります。この2つのライブラリは実際のところあまり変わりはありません。というのも、jaxには試験的に書かれた<a href="https://jax.readthedocs.io/en/latest/jax.example_libraries.stax.html">stax</a>という深層学習ライブラリのリファレンス実装があり、haikuもflaxもstaxをベースにオブジェクト志向的な<code>Module</code>を採用したものだからです。あるいは、haikuやflaxは「staxをPyTorchっぽくしたもの」と言ってもいいかもしれません。equinoxのドキュメントにある<a href="https://docs.kidger.site/equinox/examples/init_apply/">Compatibility with init-apply libraries</a>というページでは、これらのライブラリのやり方を「init-applyアプローチ」と呼んで軽く説明しています。これについてざっと見てみましょう。</p>
 <section id="jaxにできることとできないこと" class="level1">
 <h1>Jaxにできることとできないこと</h1>
 <p>そもそも、jaxというのは何をしてくれるライブラリなのでしょうか。ホームページのトップにはこう書かれています。</p>
 <blockquote class="blockquote">
 <p>JAX is Autograd and XLA, brought together for high-performance numerical computing.</p>
 </blockquote>
-<p><a href="https://www.tensorflow.org/xla">XLA</a>というのは、Tensorflowのバックエンドとして開発された深層学習用の中間言語で、CPU/GPU用に数値計算コードを最適化してくれます。Jaxは、numpyライクなシンタックスのコードをXLAに変換することで、「numpyコードを高速にjitコンパイルすること」を可能にしています。では、Autogradというのはなんでしょうか？これは、jaxの開発者が以前に開発していたライブラリの名前でもありますが、自動微分全般のことを指すと考えていいでしょう。自分で勾配逆伝播のコードを書かなくても、jaxでは損失関数の各パラメタにおいての偏微分を勝手に計算してくれます。試しに、<span class="math inline">\(f(x, y) = x^2 + y\)</span>の偏微分を計算してみましょう。</p>
+<p><a href="https://www.tensorflow.org/xla">XLA</a>というのは、Tensorflowのバックエンドとして開発された深層学習用の中間言語で、CPU/GPU/TPU用に数値計算コードを最適化してくるものです。深層学習に求められる並列化の性質から、特にSIMD演算/ベクトル並列化に特化しています。Jaxは、<code>jax.numpy</code>というNumPyに似せたライブラリをXLAのフロントエンドとして提供することで、「NumPyコードをベクトル並列化された高速なGPU用コードに実行時コンパイルすること」を可能にしています。では、Autogradというのはなんでしょうか？これは、jaxの開発者が以前に開発していたライブラリの名前でもありますが、自動微分全般のことを指すと考えていいでしょう。自分で勾配逆伝播のコードを書かなくても、jaxでは損失関数の各パラメタにおいての偏微分を勝手に計算してくれます。試しに、<span class="math inline">\(f(x, y) = x^2 + y\)</span>の偏微分を計算してみましょう。</p>
 <div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
@@ -224,7 +226,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="init-applyアプローチによるパラメタ管理" class="level1">
 <h1>init-applyアプローチによるパラメタ管理</h1>
 <p>stax, haiku, flaxでは、この「パラメタ管理の問題」を、「init-applyアプローチ」により解決しています。このアプローチは以下のようにまとめられます。 1. モデルはパラメータを持たない 2. モデルは<code>init</code>と<code>apply</code>の2つの関数を持つ - <code>init</code>は、入力例を受け取ってパラメタを初期化し、最初のパラメータを返す - <code>apply</code>は、入力とパラメタを受け取り、モデルの計算結果を返す</p>
-<p>なので、flaxやhaikuのAPIは以下のような感じになります。flaxでは<code>__call__</code>を使うがhaikuはPyTorchと同じ<code>forward</code>を使う、<code>flax</code>のModuleは <a href="https://docs.python.org/ja/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a>デコレータにより定義されたクラスと同じような性質を持つなどの違いがありますが、まあそれくらいで、大して違いはないです。以下僕がflaxとhaikuの間をとって書いた適当な疑似コードです。</p>
+<p>なので、flaxやhaikuのAPIは以下のような感じになります。flaxでは<code>__call__</code>を使うがhaikuはPyTorchと同じ<code>forward</code>を使う、<code>flax</code>のModuleは <a href="https://docs.python.org/ja/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a>デコレータにより定義されたクラスと同じような性質を持つなどの違いがありますが、まあそれくらいで、大して違いはないです。以下僕がflaxとhaikuの間をとって書いた適当な疑似コードです。ニューラルネットワークを表すクラスとして、PyTorch風に「Module」という名前を使っています。</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(Module):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> x.shape[<span class="dv">0</span>]</span>
@@ -241,14 +243,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Linear/~/b"</span>: [...],</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>stax</code>はただのreference implementationなのでこのような機能がなく、かわりに、数のレイヤーを組み合わせるコンビネーターを提供しています。ではこのアプローチにはどのようなメリット、デメリットがあるでしょうか。</p>
-<p><strong>メリット</strong> - Moduleを初期化する際に入力されるArrayのshapeを指定しなくていい - Moduleの定義は<code>init</code>と<code>apply</code>という2つの関数を定義するだけで、パラメタは<code>init</code>が呼ばれた際に初期化されるため。 - 関数とデータを分離できる - Moduleは変更可能な変数を持たず、パラメタと完全に別に扱われるので、見通しがよくなる - <code>init</code>、<code>apply</code>に<code>jit</code>や<code>vmap</code>などの関数デコレータを適用するコードが自然に書ける</p>
-<p><strong>デメリット</strong> - Moduleは冗長 - Moduleは「出力の次元」などの「モデルに関する設定」を持っているだけ - これらは<code>Config</code>など専用のクラスで管理されることが多く、<code>Config</code>と<code>Module</code>を両方持つのは冗長 - パラメタの要素のアクセスに型検査をするのが難しい - 例えばhaikuなら<code>params["Linear/~/w"]</code>のようにしてパラメタの各要素にアクセスするが、これは<code>pyright</code>や<code>mypy</code>のような静的型検査ツールにより検査されないので、実行時エラーを起こしやすい - あまりオブジェクト指向的ではない - (特にflax, haiku)仕組みがわかりにくい</p>
+<p><strong>メリット</strong> - Moduleを初期化する際に入力されるArrayのshapeを指定しなくていい - パラメタは<code>init</code>が呼ばれた際に初期化される - 関数とデータを分離できる - Moduleは変更可能な変数を持たず、パラメタと完全に別に扱われる - <code>init</code>、<code>apply</code>に<code>jit</code>や<code>vmap</code>などの関数デコレータを適用するコードが自然に書ける</p>
+<p><strong>デメリット</strong> - Moduleは冗長 - Moduleは「出力の次元」などの「モデルに関する設定」を持っているだけ - パラメタの要素に直接アクセスするのが面倒 - 例えばhaikuなら<code>params["Linear/~/w"]</code>のようにしてパラメタの各要素にアクセスできるが、複雑なクラスだと<code>dict</code>の鍵の名前が長くなりわかりにくい - あまりオブジェクト指向的ではない - (haiku/flaxに特有) Module内でのパラメタの呼び出しを<code>jax.grad</code>が使えるような関数に変換する必要がある - 例えば<code>haiku.transform</code>は、<code>haiku.get_parameter</code>によるパラメタ呼び出しを含む関数を、パラメタを引数としてとる関数に変換する</p>
 <p>こんなところでしょうか。</p>
 </section>
 <section id="equinoxの特徴" class="level1">
 <h1>equinoxの特徴</h1>
 <p>equinoxの特徴は、init-applyアプローチと異なり、「よりオブジェクト指向的な」（または、PyTorchに近い）インターフェースを志向している点にあります。 ドキュメントのトップページにある<a href="https://docs.kidger.site/equinox/#quick-example">Quick example</a>を見てみましょう。</p>
-<div class="cell" data-execution_count="63">
+<div class="cell" data-tags="[]" data-execution_count="3">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
@@ -287,7 +289,205 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 </div>
 </div>
-<p>ここで、equinoxが他の「</p>
+<p>ここで、equinoxの最大の特徴は</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(eqx.Module):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    weight: jax.Array</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    bias: jax.Array</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>というコードに表れていますが、「Moduleがパラメタを直接持つ」という点です。init-applyアプローチと比べると、これはどのような利点・欠点があるでしょうか？</p>
+<p><strong>メリット</strong> - わかりやすい - デバッグしやすい - flax/haikuは一度<code>transform</code>しないとデバッグできない - パラメタを直接操作するのが簡単</p>
+<p><strong>デメリット</strong> - モデルを初期化する時に、入力する特徴量の次元が必要 - <code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある</p>
+<p>ここで、最後の「<code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある」というのは、どういう意味でしょうか？例えば、self-attentionを計算する以下のようなModuleを考えます。</p>
+<div class="cell" data-tags="[]" data-execution_count="14">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SelfAttention(eqx.Module):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    q: eqx.nn.Linear</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    k: eqx.nn.Linear</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    v: eqx.nn.Linear</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    sqrt_d_attn: <span class="bu">float</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, d_in: <span class="bu">int</span>, d_attn: <span class="bu">int</span>, d_out: <span class="bu">int</span>, key: jax.Array) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        q_key, k_key, v_key <span class="op">=</span> jax.random.split(key, <span class="dv">3</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.q <span class="op">=</span> eqx.nn.Linear(d_in, d_attn, key<span class="op">=</span>q_key)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.k <span class="op">=</span> eqx.nn.Linear(d_in, d_attn, key<span class="op">=</span>k_key)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.v <span class="op">=</span> eqx.nn.Linear(d_in, d_attn, key<span class="op">=</span>k_key)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.sqrt_d_attn <span class="op">=</span> <span class="bu">float</span>(jnp.sqrt(d_attn))</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, e: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> jax.vmap(<span class="va">self</span>.q)(e)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> jax.vmap(<span class="va">self</span>.k)(e)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        alpha <span class="op">=</span> jax.nn.softmax(q.T <span class="op">@</span> k <span class="op">/</span> <span class="va">self</span>.sqrt_d_attn, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> jax.vmap(<span class="va">self</span>.v)(e) <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><code>eqx.Module</code>は内部で<code>dataclasses.dataclass</code>を使うので、<code>__init__</code>等の初期化メソッドはあらかじめ用意されていますが、これをオーバーライドしてパラメタの初期化に使います。 <span class="math inline">\(\sqrt{d_\mathrm{attn}}\)</span>は定数なので、これもメンバ変数にしてしまいましょう。勾配を計算してみます。</p>
+<div class="cell" data-tags="[]" data-execution_count="15">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> SelfAttention(<span class="dv">4</span>, <span class="dv">8</span>, <span class="dv">4</span>, jax.random.PRNGKey(<span class="dv">10</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>jax.grad(<span class="kw">lambda</span> model, x: jnp.mean(model(x)))(model, jnp.ones((<span class="dv">3</span>, <span class="dv">4</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<pre><code>SelfAttention(
+  q=Linear(
+    weight=f32[8,4],
+    bias=f32[8],
+    in_features=4,
+    out_features=8,
+    use_bias=True
+  ),
+  k=Linear(
+    weight=f32[8,4],
+    bias=f32[8],
+    in_features=4,
+    out_features=8,
+    use_bias=True
+  ),
+  v=Linear(
+    weight=f32[8,4],
+    bias=f32[8],
+    in_features=4,
+    out_features=8,
+    use_bias=True
+  ),
+  sqrt_d_attn=f32[]
+)</code></pre>
+</div>
+</div>
+<p>ここで困ったことに、<code>sqrt_d_attn</code>での偏微分も計算されてしまいました。<code>eqx.Module</code>そのものがパラメタを持つことによって、定数であるようなメンバ変数に対しても偏微分が計算されてしまいます。この問題を、equinoxでは、<code>eqx.partition</code>と<code>eqx.is_inexact_array</code>を使って、「32bit浮動小数点の<code>jax.Array</code>または<code>numpy.ndarray</code>」と「その他のメンバ変数」を分離することにより解決しています。やってみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="16">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>eqx.partition(model, eqx.is_inexact_array)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<pre><code>(SelfAttention(
+   q=Linear(
+     weight=f32[8,4],
+     bias=f32[8],
+     in_features=4,
+     out_features=8,
+     use_bias=True
+   ),
+   k=Linear(
+     weight=f32[8,4],
+     bias=f32[8],
+     in_features=4,
+     out_features=8,
+     use_bias=True
+   ),
+   v=Linear(
+     weight=f32[8,4],
+     bias=f32[8],
+     in_features=4,
+     out_features=8,
+     use_bias=True
+   ),
+   sqrt_d_attn=None
+ ),
+ SelfAttention(
+   q=Linear(weight=None, bias=None, in_features=4, out_features=8, use_bias=True),
+   k=Linear(weight=None, bias=None, in_features=4, out_features=8, use_bias=True),
+   v=Linear(weight=None, bias=None, in_features=4, out_features=8, use_bias=True),
+   sqrt_d_attn=2.8284270763397217
+ ))</code></pre>
+</div>
+</div>
+<p><code>sqrt_d_attn=None</code>のものと、全てのパラメタがNoneで<code>sqrt_d_attn=2.8284270763397217</code>のものに分離されています。なので、定数を持つModuleに対して勾配を計算したい場合は 1. Moduleをパラメタとそれ以外に分割 2. 勾配を求めたい関数<code>f(module, ...)</code>をラップする関数<code>g(params, others, ..)</code>みたいなものを作る 3. <code>jax.grad(g)(params, others, ...)</code>で勾配を計算 という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<code>equinox.filter_value_and_grad</code>です。基本的にもうこれを使えばいいです。やってみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="17">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>eqx.filter_value_and_grad(<span class="kw">lambda</span> model, x: jnp.mean(model(x)))(model, jnp.ones((<span class="dv">3</span>, <span class="dv">4</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<pre><code>(Array(-0.06870805, dtype=float32),
+ SelfAttention(
+   q=Linear(
+     weight=f32[8,4],
+     bias=f32[8],
+     in_features=4,
+     out_features=8,
+     use_bias=True
+   ),
+   k=Linear(
+     weight=f32[8,4],
+     bias=f32[8],
+     in_features=4,
+     out_features=8,
+     use_bias=True
+   ),
+   v=Linear(
+     weight=f32[8,4],
+     bias=f32[8],
+     in_features=4,
+     out_features=8,
+     use_bias=True
+   ),
+   sqrt_d_attn=None
+ ))</code></pre>
+</div>
+</div>
+<p>計算結果と勾配を返してくれました。定数の<code>sqrt_d_attn</code>はきっちり<code>None</code>でマスクされています。なので、Moduleで定数を持ちたかったらとりあえず<code>jax.Array</code>か<code>ndarray</code>以外の型にしておけばいいです。じゃあ32bit浮動小数点型の<code>jax.Array</code>を定数として持ちたかったらどうすればいいんだというと、<code>filter_value_and_grad</code>を直接使えずめちゃくちゃ面倒になるので、避けたほうが良さげです。ただPython組み込みの<code>float</code>や<code>bool</code>もjitコンパイルしてしまえばただの定数になるので、パフォーマンス的には気にする必要はないです。</p>
+</section>
+<section id="強化学習してみる" class="level1">
+<h1>強化学習してみる</h1>
+<p>一通り<code>equinox</code>の特徴をおさらいしたところで、これを使って強化学習してみます。せっかくjaxを使っているの<del>とgymのAPIが変わりまくった上にgymnasiumに変わって全然ついていけないの</del>で、<a href="https://github.com/RobertTLange/gymnax">gynmax</a>というjax製のRLベンチマークライブラリを使ってみます。環境は<code>FourRooms-misc</code>というのを使ってみます。<code>-misc</code>というのがどういう意味なのかよくわかりませんが、これは<a href="https://people.cs.umass.edu/~barto/courses/cs687/Sutton-Precup-Singh-AIJ99.pdf">Sutton et al.&nbsp;1999</a>に出てくる有名な迷路です。なんだかんだ迷路がわかりやすいですよね。<a href="https://github.com/RobertTLange/gymnax#key-selling-points-">Githubの例</a>を少し改変して、迷路を表示してみましょう。</p>
+<div class="cell" data-execution_count="44">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> gymnax</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> gymnax.visualize <span class="im">import</span> Visualizer</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>key <span class="op">=</span> jax.random.PRNGKey(<span class="dv">42</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>key_reset, key_act, key_step, key <span class="op">=</span> jax.random.split(key, <span class="dv">4</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Instantiate the environment &amp; its settings.</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>env, env_params <span class="op">=</span> gymnax.make(<span class="st">"Freeway-MinAtar"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Reset the environment.</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>obs, state <span class="op">=</span> env.reset(key_reset, env_params)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample a random action.</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>action <span class="op">=</span> env.action_space(env_params).sample(key_act)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform the step transition.</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>n_obs, n_state, reward, done, _ <span class="op">=</span> env.step(key_step, state, action, env_params)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>vis <span class="op">=</span> Visualizer(env, env_params, [state])</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>vis.init()</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>vis.update(<span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/home/yu/Documents/rlog2/.venv/lib/python3.10/site-packages/gymnax/environments/minatar/freeway.py:283: UserWarning: Explicitly requested dtype &lt;class 'jax.numpy.int64'&gt; requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
+  return jnp.array(cars, dtype=jnp.int_)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="try_equinox_for_rl_jp_files/figure-html/cell-8-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>正直このVisualizerのAPIはどうなんだろう？という気もしますが…きちんとFour Roomsを表示してくれました。</p>
+</section>
+<section id="dqnを試してみる" class="level1">
+<h1>DQNを試してみる</h1>
+<p>とりあえずPPOをやってみます。</p>
+<div class="cell" data-tags="[]" data-execution_count="39">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>env.action_space(env_params).n</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="39">
+<pre><code>3</code></pre>
+</div>
+</div>
+<div class="cell" data-tags="[]" data-execution_count="40">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>env.observation_space(env_params).high</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="40">
+<pre><code>1</code></pre>
+</div>
+</div>
 
 
 </section>
