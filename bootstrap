@@ -24,8 +24,9 @@ function _ensure_venv() {
 
 function subcmd_compile() {
     _ensure_venv
-    filename=$(basename "$@")
-    pip-compile "$@" --output-file="requirements/${filename%.*}.txt"
+    args=(${@//;/ })
+    filename=$(basename "${args[0]}")
+    pip-compile "${args[@]}" --output-file="requirements/${filename%.*}.txt"
 }
 
 function subcmd_register() {
