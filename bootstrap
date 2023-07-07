@@ -36,12 +36,14 @@ function subcmd_register() {
 
 function subcmd_run() {
     _ensure_venv
-    jupyter lab --ServerApp.open_browser=False
+    args=(${@//;/ })
+    jupyter lab --ServerApp.open_browser=False "${args[@]}"
 }
 
 function subcmd_sync() {
     _ensure_venv
-    pip-sync "$@"
+    args=(${@//;/ })
+    pip-sync "${args[@]}"
 }
 
 # Entry point: dispatch to any of sub command
