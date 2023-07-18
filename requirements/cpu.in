@@ -2,6 +2,6 @@
 -r nwb.in
 distrax
 equinox
-gymnax
 jax
+jumanji
 optax
