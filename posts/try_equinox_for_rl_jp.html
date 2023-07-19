@@ -190,7 +190,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#強化学習してみる" id="toc-強化学習してみる" class="nav-link" data-scroll-target="#強化学習してみる">強化学習してみる</a>
   <ul class="collapse">
   <li><a href="#環境" id="toc-環境" class="nav-link" data-scroll-target="#環境">環境</a></li>
-  <li><a href="#ppoを実装してみる" id="toc-ppoを実装してみる" class="nav-link" data-scroll-target="#ppoを実装してみる">PPOを実装してみる</a></li>
+  <li><a href="#ppoを実装してみる" id="toc-ppoを実装してみる" class="nav-link" data-scroll-target="#ppoを実装してみる">PPOを実装してみる</a>
+  <ul class="collapse">
+  <li><a href="#入力" id="toc-入力" class="nav-link" data-scroll-target="#入力">入力</a></li>
+  <li><a href="#ネットワーク" id="toc-ネットワーク" class="nav-link" data-scroll-target="#ネットワーク">ネットワーク</a></li>
+  <li><a href="#ロールアウト" id="toc-ロールアウト" class="nav-link" data-scroll-target="#ロールアウト">ロールアウト</a></li>
+  <li><a href="#学習" id="toc-学習" class="nav-link" data-scroll-target="#学習">学習</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -402,48 +408,47 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
  ))</code></pre>
 </div>
 </div>
-<p><code>sqrt_d_attn=None</code>のものと、全てのパラメタがNoneで<code>sqrt_d_attn=2.8284270763397217</code>のものに分離されています。なので、定数を持つModuleに対して勾配を計算したい場合は 1. Moduleをパラメタとそれ以外に分割 2. 勾配を求めたい関数<code>f(module, ...)</code>をラップする関数<code>g(params, others, ..)</code>みたいなものを作る 3. <code>jax.grad(g)(params, others, ...)</code>で勾配を計算 という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<code>equinox.filter_value_and_grad</code>です。基本的にもうこれを使えばいいです。やってみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="6">
+<p><code>sqrt_d_attn=None</code>のものと、全てのパラメタがNoneで<code>sqrt_d_attn=2.8284270763397217</code>のものに分離されています。なので、定数を持つModuleに対して勾配を計算したい場合は 1. Moduleをパラメタとそれ以外に分割 2. 勾配を求めたい関数<code>f(module, ...)</code>をラップする関数<code>g(params, others, ..)</code>みたいなものを作る 3. <code>jax.grad(g)(params, others, ...)</code>で勾配を計算 という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<a href="https://docs.kidger.site/equinox/api/filtering/transformations/#equinox.filter_grad"><code>equinox.filter_grad</code></a>です。基本何も考えずにこれを使えばいいです。やってみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="109">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>eqx.filter_value_and_grad(<span class="kw">lambda</span> model, x: jnp.mean(model(x)))(model, jnp.ones((<span class="dv">3</span>, <span class="dv">4</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>eqx.filter_grad(<span class="kw">lambda</span> model, x: jnp.mean(model(x)))(model, jnp.ones((<span class="dv">3</span>, <span class="dv">4</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="6">
-<pre><code>(Array(-0.06870805, dtype=float32),
- SelfAttention(
-   q=Linear(
-     weight=f32[8,4],
-     bias=f32[8],
-     in_features=4,
-     out_features=8,
-     use_bias=True
-   ),
-   k=Linear(
-     weight=f32[8,4],
-     bias=f32[8],
-     in_features=4,
-     out_features=8,
-     use_bias=True
-   ),
-   v=Linear(
-     weight=f32[8,4],
-     bias=f32[8],
-     in_features=4,
-     out_features=8,
-     use_bias=True
-   ),
-   sqrt_d_attn=None
- ))</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="109">
+<pre><code>SelfAttention(
+  q=Linear(
+    weight=f32[8,4],
+    bias=f32[8],
+    in_features=4,
+    out_features=8,
+    use_bias=True
+  ),
+  k=Linear(
+    weight=f32[8,4],
+    bias=f32[8],
+    in_features=4,
+    out_features=8,
+    use_bias=True
+  ),
+  v=Linear(
+    weight=f32[8,4],
+    bias=f32[8],
+    in_features=4,
+    out_features=8,
+    use_bias=True
+  ),
+  sqrt_d_attn=None
+)</code></pre>
 </div>
 </div>
-<p>計算結果と勾配を返してくれました。定数の<code>sqrt_d_attn</code>はきっちり<code>None</code>でマスクされています。なので、Moduleで定数を持ちたかったらとりあえず<code>jax.Array</code>か<code>ndarray</code>以外の型にしておけばいいです。じゃあ32bit浮動小数点型の<code>jax.Array</code>を定数として持ちたかったらどうすればいいんだというと、<code>filter_value_and_grad</code>を直接使えずめちゃくちゃ面倒になるので、避けたほうが良さげです。ただPython組み込みの<code>float</code>や<code>bool</code>もjitコンパイルしてしまえばただの定数になるので、パフォーマンス的には気にする必要はないです。</p>
+<p>勾配を返してくれました。定数の<code>sqrt_d_attn</code>はきっちり<code>None</code>でマスクされています。なので、Moduleで定数を持ちたかったらとりあえず<code>jax.Array</code>か<code>ndarray</code>以外の型にしておけばいいです。じゃあ32bit浮動小数点型の<code>jax.Array</code>を定数として持ちたかったらどうすればいいんだというと、<code>filter_value_and_grad</code>を直接使えずめちゃくちゃ面倒になるので、避けたほうが良さげです。ただPython組み込みの<code>float</code>や<code>bool</code>もjitコンパイルしてしまえばただの定数になるので、パフォーマンス的には気にする必要はないです。</p>
 </section>
 <section id="強化学習してみる" class="level1">
 <h1>強化学習してみる</h1>
 <section id="環境" class="level2">
 <h2 class="anchored" data-anchor-id="環境">環境</h2>
 <p>一通り<code>equinox</code>の特徴をおさらいしたところで、これを使って強化学習してみます。せっかくjaxを使っているの<del>とgymのAPIが変わりまくった上にgymnasiumに変わって全然ついていけないの</del>で、jax製の環境を使ってみましょう。ここでは<a href="https://instadeepai.github.io/jumanji/">jumanji</a>というライブラリの<a href="https://instadeepai.github.io/jumanji/environments/maze/?h=maze">Maze</a>を使ってみます。</p>
-<div class="cell" data-execution_count="85">
+<div class="cell" data-execution_count="8">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jumanji</span>
@@ -454,14 +459,14 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 <span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>env <span class="op">=</span> AutoResetWrapper(env)</span>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>n_actions <span class="op">=</span> env.action_spec().num_values</span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>key, <span class="op">*</span>keys <span class="op">=</span> jax.random.split(jax.random.PRNGKey(<span class="dv">43</span>), <span class="dv">11</span>)</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>state, timestep <span class="op">=</span> env.reset(key1)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>state, timestep <span class="op">=</span> env.reset(key)</span>
 <span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>states <span class="op">=</span> [state]</span>
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> key <span class="kw">in</span> keys:</span>
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    action <span class="op">=</span> jax.random.randint(key<span class="op">=</span>key, minval<span class="op">=</span><span class="dv">0</span>, maxval<span class="op">=</span>n_actions, shape<span class="op">=</span>())</span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    state, timestep <span class="op">=</span> env.step(state, action)</span>
 <span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    states.append(state)</span>
 <span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>anim <span class="op">=</span> env.animate(states)</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>HTML(anim.to_html5_video().replace(<span class="st">'="1000"'</span>, <span class="st">'="640"'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>HTML(anim.to_html5_video().replace(<span class="st">'="1000"'</span>, <span class="st">'="640"'</span>))  <span class="co"># Change video size</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
 <script type="application/javascript">
@@ -1443,11 +1448,11 @@ if (IPython.notebook.kernel !== null) {
 </script>
 </div>
 <div class="cell-output cell-output-display">
-<div id="0c182925-b17e-4048-a489-acdffb1c2c42"></div>
+<div id="0db6bd31-dd8e-4eb4-a396-ff082608aaa3"></div>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="85">
+<div class="cell-output cell-output-display" data-execution_count="8">
 <video width="640" height="640" controls="" autoplay="" loop="">
-  <source type="video/mp4" src="data:video/mp4;base64,AAAAIGZ0eXBNNFYgAAACAE00ViBpc29taXNvMmF2YzEAAAAIZnJlZQAAC/5tZGF0AAACrgYF//+q
+  <source type="video/mp4" src="data:video/mp4;base64,AAAAIGZ0eXBNNFYgAAACAE00ViBpc29taXNvMmF2YzEAAAAIZnJlZQAAC/xtZGF0AAACrgYF//+q
 3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NCByMzA5NSBiYWVlNDAwIC0gSC4yNjQvTVBF
 Ry00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMiAtIGh0dHA6Ly93d3cudmlkZW9sYW4u
 b3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFs
@@ -1459,66 +1464,66 @@ ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MyBi
 X3B5cmFtaWQ9MiBiX2FkYXB0PTEgYl9iaWFzPTAgZGlyZWN0PTEgd2VpZ2h0Yj0xIG9wZW5fZ29w
 PTAgd2VpZ2h0cD0yIGtleWludD0yNTAga2V5aW50X21pbj01IHNjZW5lY3V0PTQwIGludHJhX3Jl
 ZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAu
-NjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAF
-i2WIhAAT//73sY+BTcgADZc6inof4RWx9JBRerHZoGTqAAADAAADAAADAAADArgaM2GApU5IaEgA
-AAMAAXMADtABwABOwBKABNvAAXXgKVfbtlC/vwFWVxVgAAdpH/EjV/AP9+BnmBFU3wPDYM58QAAA
-awAvgB2PyvT24QzoE5pTqXtMwOZv6o8XLGhnjlowcHsrNDDG40g+S53grUxDFM2DUcken2ehECER
-0ZaDzfhQScKyIjLDX1cJCVJyHyJhqKmoT0hBKvWT+M4IGAAABZKX45tiBordUKRb7TXTMagAAAMA
-AAMAAA9OdRzmEyC5777W8EohduR7QEjgCJKiKc74lWgc7rphWiMijWAAAJ3XfHfxM28AAAMAAAMC
-NHUUt59kXhAqLyvcAfFpGAmJewK5hYiGKkXfq9dAZkQtrLXB89XKrneHi9t0xybfZoAkLz3+897I
-cKRFhh+ufaWt03m2Ltadpf0mn1AAAA1GkS67/Jz/3mN/wK5WTAACV2IwBdSp7x9Zr4bOgur3dHr5
-Zt/W47KRU+l1sG7GPtwzyrb7zsj1/TlWQ/tjysV9NKN+NqzQrwAXkegKpCuGvoVfjojNIBW7g5se
-OuqRXkXPIdrW55KQdV7GomFlaEDlYeHQv13Is8xvAEW6eX5PLI1IxFpT/dvvjEC9ZPeGthDJKCsq
-2OuH1bxlkW4CHzqGLmFC695X0AQbjrcayssqP517EbXwAItwlmp45ExH4GhPMWMCRYWdnAC8zyzv
-cm9GHuGyJ0re7J+boRuqAjo3duC7h08erEPynz0uk1kAb6vHIa/sVKeRwAS1Tyd1cs/Grtcz9ATJ
-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
-LjMuMTAw
+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
+LjEwMA==
 ">
   Your browser does not support the video tag.
 </video>
@@ -1529,321 +1534,431 @@ LjMuMTAw
 </section>
 <section id="ppoを実装してみる" class="level2">
 <h2 class="anchored" data-anchor-id="ppoを実装してみる">PPOを実装してみる</h2>
-<p>ということで、この環境を学習してみましょう。ここでは定番かつ学習が高速な<a href="https://arxiv.org/abs/1707.06347">PPO</a>を実装してみます。 まずは、ネットワークを定義してみましょう。</p>
-<div class="cell" data-execution_count="117">
+<p>ということで、この環境を学習してみましょう。ここでは定番かつ学習が高速な<a href="https://arxiv.org/abs/1707.06347">PPO</a>を実装してみます。</p>
+<section id="入力" class="level3">
+<h3 class="anchored" data-anchor-id="入力">入力</h3>
+<p>それぞれ壁の位置、エージェントの位置、ゴールの位置をそれぞれ10x10のバイナリ画像で表現し、<code>3x10x10</code>の配列として入力します。</p>
+<div class="cell" data-tags="[]" data-execution_count="16">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> NamedTuple</span>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.environments.routing.maze.types <span class="im">import</span> Observation, State</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jax.nn.initializers <span class="im">import</span> orthogonal</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PPONetOutput(NamedTuple):</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    policy_logits: jax.Array</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    value: jax.Array</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SoftmaxPPONet(eqx.Module):</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    torso: <span class="bu">list</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    value_head: eqx.nn.Linear</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    policy_head: eqx.nn.Linear</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, key: jax.Array, n_actions: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        key1, key2, key3, key4, key5 <span class="op">=</span> jax.random.split(key, <span class="dv">5</span>)</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Common layers</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.torso <span class="op">=</span> [</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>            eqx.nn.Conv2d(<span class="dv">3</span>, <span class="dv">3</span>, kernel_size<span class="op">=</span><span class="dv">4</span>, key<span class="op">=</span>key1),</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>            jax.nn.relu,</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>            jnp.ravel,</span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>            eqx.nn.Linear(<span class="dv">3</span> <span class="op">*</span> <span class="dv">7</span> <span class="op">*</span> <span class="dv">7</span>, <span class="dv">64</span>, key<span class="op">=</span>key2),</span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>            jax.nn.relu,</span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>        ]</span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value_head <span class="op">=</span> eqx.nn.Linear(<span class="dv">64</span>, <span class="dv">1</span>, key<span class="op">=</span>key3)</span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>        policy_head <span class="op">=</span> eqx.nn.Linear(<span class="dv">64</span>, n_actions, key<span class="op">=</span>key4)</span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Use small value for policy initialization</span></span>
-<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.policy_head <span class="op">=</span> eqx.tree_at(</span>
-<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> linear: linear.weight,</span>
-<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>            policy_head,</span>
-<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>            orthogonal(scale<span class="op">=</span><span class="fl">0.01</span>)(key5, policy_head.weight.shape),</span>
-<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> <span class="va">self</span>.torso:</span>
-<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> layer(x)</span>
-<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> <span class="va">self</span>.value_head(x)</span>
-<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>        policy_logits <span class="op">=</span> <span class="va">self</span>.policy_head(x)</span>
-<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> PPONetOutput(policy_logits<span class="op">=</span>policy_logits, value<span class="op">=</span>value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> obs_to_image(obs: Observation) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    walls <span class="op">=</span> obs.walls.astype(jnp.float32)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    agent <span class="op">=</span> jnp.zeros_like(walls).at[obs.agent_position].<span class="bu">set</span>(<span class="fl">1.0</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    target <span class="op">=</span> jnp.zeros_like(walls).at[obs.target_position].<span class="bu">set</span>(<span class="fl">1.0</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jnp.stack([walls, agent, target])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="168">
+</section>
+<section id="ネットワーク" class="level3">
+<h3 class="anchored" data-anchor-id="ネットワーク">ネットワーク</h3>
+<p>たたみこんでからReLU + 線形レイヤを2回というシンプルな構成にします。途中までは価値関数と方策は共通でいいでしょう。方策はカテゴリカル分布とします。面倒なので、入力サイズ<span class="math inline">\(3 \times 10 \times 10\)</span>、行動数<span class="math inline">\(4\)</span>として入出力サイズをベタ書きしてしまいます。</p>
+<div class="cell" data-execution_count="68">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="at">@chex.dataclass</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Rollout:</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Rollout buffer that stores the entire history of one rollout"""</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    observations: jax.Array</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    actions: jax.Array</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    rewards: jax.Array</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    terminations: jax.Array</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    values: jax.Array</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    policy_logits: jax.Array</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> NamedTuple</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jax.nn.initializers <span class="im">import</span> orthogonal</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PPONetOutput(NamedTuple):</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    policy_logits: jax.Array</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    value: jax.Array</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SoftmaxPPONet(eqx.Module):</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    torso: <span class="bu">list</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    value_head: eqx.nn.Linear</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    policy_head: eqx.nn.Linear</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, key: jax.Array) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>        key1, key2, key3, key4, key5 <span class="op">=</span> jax.random.split(key, <span class="dv">5</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Common layers</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.torso <span class="op">=</span> [</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>            eqx.nn.Conv2d(<span class="dv">3</span>, <span class="dv">3</span>, kernel_size<span class="op">=</span><span class="dv">4</span>, key<span class="op">=</span>key1),</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>            jax.nn.relu,</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>            jnp.ravel,</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>            eqx.nn.Linear(<span class="dv">3</span> <span class="op">*</span> <span class="dv">7</span> <span class="op">*</span> <span class="dv">7</span>, <span class="dv">64</span>, key<span class="op">=</span>key2),</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>            jax.nn.relu,</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.value_head <span class="op">=</span> eqx.nn.Linear(<span class="dv">64</span>, <span class="dv">1</span>, key<span class="op">=</span>key3)</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>        policy_head <span class="op">=</span> eqx.nn.Linear(<span class="dv">64</span>, <span class="dv">4</span>, key<span class="op">=</span>key4)</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Use small value for policy initialization</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.policy_head <span class="op">=</span> eqx.tree_at(</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>            <span class="kw">lambda</span> linear: linear.weight,</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>            policy_head,</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>            orthogonal(scale<span class="op">=</span><span class="fl">0.01</span>)(key5, policy_head.weight.shape),</span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> <span class="va">self</span>.torso:</span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> layer(x)</span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> <span class="va">self</span>.value_head(x)</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>        policy_logits <span class="op">=</span> <span class="va">self</span>.policy_head(x)</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> PPONetOutput(policy_logits<span class="op">=</span>policy_logits, value<span class="op">=</span>value)</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> value(<span class="va">self</span>, x: jax.Array) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> <span class="va">self</span>.torso:</span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>            x <span class="op">=</span> layer(x)</span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.value_head(x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="169">
+</section>
+<section id="ロールアウト" class="level3">
+<h3 class="anchored" data-anchor-id="ロールアウト">ロールアウト</h3>
+<p>PPOの実装では1000~8000ステップ程度環境で行動した履歴を集めてそれを使って何度かネットワークを更新するのが普通です。ここでは<a href="https://jax.readthedocs.io/en/latest/jaxpr.html#scan">jax.lax.scan</a>を使って、Pythonのループを使うより高速なロールアウトを実装します。scanの速度面での恩恵は大きいですが、使い方には少し注意が必要です。特に、1ステップ進める関数の二番目の出力を<code>results: list[Result]</code> とすると、最終的に返ってくるのが<code>Result(member1=stack([m1 for m1 in results.member1]), ...)</code>になることは把握しておきましょう。 また、<code>exec_rollout</code>の引数が<code>eqx.Module</code>のインスタンスである<code>SoftmaxPPONet</code>を含んでいるので、<code>eqx.filter_jit</code>でjitしてあげるとうまいことjitできない値を除外してjitしてくれます。</p>
+<div class="cell" data-execution_count="134">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.environments.routing.maze.types <span class="im">import</span> Observation, State</span>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> obs_to_image(obs: Observation) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    walls <span class="op">=</span> obs.walls.astype(jnp.float32)</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    agent <span class="op">=</span> jnp.zeros_like(walls).at[obs.agent_position].<span class="bu">set</span>(<span class="fl">1.0</span>)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    target <span class="op">=</span> jnp.zeros_like(walls).at[obs.target_position].<span class="bu">set</span>(<span class="fl">1.0</span>)</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jnp.stack([walls, agent, target])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> chex</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="at">@chex.dataclass</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Rollout:</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Rollout buffer that stores the entire history of one rollout"""</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    observations: jax.Array</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    actions: jax.Array</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    rewards: jax.Array</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    terminations: jax.Array</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    values: jax.Array</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    policy_logits: jax.Array</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="at">@eqx.filter_jit</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> exec_rollout(</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    initial_state: State,</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    initial_obs: jax.Array,</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>    env: jumanji.Environment,</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>    network: SoftmaxPPONet,</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    prng_key: jax.Array,</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    n_rollout_steps: <span class="bu">int</span>,</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[State, Rollout, jax.Array, jax.Array]:</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>    keys <span class="op">=</span> jax.random.split(prng_key, n_rollout_steps)</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step_rollout(</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>        carried: <span class="bu">tuple</span>[State, jax.Array],</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>        key: jax.Array,</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[<span class="bu">tuple</span>[State, jax.Array], Rollout]:</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>        state, obs <span class="op">=</span> carried</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>        net_out <span class="op">=</span> jax.vmap(network)(obs)</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>        actions <span class="op">=</span> jax.random.categorical(key, net_out.policy_logits)</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>        state, timestep <span class="op">=</span> jax.vmap(env.step)(state, actions)</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>        obs <span class="op">=</span> jax.vmap(obs_to_image)(timestep.observation)</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>        rollout <span class="op">=</span> Rollout(</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>            observations<span class="op">=</span>obs,</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>            actions<span class="op">=</span>actions,</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>            rewards<span class="op">=</span>timestep.reward,</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>            terminations<span class="op">=</span>timestep.discount,</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>            values<span class="op">=</span>net_out.value,</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>            policy_logits<span class="op">=</span>net_out.policy_logits,</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (state, obs), rollout</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>    (state, obs), rollout <span class="op">=</span> jax.lax.scan(</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>        step_rollout,</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>        (initial_state, initial_obs),</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>        keys,</span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>    next_value <span class="op">=</span> jax.vmap(network.value)(obs)</span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state, rollout, obs, next_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="170">
+<p>テストしてみましょう。<code>jax.vmap</code>で簡単に環境をベクトル並列化できるのがjax製環境の利点なので、今回は16並列で動かしてみます。<code>reset</code>を<code>vmap</code>してPRNGKeyを16個突っ込むと勝手に16並列の<code>State</code>がでてきます。</p>
+<div class="cell" data-tags="[]" data-execution_count="135">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> exec_rollout(</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    initial_state: State,</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    initial_obs: jax.Array,</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    network: SoftmaxPPONet,</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    prng_key: jax.Array,</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    env: jumanji.Environment,</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    n_rollout_steps: <span class="bu">int</span>,</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Rollout:</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> env.action_spec()</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    keys <span class="op">=</span> jax.random.split(prng_key, n_rollout_steps)</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> step_rollout(</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>        carried: <span class="bu">tuple</span>[State, jax.Array],</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        key: jax.Array,</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[<span class="bu">tuple</span>[State, jax.Array], Rollout]:</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        state, obs <span class="op">=</span> carried</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        values, policy_logits <span class="op">=</span> jax.vmap(network)(obs)</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        actions <span class="op">=</span> jax.random.categorical(key, policy_logits)</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        state, timestep <span class="op">=</span> jax.vmap(env.step)(state, actions)</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        obs <span class="op">=</span> jax.vmap(obs_to_image)(timestep.observation)</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>        rollout <span class="op">=</span> Rollout(</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>            observations<span class="op">=</span>obs,</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>            actions<span class="op">=</span>actions,</span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>            rewards<span class="op">=</span>timestep.reward,</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>            terminations<span class="op">=</span>timestep.discount,</span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>            values<span class="op">=</span>values,</span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>            policy_logits<span class="op">=</span>policy_logits</span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (state, obs), rollout</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jax.lax.scan(step_rollout, (initial_state, initial_obs), keys)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>key, net_key, reset_key, rollout_key <span class="op">=</span> jax.random.split(key, <span class="dv">4</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>pponet <span class="op">=</span> SoftmaxPPONet(net_key)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>initial_state, initial_timestep <span class="op">=</span> jax.vmap(env.reset)(jax.random.split(reset_key, <span class="dv">16</span>))</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>next_state, rollout, next_obs, next_value <span class="op">=</span> exec_rollout(</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    initial_state,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    jax.vmap(obs_to_image)(initial_timestep.observation),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    env,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    pponet,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    rollout_key,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1024</span>,</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>next_obs.shape, rollout.rewards.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-output cell-output-display" data-execution_count="135">
+<pre><code>((16, 3, 10, 10), (1024, 16))</code></pre>
 </div>
-<div class="cell" data-execution_count="171">
+</div>
+<p>入力が16並列になっていること、Rolloutの各メンバが予想通りステップ数x環境数x…の大きさになっていることが確認できました。</p>
+</section>
+<section id="学習" class="level3">
+<h3 class="anchored" data-anchor-id="学習">学習</h3>
+<p>データが集められたので後はネットワークを更新するコードを書きましょう。まず<a href="https://arxiv.org/abs/1506.02438">GAE</a>を計算します。意外とボトルネックになるので<a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.lax.fori_loop.html#jax.lax.fori_loop"><code>fori_loop</code></a>で高速化しておきましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="182">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>state, timestep <span class="op">=</span> jax.vmap(env.reset)(jax.random.split(jax.random.PRNGKey(<span class="dv">43</span>), <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> functools</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="at">@chex.dataclass</span>(frozen<span class="op">=</span><span class="va">True</span>, mappable_dataclass<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Batch:</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Batch for PPO, indexable to get a minibatch."""</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    observations: jax.Array</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    onehot_actions: jax.Array</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    rewards: jax.Array</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    advantages: jax.Array</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    value_targets: jax.Array</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    log_action_probs: jax.Array</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__len__</span>(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.observation.shape[<span class="dv">0</span>]</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__getitem__</span>(<span class="va">self</span>, idx: jax.Array):</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.__class__(  <span class="co"># type: ignore</span></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>            observations<span class="op">=</span><span class="va">self</span>.observations[idx],</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>            onehot_actions<span class="op">=</span><span class="va">self</span>.onehot_actions[idx],</span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>            rewards<span class="op">=</span><span class="va">self</span>.rewards[idx],</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>            advantages<span class="op">=</span><span class="va">self</span>.advantages[idx],</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>            value_targets<span class="op">=</span><span class="va">self</span>.value_targets[idx],</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>            log_action_probs<span class="op">=</span><span class="va">self</span>.log_action_probs[idx],</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compute_gae(</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>    r_t: jax.Array,</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>    discount_t: jax.Array,</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>    values: jax.Array,</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>    lambda_: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Efficiently compute generalized advantage estimator (GAE)"""</span></span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>    gamma_lambda_t <span class="op">=</span> discount_t <span class="op">*</span> lambda_</span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>    delta_t <span class="op">=</span> r_t <span class="op">+</span> discount_t <span class="op">*</span> values[<span class="dv">1</span>:] <span class="op">-</span> values[:<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> delta_t.shape[<span class="dv">0</span>]</span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> update(i: <span class="bu">int</span>, advantage_t: chex.Array) <span class="op">-&gt;</span> chex.Array:</span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a>        t <span class="op">=</span> n <span class="op">-</span> i <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>        adv_t <span class="op">=</span> delta_t[t] <span class="op">+</span> gamma_lambda_t[t] <span class="op">*</span> advantage_t[t <span class="op">+</span> <span class="dv">1</span>]</span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> advantage_t.at[t].<span class="bu">set</span>(adv_t)</span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>    advantage_t <span class="op">=</span> jax.lax.fori_loop(<span class="dv">0</span>, n, update, jnp.zeros_like(values))</span>
+<span id="cb22-47"><a href="#cb22-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> advantage_t[:<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb22-48"><a href="#cb22-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-49"><a href="#cb22-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-50"><a href="#cb22-50" aria-hidden="true" tabindex="-1"></a><span class="at">@functools.partial</span>(jax.jit, static_argnums<span class="op">=</span>(<span class="dv">3</span>, <span class="dv">4</span>))</span>
+<span id="cb22-51"><a href="#cb22-51" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_batch(</span>
+<span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a>    rollout: Rollout,</span>
+<span id="cb22-53"><a href="#cb22-53" aria-hidden="true" tabindex="-1"></a>    next_obs: jax.Array,</span>
+<span id="cb22-54"><a href="#cb22-54" aria-hidden="true" tabindex="-1"></a>    next_value: jax.Array,</span>
+<span id="cb22-55"><a href="#cb22-55" aria-hidden="true" tabindex="-1"></a>    gamma: <span class="bu">float</span>,</span>
+<span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a>    gae_lambda: <span class="bu">float</span>,</span>
+<span id="cb22-57"><a href="#cb22-57" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Batch:</span>
+<span id="cb22-58"><a href="#cb22-58" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> jnp.concatenate(</span>
+<span id="cb22-59"><a href="#cb22-59" aria-hidden="true" tabindex="-1"></a>        [jnp.squeeze(rollout.values), next_value.reshape(<span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>)]</span>
+<span id="cb22-60"><a href="#cb22-60" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb22-61"><a href="#cb22-61" aria-hidden="true" tabindex="-1"></a>    advantages <span class="op">=</span> compute_gae(</span>
+<span id="cb22-62"><a href="#cb22-62" aria-hidden="true" tabindex="-1"></a>        rollout.rewards,</span>
+<span id="cb22-63"><a href="#cb22-63" aria-hidden="true" tabindex="-1"></a>        rollout.terminations <span class="op">*</span> gamma,</span>
+<span id="cb22-64"><a href="#cb22-64" aria-hidden="true" tabindex="-1"></a>        all_values,</span>
+<span id="cb22-65"><a href="#cb22-65" aria-hidden="true" tabindex="-1"></a>        gae_lambda,</span>
+<span id="cb22-66"><a href="#cb22-66" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb22-67"><a href="#cb22-67" aria-hidden="true" tabindex="-1"></a>    value_targets <span class="op">=</span> advantages <span class="op">+</span> all_values[:<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb22-68"><a href="#cb22-68" aria-hidden="true" tabindex="-1"></a>    onehot_actions <span class="op">=</span> jax.nn.one_hot(rollout.actions, <span class="dv">4</span>)</span>
+<span id="cb22-69"><a href="#cb22-69" aria-hidden="true" tabindex="-1"></a>    n_rollout_steps, n_agents, <span class="op">*</span>obs_shape <span class="op">=</span> rollout.observations.shape</span>
+<span id="cb22-70"><a href="#cb22-70" aria-hidden="true" tabindex="-1"></a>    log_action_probs <span class="op">=</span> jnp.<span class="bu">sum</span>(</span>
+<span id="cb22-71"><a href="#cb22-71" aria-hidden="true" tabindex="-1"></a>        jax.nn.log_softmax(rollout.policy_logits) <span class="op">*</span> onehot_actions,</span>
+<span id="cb22-72"><a href="#cb22-72" aria-hidden="true" tabindex="-1"></a>        axis<span class="op">=-</span><span class="dv">1</span>,</span>
+<span id="cb22-73"><a href="#cb22-73" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb22-74"><a href="#cb22-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Batch(</span>
+<span id="cb22-75"><a href="#cb22-75" aria-hidden="true" tabindex="-1"></a>        observations<span class="op">=</span>rollout.observations.reshape(<span class="op">-</span><span class="dv">1</span>, <span class="op">*</span>obs_shape),</span>
+<span id="cb22-76"><a href="#cb22-76" aria-hidden="true" tabindex="-1"></a>        onehot_actions<span class="op">=</span>onehot_actions.reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">4</span>),</span>
+<span id="cb22-77"><a href="#cb22-77" aria-hidden="true" tabindex="-1"></a>        rewards<span class="op">=</span>rollout.rewards.ravel(),</span>
+<span id="cb22-78"><a href="#cb22-78" aria-hidden="true" tabindex="-1"></a>        advantages<span class="op">=</span>advantages.ravel(),</span>
+<span id="cb22-79"><a href="#cb22-79" aria-hidden="true" tabindex="-1"></a>        value_targets<span class="op">=</span>value_targets.ravel(),</span>
+<span id="cb22-80"><a href="#cb22-80" aria-hidden="true" tabindex="-1"></a>        log_action_probs<span class="op">=</span>log_action_probs.ravel(),</span>
+<span id="cb22-81"><a href="#cb22-81" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="172">
+<div class="cell" data-execution_count="183">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>jax.vmap(obs_to_image)(timestep.observation).shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>batch <span class="op">=</span> make_batch(rollout, next_obs, next_value, <span class="fl">0.99</span>, <span class="fl">0.95</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>batch.advantages.shape, batch.onehot_actions.shape, batch.log_action_probs.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="172">
-<pre><code>(10, 3, 10, 10)</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="183">
+<pre><code>((16384,), (16384, 4), (16384,))</code></pre>
 </div>
 </div>
-<div class="cell">
+<p><span class="math inline">\(1024 \times 16 = 16384\)</span>なので大丈夫そうですね。あとはこれで作った<code>Batch</code>からミニバッチをサンプルして、損失関数を最小化するように勾配降下で更新します。jax界隈では定番の<a href="https://optax.readthedocs.io">optax</a>を使いましょう。この時、以下の3点に注意します。 - 前節で説明したように、<code>jax.grad</code>のかわりに<code>eqx.filter_grad</code>を使う - <code>SoftmaxPPONet</code>は<code>jax.nn.relu</code>など<code>jax.jit</code>の引数として使えない型を持っているので、<code>jax.lax.scan</code>の引数にする前に<code>eqx.partition</code>で分解する - 同様に、<code>SoftmaxPPONet</code>はそのまま<code>optax</code>の初期化・アップデート関数の引数にできないので、<code>eqx.partition</code>で分解するか<code>eqx.filter</code>で<code>jax.Array</code>以外のメンバを除外しておく</p>
+<p>また、ミニバッチ更新のループで<code>jax.lax.scan</code>を使いたい場合、いくつか方法があると思うのですが、ここではミニバッチサイズ<span class="math inline">\(N\)</span>、更新回数<span class="math inline">\(M\)</span>、更新エポック数<span class="math inline">\(K\)</span>回、全体のバッチサイズ<span class="math inline">\(N \times M\)</span>として、 1. <span class="math inline">\(0, 1, 2, ..., NM - 1\)</span>の順列を<span class="math inline">\(K\)</span>個作る 2. バッチの各要素を1で作った順列のもと並び替えたものを<span class="math inline">\(K\)</span>個作る 3. 各メンバを<code>jnp.concatenate</code>でくっつけて大きさ<span class="math inline">\(MK \times N \times ...\)</span>の配列にreshapeする</p>
+<p>という方法を使いました。ちょっと面倒ですし、正直ここまで高速化しなくてもいいかもしれませんね。メモリ使用量が不安な場合は<span class="math inline">\(K\)</span>のループをPythonで書くのもアリかなと思いますが、今回は入力が<span class="math inline">\(3\times 10\times 10\)</span>なので大丈夫そうですね。</p>
+<div class="cell" data-tags="[]" data-execution_count="346">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>exec_rollout(</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    state,</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    jax.vmap(obs_to_image)(timestep.observation),</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    pponet,</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    jax.random.PRNGKey(<span class="dv">43</span>),</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    env,</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1024</span>,</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss_function(</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    network: SoftmaxPPONet,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    batch: Batch,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    ppo_clip_eps: <span class="bu">float</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> jax.Array:</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    net_out <span class="op">=</span> jax.vmap(network)(batch.observations)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Policy loss</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    log_pi <span class="op">=</span> jax.nn.log_softmax(net_out.policy_logits)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    log_action_probs <span class="op">=</span> jnp.<span class="bu">sum</span>(log_pi <span class="op">*</span> batch.onehot_actions, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    policy_ratio <span class="op">=</span> jnp.exp(log_action_probs <span class="op">-</span> batch.log_action_probs)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    clipped_ratio <span class="op">=</span> jnp.clip(policy_ratio, <span class="fl">1.0</span> <span class="op">-</span> ppo_clip_eps, <span class="fl">1.0</span> <span class="op">+</span> ppo_clip_eps)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    clipped_objective <span class="op">=</span> jnp.fmin(</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>        policy_ratio <span class="op">*</span> batch.advantages,</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>        clipped_ratio <span class="op">*</span> batch.advantages,</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>    policy_loss <span class="op">=</span> <span class="op">-</span>jnp.mean(clipped_objective)</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Value loss</span></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>    value_loss <span class="op">=</span> jnp.mean(<span class="fl">0.5</span> <span class="op">*</span> (net_out.value <span class="op">-</span> batch.value_targets) <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Entropy regularization</span></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    entropy <span class="op">=</span> jnp.mean(<span class="op">-</span>jnp.exp(log_pi) <span class="op">*</span> log_pi)</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> policy_loss <span class="op">+</span> value_loss <span class="op">-</span> <span class="fl">0.01</span> <span class="op">*</span> entropy</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>vmapped_permutation <span class="op">=</span> jax.vmap(jax.random.permutation, in_axes<span class="op">=</span>(<span class="dv">0</span>, <span class="va">None</span>), out_axes<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a><span class="at">@eqx.filter_jit</span></span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> update_network(</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>    batch: Batch,</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>    network: SoftmaxPPONet,</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>    optax_update: optax.TransformUpdateFn,</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>    opt_state: optax.OptState,</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>    prng_key: jax.Array,</span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>    minibatch_size: <span class="bu">int</span>,</span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>    n_epochs: <span class="bu">int</span>,</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a>    ppo_clip_eps: <span class="bu">float</span>,</span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[optax.OptState, SoftmaxPPONet]:</span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Prepare update function</span></span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a>    dynamic_net, static_net <span class="op">=</span> eqx.partition(network, eqx.is_array)</span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> update_once(</span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a>        carried: <span class="bu">tuple</span>[optax.OptState, SoftmaxPPONet],</span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a>        batch: Batch,</span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="bu">tuple</span>[<span class="bu">tuple</span>[optax.OptState, SoftmaxPPONet], <span class="va">None</span>]:</span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a>        opt_state, dynamic_net <span class="op">=</span> carried</span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a>        network <span class="op">=</span> eqx.combine(dynamic_net, static_net)</span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a>        value, grad <span class="op">=</span> eqx.filter_value_and_grad(loss_function)(network, batch, ppo_clip_eps)</span>
+<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a>        updates, new_opt_state <span class="op">=</span> optax_update(grad, opt_state)</span>
+<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a>        dynamic_net <span class="op">=</span> optax.apply_updates(dynamic_net, updates)</span>
+<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (new_opt_state, dynamic_net), value</span>
+<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Prepare minibatches</span></span>
+<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> batch.observations.shape[<span class="dv">0</span>]</span>
+<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a>    permutations <span class="op">=</span> vmapped_permutation(jax.random.split(key, n_epochs), batch_size)</span>
+<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a>    minibatches <span class="op">=</span> jax.tree_map(</span>
+<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Here, x's shape is [batch_size, ...]</span></span>
+<span id="cb25-60"><a href="#cb25-60" aria-hidden="true" tabindex="-1"></a>        <span class="kw">lambda</span> x: x[permutations].reshape(<span class="op">-</span><span class="dv">1</span>, minibatch_size, <span class="op">*</span>x.shape[<span class="dv">1</span>:]),</span>
+<span id="cb25-61"><a href="#cb25-61" aria-hidden="true" tabindex="-1"></a>        batch,</span>
+<span id="cb25-62"><a href="#cb25-62" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-63"><a href="#cb25-63" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Update network n_epochs x n_minibatches times</span></span>
+<span id="cb25-64"><a href="#cb25-64" aria-hidden="true" tabindex="-1"></a>    (opt_state, updated_dynet), values <span class="op">=</span> jax.lax.scan(</span>
+<span id="cb25-65"><a href="#cb25-65" aria-hidden="true" tabindex="-1"></a>        update_once,</span>
+<span id="cb25-66"><a href="#cb25-66" aria-hidden="true" tabindex="-1"></a>        (opt_state, dynamic_net),</span>
+<span id="cb25-67"><a href="#cb25-67" aria-hidden="true" tabindex="-1"></a>        minibatches,</span>
+<span id="cb25-68"><a href="#cb25-68" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-69"><a href="#cb25-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> opt_state, eqx.combine(updated_dynet, static_net)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="123">
+<p>というわけで、部品が全部できたので学習を回してみましょう。</p>
+<div class="cell" data-tags="[]" data-execution_count="347">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> obs_to_image(timestep.observation)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_training(</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    adam_lr: <span class="bu">float</span> <span class="op">=</span> <span class="fl">1e-4</span>,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    adam_eps: <span class="bu">float</span> <span class="op">=</span> <span class="fl">1e-6</span>,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    gamma: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.995</span>,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    gae_lambda: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    n_optim_epochs: <span class="bu">int</span> <span class="op">=</span> <span class="dv">4</span>,</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    minibatch_size: <span class="bu">int</span> <span class="op">=</span> <span class="dv">2048</span>,</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    n_agents: <span class="bu">int</span> <span class="op">=</span> <span class="dv">16</span>,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    n_rollout_steps: <span class="bu">int</span> <span class="op">=</span> <span class="dv">1024</span>,</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    n_total_steps: <span class="bu">int</span> <span class="op">=</span> <span class="dv">16</span> <span class="op">*</span> <span class="dv">1024</span> <span class="op">*</span> <span class="dv">1000</span>,</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    ppo_clip_eps: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">123456789</span>,</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    key <span class="op">=</span> jax.random.PRNGKey(seed)</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    key, net_key, reset_key <span class="op">=</span> jax.random.split(key, <span class="dv">3</span>)</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    pponet <span class="op">=</span> SoftmaxPPONet(net_key)</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    env <span class="op">=</span> AutoResetWrapper(jumanji.make(<span class="st">"Maze-v0"</span>))</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    adam_init, adam_update <span class="op">=</span> optax.adam(adam_lr, eps<span class="op">=</span>adam_eps)</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    opt_state <span class="op">=</span> adam_init(eqx.<span class="bu">filter</span>(pponet, eqx.is_array))</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    env_state, timestep <span class="op">=</span> jax.vmap(env.reset)(jax.random.split(reset_key, <span class="dv">16</span>))</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    obs <span class="op">=</span> jax.vmap(obs_to_image)(timestep.observation)</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    n_loop <span class="op">=</span> n_total_steps <span class="op">//</span> (n_agents <span class="op">*</span> n_rollout_steps)</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_loop):</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>        key, rollout_key, update_key <span class="op">=</span> jax.random.split(key, <span class="dv">3</span>)</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>        env_state, rollout, obs, next_value <span class="op">=</span> exec_rollout(</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>            env_state,</span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>            obs,</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>            env,</span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>            pponet,</span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>            rollout_key,</span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>            n_rollout_steps,</span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a>        opt_state, pponet <span class="op">=</span> update_network(</span>
+<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a>            batch,</span>
+<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a>            pponet,</span>
+<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a>            adam_update,</span>
+<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a>            opt_state,</span>
+<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a>            update_key,</span>
+<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a>            minibatch_size,</span>
+<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a>            n_optim_epochs,</span>
+<span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a>            ppo_clip_eps,</span>
+<span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a>        <span class="co"># if i &gt; 0 and (i % (n_loop // 20) == 0):</span></span>
+<span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"Mean reward: </span><span class="sc">{</span>jnp<span class="sc">.</span>mean(rollout.rewards)<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="115">
+<div class="cell" data-tags="[]" data-execution_count="344">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>pponet <span class="op">=</span> SoftmaxPPONet(key<span class="op">=</span>jax.random.PRNGKey(<span class="dv">43</span>), n_actions<span class="op">=</span>n_actions)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>run_training(n_total_steps<span class="op">=</span><span class="dv">16</span> <span class="op">*</span> <span class="dv">1024</span> <span class="op">*</span> <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-</div>
-<div class="cell" data-execution_count="116">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>pponet(image)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="116">
-<pre><code>PPONetOutput(policy_logits=Array([-0.10854915,  0.12029472,  0.03809793, -0.01860824], dtype=float32), value=Array([-0.02617188], dtype=float32))</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="132">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span>(state)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="132">
-<pre><code>jumanji.environments.routing.maze.types.State</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="136">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>timestep</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="136">
-<pre><code>TimeStep(step_type=Array(1, dtype=int8), reward=Array(0., dtype=float32), discount=Array(1., dtype=float32), observation=Observation(agent_position=Position(row=Array(2, dtype=int32), col=Array(0, dtype=int32)), target_position=Position(row=Array(2, dtype=int32), col=Array(8, dtype=int32)), walls=Array([[False,  True, False, False, False,  True, False,  True, False,
-        False],
-       [False,  True,  True,  True, False,  True, False,  True, False,
-         True],
-       [False, False, False,  True, False,  True, False,  True, False,
-        False],
-       [False,  True, False,  True, False,  True, False,  True, False,
-         True],
-       [False,  True, False, False, False, False, False, False, False,
-        False],
-       [False,  True,  True,  True,  True,  True,  True,  True, False,
-         True],
-       [False, False, False, False, False, False, False,  True, False,
-        False],
-       [False,  True, False,  True,  True,  True, False,  True, False,
-         True],
-       [False,  True, False,  True, False, False, False,  True, False,
-        False],
-       [False,  True,  True,  True, False,  True, False,  True, False,
-         True]], dtype=bool), action_mask=Array([ True,  True,  True, False], dtype=bool), step_count=Array(10, dtype=int32)), extras=None)</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="77">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>key</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="77">
-<pre><code>Array([ 499813607, 2392722011], dtype=uint32)</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="127">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>jumanji.Environment</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="127">
-<pre><code>jumanji.env.Environment</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="128">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>env</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="128">
-<pre><code>AutoResetWrapper(Maze environment:
- - num_rows: 10
- - num_cols: 10
- - time_limit: 100
- - generator: &lt;jumanji.environments.routing.maze.generator.RandomGenerator object at 0x7fbb97d7c450&gt;)</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="131">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>env.observation_spec().</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="131">
-<pre><code>ObservationSpec(
-    agent_position=PositionSpec(
-    row=BoundedArray(shape=(), dtype=dtype('int32'), name='row_coordinate', minimum=Array(0, dtype=int32), maximum=Array(9, dtype=int32)),
-    col=BoundedArray(shape=(), dtype=dtype('int32'), name='col_coordinate', minimum=Array(0, dtype=int32), maximum=Array(9, dtype=int32)),
-),
-    target_position=PositionSpec(
-    row=BoundedArray(shape=(), dtype=dtype('int32'), name='row_coordinate', minimum=Array(0, dtype=int32), maximum=Array(9, dtype=int32)),
-    col=BoundedArray(shape=(), dtype=dtype('int32'), name='col_coordinate', minimum=Array(0, dtype=int32), maximum=Array(9, dtype=int32)),
-),
-    walls=BoundedArray(shape=(10, 10), dtype=dtype('bool'), name='walls', minimum=Array(False, dtype=bool), maximum=Array(True, dtype=bool)),
-    step_count=Array(shape=(), dtype=dtype('int32'), name='step_count'),
-    action_mask=BoundedArray(shape=(4,), dtype=dtype('bool'), name='action_mask', minimum=Array(False, dtype=bool), maximum=Array(True, dtype=bool)),
-)</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="49">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> obs_to_image(obs: jumanji.environments.routing.maze.types.Observation) <span class="op">-&gt;</span> jax.Array:</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    walls <span class="op">=</span> obs.walls.astype(jnp.float32)</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    agent_index</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    agent <span class="op">=</span> jnp.zeros_like(walls).at[obs.agent_position].<span class="bu">set</span>(<span class="fl">1.0</span>)</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    target <span class="op">=</span> jnp.zeros_like(walls).at[obs.target_position].<span class="bu">set</span>(<span class="fl">1.0</span>)</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> jnp.stack([walls, agent, target])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<div class="cell" data-execution_count="42">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>walls <span class="op">=</span> timestep.observation.walls.astype(jnp.float32)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<div class="cell">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>pos <span class="op">=</span> jnp.array([timestep.observation_position.row, timestep.observation.agent_position.col]) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<div class="cell">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>jnp.zeros_like()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<div class="cell" data-execution_count="119">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>timestep.discount</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="119">
-<pre><code>Array(1., dtype=float32)</code></pre>
-</div>
-</div>
-<div class="cell" data-execution_count="33">
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-display" data-execution_count="33">
-<pre><code>Observation(agent_position=Position(row=Array(2, dtype=int32), col=Array(0, dtype=int32)), target_position=Position(row=Array(2, dtype=int32), col=Array(8, dtype=int32)), walls=Array([[False,  True, False, False, False,  True, False,  True, False,
-        False],
-       [False,  True,  True,  True, False,  True, False,  True, False,
-         True],
-       [False, False, False,  True, False,  True, False,  True, False,
-        False],
-       [False,  True, False,  True, False,  True, False,  True, False,
-         True],
-       [False,  True, False, False, False, False, False, False, False,
-        False],
-       [False,  True,  True,  True,  True,  True,  True,  True, False,
-         True],
-       [False, False, False, False, False, False, False,  True, False,
-        False],
-       [False,  True, False,  True,  True,  True, False,  True, False,
-         True],
-       [False,  True, False,  True, False, False, False,  True, False,
-        False],
-       [False,  True,  True,  True, False,  True, False,  True, False,
-         True]], dtype=bool), action_mask=Array([ True,  True,  True, False], dtype=bool), step_count=Array(10, dtype=int32))</code></pre>
+<div class="cell-output cell-output-stdout">
+<pre><code>-0.0011034897
+-0.0011034897
+-0.018904295
+0.0011646664
+-0.023047319
+Mean reward: 0.00164794921875
+0.0025309124
+-0.023422167
+Mean reward: 0.00274658203125
+0.002412377
+-0.02344404
+Mean reward: 0.0023193359375
+0.0025090156
+-0.023455994
+Mean reward: 0.00177001953125
+0.0025963746
+-0.023466423
+Mean reward: 0.0028076171875
+0.0027008322
+-0.02347576
+Mean reward: 0.00213623046875
+0.002805225
+-0.023483884
+Mean reward: 0.00128173828125
+0.0029116897
+-0.023491226
+Mean reward: 0.0028076171875
+0.003014986
+-0.023497954
+Mean reward: 0.00201416015625</code></pre>
 </div>
 </div>
 
 
+</section>
 </section>
 </section>
 
