@@ -238,7 +238,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="init-applyアプローチによるパラメタ管理" class="level1">
 <h1>init-applyアプローチによるパラメタ管理</h1>
-<p>stax, haiku, flaxでは、この「パラメタ管理の問題」を、「init-applyアプローチ」により解決しています。このアプローチは以下のようにまとめられます。 1. モデルはパラメータを持たない 2. モデルは<code>init</code>と<code>apply</code>の2つの関数を持つ - <code>init</code>は、入力例を受け取ってパラメタを初期化し、最初のパラメータを返す - <code>apply</code>は、入力とパラメタを受け取り、モデルの計算結果を返す</p>
+<p>stax, haiku, flaxでは、この「パラメタ管理の問題」を、「init-applyアプローチ」により解決しています。このアプローチは以下のようにまとめられます。</p>
+<ol type="1">
+<li>モデルはパラメータを持たない</li>
+<li>モデルは<code>init</code>と<code>apply</code>の2つの関数を持つ</li>
+</ol>
+<ul>
+<li><code>init</code>は、入力例を受け取ってパラメタを初期化し、最初のパラメータを返す</li>
+<li><code>apply</code>は、入力とパラメタを受け取り、モデルの計算結果を返す</li>
+</ul>
 <p>なので、flaxやhaikuのAPIは以下のような感じになります。flaxでは<code>__call__</code>を使うがhaikuはPyTorchと同じ<code>forward</code>を使う、<code>flax</code>のModuleは <a href="https://docs.python.org/ja/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a>デコレータにより定義されたクラスと同じような性質を持つなどの違いがありますが、まあそれくらいで、大して違いはないです。以下僕がflaxとhaikuの間をとって書いた適当な疑似コードです。ニューラルネットワークを表すクラスとして、PyTorch風に「Module」という名前を使っています。</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(Module):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x):</span>
@@ -256,8 +264,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Linear/~/b"</span>: [...],</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><code>stax</code>はただのreference implementationなのでこのような機能がなく、かわりに、数のレイヤーを組み合わせるコンビネーターを提供しています。ではこのアプローチにはどのようなメリット、デメリットがあるでしょうか。</p>
-<p><strong>メリット</strong> - Moduleを初期化する際に入力されるArrayのshapeを指定しなくていい - パラメタは<code>init</code>が呼ばれた際に初期化される - 関数とデータを分離できる - Moduleは変更可能な変数を持たず、パラメタと完全に別に扱われる - <code>init</code>、<code>apply</code>に<code>jit</code>や<code>vmap</code>などの関数デコレータを適用するコードが自然に書ける</p>
-<p><strong>デメリット</strong> - Moduleは冗長 - Moduleは「出力の次元」などの「モデルに関する設定」を持っているだけ - パラメタの要素に直接アクセスするのが面倒 - 例えばhaikuなら<code>params["Linear/~/w"]</code>のようにしてパラメタの各要素にアクセスできるが、複雑なクラスだと<code>dict</code>の鍵の名前が長くなりわかりにくい - あまりオブジェクト指向的ではない - (haiku/flaxに特有) Module内でのパラメタの呼び出しを<code>jax.grad</code>が使えるような関数に変換する必要がある - 例えば<code>haiku.transform</code>は、<code>haiku.get_parameter</code>によるパラメタ呼び出しを含む関数を、パラメタを引数としてとる関数に変換する</p>
+<p><strong>メリット</strong></p>
+<ul>
+<li>Moduleを初期化する際に入力されるArrayのshapeを指定しなくていい
+<ul>
+<li>パラメタは<code>init</code>が呼ばれた際に初期化される</li>
+</ul></li>
+<li>関数とデータを分離できる
+<ul>
+<li>Moduleは変更可能な変数を持たず、パラメタと完全に別に扱われる</li>
+</ul></li>
+<li><code>init</code>、<code>apply</code>に<code>jit</code>や<code>vmap</code>などの関数デコレータを適用するコードが自然に書ける</li>
+</ul>
+<p><strong>デメリット</strong></p>
+<ul>
+<li>Moduleは冗長
+<ul>
+<li>Moduleは「出力の次元」などの「モデルに関する設定」を持っているだけ</li>
+</ul></li>
+<li>パラメタの要素に直接アクセスするのが面倒
+<ul>
+<li>例えばhaikuなら<code>params["Linear/~/w"]</code>のようにしてパラメタの各要素にアクセスできるが、複雑なクラスだと<code>dict</code>の鍵の名前が長くなりわかりにくい</li>
+</ul></li>
+<li>あまりオブジェクト指向的ではない</li>
+<li>(haiku/flaxに特有) Module内でのパラメタの呼び出しを<code>jax.grad</code>が使えるような関数に変換する必要がある
+<ul>
+<li>例えば<code>haiku.transform</code>は、<code>haiku.get_parameter</code>によるパラメタ呼び出しを含む関数を、パラメタを引数としてとる関数に変換する</li>
+</ul></li>
+</ul>
 <p>こんなところでしょうか。</p>
 </section>
 <section id="equinoxの特徴" class="level1">
@@ -307,8 +341,21 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    weight: jax.Array</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    bias: jax.Array</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>というコードに表れていますが、「Moduleがパラメタを直接持つ」という点です。init-applyアプローチと比べると、これはどのような利点・欠点があるでしょうか？</p>
-<p><strong>メリット</strong> - わかりやすい - デバッグしやすい - flax/haikuは一度<code>transform</code>しないとデバッグできない - <code>net = Module(...); net(input)</code>のように短い行数でテストコードが書ける - パラメタを直接操作するのが簡単</p>
-<p><strong>デメリット</strong> - モデルを初期化する時に、入力する特徴量の次元が必要 - <code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある</p>
+<p><strong>メリット</strong></p>
+<ul>
+<li>わかりやすい</li>
+<li>デバッグしやすい
+<ul>
+<li>flax/haikuは一度<code>transform</code>しないとデバッグできない</li>
+<li><code>net = Module(...); net(input)</code>のように短い行数でテストコードが書ける</li>
+</ul></li>
+<li>パラメタを直接操作するのが簡単</li>
+</ul>
+<p><strong>デメリット</strong></p>
+<ul>
+<li>モデルを初期化する時に、入力する特徴量の次元が必要</li>
+<li><code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある</li>
+</ul>
 <p>ここで、最後の「<code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある」というのは、どういう意味でしょうか？例えば、self-attentionを計算する以下のようなModuleを考えます。</p>
 <div class="cell" data-tags="[]" data-execution_count="17">
 <details>
@@ -406,7 +453,13 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
  ))</code></pre>
 </div>
 </div>
-<p><code>sqrt_d_attn=None</code>のものと、全てのパラメタがNoneで<code>sqrt_d_attn=2.8284270763397217</code>のものに分離されています。なので、定数を持つModuleに対して勾配を計算したい場合は 1. Moduleをパラメタとそれ以外に分割 2. 勾配を求めたい関数<code>f(module, ...)</code>をラップする関数<code>g(params, others, ..)</code>みたいなものを作る 3. <code>jax.grad(g)(params, others, ...)</code>で勾配を計算 という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<a href="https://docs.kidger.site/equinox/api/filtering/transformations/#equinox.filter_grad"><code>equinox.filter_grad</code></a>です。基本何も考えずにこれを使えばいいです。やってみましょう。</p>
+<p><code>sqrt_d_attn=None</code>のものと、全てのパラメタがNoneで<code>sqrt_d_attn=2.8284270763397217</code>のものに分離されています。なので、定数を持つModuleに対して勾配を計算したい場合は</p>
+<ol type="1">
+<li>Moduleをパラメタとそれ以外に分割</li>
+<li>勾配を求めたい関数<code>f(module, ...)</code>をラップする関数<code>g(params, others, ..)</code>みたいなものを作る</li>
+<li><code>jax.grad(g)(params, others, ...)</code>で勾配を計算</li>
+</ol>
+<p>という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<a href="https://docs.kidger.site/equinox/api/filtering/transformations/#equinox.filter_grad"><code>equinox.filter_grad</code></a>です。基本何も考えずにこれを使えばいいです。やってみましょう。</p>
 <div class="cell" data-tags="[]" data-execution_count="20">
 <details>
 <summary>Code</summary>
