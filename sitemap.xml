@@ -2,38 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://github.com/kngwyu/rlog2/about.html</loc>
-    <lastmod>2023-07-19T04:28:01.900Z</lastmod>
+    <lastmod>2023-07-21T07:59:38.647Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/try_equinox_for_rl_jp.html</loc>
-    <lastmod>2023-07-19T04:28:00.484Z</lastmod>
+    <lastmod>2023-07-21T07:59:37.107Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/understanding-attention.html</loc>
-    <lastmod>2023-07-19T04:27:58.932Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/kngwyu/rlog2/posts/try_nwb_and_dandi.html</loc>
-    <lastmod>2023-07-19T04:27:57.268Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/kngwyu/rlog2/index.html</loc>
-    <lastmod>2023-07-19T04:27:54.332Z</lastmod>
+    <lastmod>2023-07-21T07:59:35.319Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/understanding-what-makes-rl-difficult.html</loc>
-    <lastmod>2023-07-19T04:27:56.824Z</lastmod>
+    <lastmod>2023-07-21T07:59:33.531Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/kngwyu/rlog2/index.html</loc>
+    <lastmod>2023-07-21T07:59:30.931Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/sandb-exercise-racetrack.html</loc>
-    <lastmod>2023-07-19T04:27:58.252Z</lastmod>
+    <lastmod>2023-07-21T07:59:34.619Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/understanding-attention-en.html</loc>
-    <lastmod>2023-07-19T04:27:59.916Z</lastmod>
+    <lastmod>2023-07-21T07:59:36.343Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/kngwyu/rlog2/posts/jax-brax-haiku.html</loc>
-    <lastmod>2023-07-19T04:28:01.628Z</lastmod>
+    <lastmod>2023-07-21T07:59:38.363Z</lastmod>
   </url>
 </urlset>
