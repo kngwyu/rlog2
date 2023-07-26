@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2023-06-09">
 
-<title>RLog2 - equinoxで強化学習してみる</title>
+<title>RLog2 - Try reinforcement learning with equinox</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -152,7 +151,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">equinoxで強化学習してみる</h1>
+      <h1 class="title">Try reinforcement learning with equinox</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">ja</div>
                 <div class="quarto-category">RL</div>
@@ -168,7 +167,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">June 9, 2023</p>
+        <p class="date">Invalid Date</p>
       </div>
     </div>
     
@@ -184,21 +183,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#jaxにできることとできないこと" id="toc-jaxにできることとできないこと" class="nav-link active" data-scroll-target="#jaxにできることとできないこと">Jaxにできることとできないこと</a></li>
-  <li><a href="#init-applyアプローチによるパラメタ管理" id="toc-init-applyアプローチによるパラメタ管理" class="nav-link" data-scroll-target="#init-applyアプローチによるパラメタ管理">init-applyアプローチによるパラメタ管理</a></li>
-  <li><a href="#equinoxの特徴" id="toc-equinoxの特徴" class="nav-link" data-scroll-target="#equinoxの特徴">equinoxの特徴</a></li>
-  <li><a href="#強化学習してみる" id="toc-強化学習してみる" class="nav-link" data-scroll-target="#強化学習してみる">強化学習してみる</a>
+  <li><a href="#what-jax-can-do-for-you-and-what-it-doesnt-provide" id="toc-what-jax-can-do-for-you-and-what-it-doesnt-provide" class="nav-link active" data-scroll-target="#what-jax-can-do-for-you-and-what-it-doesnt-provide">What jax can do for you, and what it doesn’t provide</a>
   <ul class="collapse">
-  <li><a href="#環境" id="toc-環境" class="nav-link" data-scroll-target="#環境">環境</a></li>
-  <li><a href="#ppoを実装してみる" id="toc-ppoを実装してみる" class="nav-link" data-scroll-target="#ppoを実装してみる">PPOを実装してみる</a>
+  <li><a href="#nn-parameter-management-by-init-apply-approach" id="toc-nn-parameter-management-by-init-apply-approach" class="nav-link" data-scroll-target="#nn-parameter-management-by-init-apply-approach">NN parameter management by init-apply approach</a></li>
+  </ul></li>
+  <li><a href="#equinox-features" id="toc-equinox-features" class="nav-link" data-scroll-target="#equinox-features">equinox Features</a>
   <ul class="collapse">
-  <li><a href="#入力" id="toc-入力" class="nav-link" data-scroll-target="#入力">入力</a></li>
-  <li><a href="#ネットワーク" id="toc-ネットワーク" class="nav-link" data-scroll-target="#ネットワーク">ネットワーク</a></li>
-  <li><a href="#ロールアウト" id="toc-ロールアウト" class="nav-link" data-scroll-target="#ロールアウト">ロールアウト</a></li>
-  <li><a href="#学習" id="toc-学習" class="nav-link" data-scroll-target="#学習">学習</a></li>
+  <li><a href="#try-reinforcement-learning" id="toc-try-reinforcement-learning" class="nav-link" data-scroll-target="#try-reinforcement-learning">Try reinforcement learning</a></li>
+  <li><a href="#environment" id="toc-environment" class="nav-link" data-scroll-target="#environment">Environment</a></li>
+  <li><a href="#lets-implement-ppo." id="toc-lets-implement-ppo." class="nav-link" data-scroll-target="#lets-implement-ppo.">Let’s implement PPO.</a>
+  <ul class="collapse">
+  <li><a href="#input" id="toc-input" class="nav-link" data-scroll-target="#input">Input</a></li>
+  <li><a href="#network" id="toc-network" class="nav-link" data-scroll-target="#network">Network</a></li>
+  <li><a href="#rollout" id="toc-rollout" class="nav-link" data-scroll-target="#rollout">Rollout</a></li>
+  <li><a href="#learning" id="toc-learning" class="nav-link" data-scroll-target="#learning">Learning</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">まとめ</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
 </nav>
     </div>
@@ -208,14 +209,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>最近<a href="https://docs.kidger.site/equinox/">equinox</a>という<a href="https://jax.readthedocs.io/en/latest/">jax</a>ベースの深層学習モデルを定義するライブラリを使ってみたのですが、これが中々いいと思ったので紹介ついでに強化学習してみます。他のjaxベースのライブラリにはDeepmindの<a href="https://dm-haiku.readthedocs.io/en/latest/">haiku</a>やGoogle Researchの<a href="https://flax.readthedocs.io/en/latest/">flax</a>があります。この2つのライブラリは実際のところあまり変わりはありません。というのも、jaxには試験的に書かれた<a href="https://jax.readthedocs.io/en/latest/jax.example_libraries.stax.html">stax</a>という深層学習ライブラリのリファレンス実装があり、haikuもflaxもstaxをベースにオブジェクト志向的な<code>Module</code>を採用したものだからです。あるいは、haikuやflaxは「staxをPyTorchっぽくしたもの」と言ってもいいかもしれません。equinoxのドキュメントにある<a href="https://docs.kidger.site/equinox/examples/init_apply/">Compatibility with init-apply libraries</a>というページでは、これらのライブラリのやり方を「init-applyアプローチ」と呼んで軽く説明しています。これについてざっと見てみましょう。</p>
-<section id="jaxにできることとできないこと" class="level1">
-<h1>Jaxにできることとできないこと</h1>
-<p>そもそも、jaxというのは何をしてくれるライブラリなのでしょうか。ホームページのトップにはこう書かれています。</p>
+<p>I recently tried <a href="https://docs.kidger.site/equinox/">equinox</a>, a <a href="https://jax.readthedocs.io/en/latest/">jax</a>-based library for defining and managing neural nets, and I liked it. So in this blog post I will introduce equinox and demonstrate its use with a reinforcement learning example. Other jax-based NN libraries include <a href="https://dm-haiku.readthedocs.io/en/latest/">haiku</a> from Deepmind and <a href="https://flax.readthedocs.io/en/latest/">flax</a> from Google Research. Both are actually quite similar because their designs are based on <a href="https://jax.readthedocs.io/en/latest/jax.example_libraries.stax.html">stax</a>, which is a reference implementation by the Jax developers. In other words, I would say that both haiku and flax are libraries that have added a PyTorch-like <code>Module</code> to stax. An <a href="https://docs.kidger.site/equinox/examples/init_apply/">equinox document</a> briefly summarizes the approach of haiku and flax, calling it the ‘init-apply approach’. Let’s start this blog post by paraphrasing that document.</p>
+<section id="what-jax-can-do-for-you-and-what-it-doesnt-provide" class="level1">
+<h1>What jax can do for you, and what it doesn’t provide</h1>
+<p>So, what can jax do? Its webpage says that:</p>
 <blockquote class="blockquote">
 <p>JAX is Autograd and XLA, brought together for high-performance numerical computing.</p>
 </blockquote>
-<p><a href="https://www.tensorflow.org/xla">XLA</a>というのは、Tensorflowのバックエンドとして開発された深層学習用の中間言語で、CPU/GPU/TPU用に数値計算コードを最適化してくるものです。深層学習に求められる並列化の性質から、特にSIMD演算/ベクトル並列化に特化しています。Jaxは、<code>jax.numpy</code>というNumPyに似せたライブラリをXLAのフロントエンドとして提供することで、「NumPyコードをベクトル並列化された高速なGPU用コードに実行時コンパイルすること」を可能にしています。では、Autogradというのはなんでしょうか？これは、jaxの開発者が以前に開発していたライブラリの名前でもありますが、自動微分全般のことを指すと考えていいでしょう。自分で勾配逆伝播のコードを書かなくても、jaxでは損失関数の各パラメタにおいての偏微分を勝手に計算してくれます。試しに、<span class="math inline">\(f(x, y) = x^2 + y\)</span>の偏微分を計算してみましょう。</p>
+<p><a href="https://www.tensorflow.org/xla">XLA</a> is an intermediate language for deep learning developed as a backend to Tensorflow. It’s intended for producing optimized programs for vector accelartors like GPU, TPU, and even modern CPU’s SIMD instructions. Jax provides a NumPy-like library called <code>jax.numpy</code> as a front-end to XLA, which allows NumPy-like Python code to be vector-parallelized into fast GPU code by runtime (just-in-time) compilation. So what is Autograd? This is also the name of a library previously developed by the developers of jax, but you can think of it as autodifferentiation in general. Autodifferentiation is a technique to automatically derive gradients of functions in numerical computation. Jax supports autograd, which means that you can derive the partial derivative of the function w.r.t. your inputs, without explicitly write the code to do that. Let’s try to compute the partial derivative of <span class="math inline">\(f(x, y) = x^2 + y\)</span>:</p>
 <div class="cell" data-tags="[]" data-execution_count="2">
 <details>
 <summary>Code</summary>
@@ -234,20 +235,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  Array([1., 1., 1., 1., 1.], dtype=float32))</code></pre>
 </div>
 </div>
-<p><span class="math inline">\(\frac{\partial}{\partial x}f = 2x, \frac{\partial}{\partial y}f = 1\)</span>なので、正しく計算されているようですね。こんな感じで、jaxは自動的に偏微分を計算してくれるので、これをそのまま勾配降下法に使ってモデルを学習させることができます。深層ニューラルネットワークを学習させる際も、この<code>grad</code>を使えば全部のパラメタについて偏微分を効率的に計算してくれるので、それを使って学習できます。ついでに、この勾配をとる計算やモデルを更新する計算を<code>jax.jit</code>につっこめば、高速に計算してくれます。 ここで問題になるのは、深層ニューラルネットワークの場合パラメタが多すぎるので、こんな風にいちいち全てのパラメタについて変数を割り当ててプログラムを書いていたら大変すぎる、ということです。大変すぎる以外に何か問題はあるのかというと、特にないと思います。コードの再利用性くらいでしょうか。しかし、まあ面倒なものは面倒ですから、<strong>パラメタを管理してくれる仕組み</strong>がほしいなあ、と思うわけですね。</p>
-</section>
-<section id="init-applyアプローチによるパラメタ管理" class="level1">
-<h1>init-applyアプローチによるパラメタ管理</h1>
-<p>stax, haiku, flaxでは、この「パラメタ管理の問題」を、「init-applyアプローチ」により解決しています。このアプローチは以下のようにまとめられます。</p>
+<p>Since <span class="math inline">\(\frac{\partial}{\partial x}f = 2x, \frac{\partial}{\partial y}f = 1\)</span>, the outputs look correct. Since jax automatically computes partial derivatives, you can use it directly for gradient descent to train your NN model. In addition, if you put the computation of taking this gradient and updating the model into <code>jax.jit</code>, it can acceralate the whole model traning procedure. The problem here is that there are too many parameters in the case of deep neural networks, so it would be too much work to write a program like this, assigning variables for every single parameter. This is a surprisingly serious problem because recent deep NN often have too many parameters, difficult to manage by hand. So I want a system to efficiently manage the all parameters of my model with covenient abstractions.</p>
+<section id="nn-parameter-management-by-init-apply-approach" class="level2">
+<h2 class="anchored" data-anchor-id="nn-parameter-management-by-init-apply-approach">NN parameter management by init-apply approach</h2>
+<p>In stax, haiku, and flax, this problem of parameter management is solved by the so-called “init-apply approach”, which can be summarized as:</p>
 <ol type="1">
-<li>モデルはパラメータを持たない</li>
-<li>モデルは<code>init</code>と<code>apply</code>の2つの関数を持つ</li>
+<li>the <em>model</em> has no parameters</li>
+<li>instead, the <em>model</em> is just a set of two functions: <code>init</code> and <code>apply</code></li>
 </ol>
 <ul>
-<li><code>init</code>は、入力例を受け取ってパラメタを初期化し、最初のパラメータを返す</li>
-<li><code>apply</code>は、入力とパラメタを受け取り、モデルの計算結果を返す</li>
+<li><code>init</code> takes an example input, initializes the parameters, and returns the initial parameter</li>
+<li><code>apply</code> takes input and parameters, and then compute the output of the model</li>
 </ul>
-<p>なので、flaxやhaikuのAPIは以下のような感じになります。flaxでは<code>__call__</code>を使うがhaikuはPyTorchと同じ<code>forward</code>を使う、<code>flax</code>のModuleは <a href="https://docs.python.org/ja/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a>デコレータにより定義されたクラスと同じような性質を持つなどの違いがありますが、まあそれくらいで、大して違いはないです。以下僕がflaxとhaikuの間をとって書いた適当な疑似コードです。ニューラルネットワークを表すクラスとして、PyTorch風に「Module」という名前を使っています。</p>
+<p>So the APIs for flax and haiku are as follows. While there are a number of differences (e.g., flax uses <code>__call__</code> (while haiku uses <code>forward</code> like PyTorch (just like how Chainer and PyTorch differ), <code>flax</code> employs <a href="https://%20docs.python.org/en/3/library/dataclasses.html#dataclasses.dataclass"><code>dataclasses.dataclass</code></a> for Module class), their design is quite similar.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(Module):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__call__</span>(<span class="va">self</span>, x):</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> x.shape[<span class="dv">0</span>]</span>
@@ -258,45 +258,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> Linear(output_size<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> model.init(jnp.zeros(<span class="dv">1</span>, <span class="dv">100</span>))</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> model.<span class="bu">apply</span>(params, jnp.zeros(<span class="dv">10</span>, <span class="dv">100</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>こんな感じですかね。なお、上疑似コード中の<code>self.parameter</code>というメソッドは<code>flax</code>や<code>haiku</code>にある「パラメータをクラスに登録する機能」のことです。この機能により、各パラメタを値としてもつ<code>dict</code>を<code>init</code>により返すことができます。haikuの場合は、<code>params</code>は以下のような<code>dict</code>になっています。</p>
+<p>In the above example, I used <code>Module</code> to represent the abstract class for defining NN. Note that he method <code>self.parameter</code> in the above example is the counterpart of the parameter registration functions in <code>flax</code> and <code>haiku</code>. In the case of <code>haiku</code>, the <code>params</code> is the following <code>dict</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>{</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Linear/~/w"</span>: [...],</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Linear/~/b"</span>: [...],</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p><code>stax</code>はただのreference implementationなのでこのような機能がなく、かわりに、数のレイヤーを組み合わせるコンビネーターを提供しています。ではこのアプローチにはどのようなメリット、デメリットがあるでしょうか。</p>
-<p><strong>メリット</strong></p>
+<p>So, it means that users need to know this naming scheme to access a specific value of parameter. <code>stax</code> doesn’t have <code>Module</code> feature. Instead, it provides function combinator to combine multiple <code>init</code> and <code>apply</code>. Then let’s summarize the pros and cons of this approach.</p>
+<p><strong>Pros</strong></p>
 <ul>
-<li>Moduleを初期化する際に入力されるArrayのshapeを指定しなくていい
+<li>No need to specify the shape of the input Array when initializing the Module
 <ul>
-<li>パラメタは<code>init</code>が呼ばれた際に初期化される</li>
+<li>Parameters are initialized when <code>init</code> is called</li>
 </ul></li>
-<li>関数とデータを分離できる
+<li>Functions and data are separated
 <ul>
-<li>Moduleは変更可能な変数を持たず、パラメタと完全に別に扱われる</li>
-</ul></li>
-<li><code>init</code>、<code>apply</code>に<code>jit</code>や<code>vmap</code>などの関数デコレータを適用するコードが自然に書ける</li>
-</ul>
-<p><strong>デメリット</strong></p>
-<ul>
-<li>Moduleは冗長
-<ul>
-<li>Moduleは「出力の次元」などの「モデルに関する設定」を持っているだけ</li>
-</ul></li>
-<li>パラメタの要素に直接アクセスするのが面倒
-<ul>
-<li>例えばhaikuなら<code>params["Linear/~/w"]</code>のようにしてパラメタの各要素にアクセスできるが、複雑なクラスだと<code>dict</code>の鍵の名前が長くなりわかりにくい</li>
-</ul></li>
-<li>あまりオブジェクト指向的ではない</li>
-<li>(haiku/flaxに特有) Module内でのパラメタの呼び出しを<code>jax.grad</code>が使えるような関数に変換する必要がある
-<ul>
-<li>例えば<code>haiku.transform</code>は、<code>haiku.get_parameter</code>によるパラメタ呼び出しを含む関数を、パラメタを引数としてとる関数に変換する</li>
+<li>Module has no variables that can be changed, and is treated completely separately from its parameters</li>
 </ul></li>
 </ul>
-<p>こんなところでしょうか。</p>
+<p><strong>Disadvantages</strong>.</p>
+<ul>
+<li>(Only haiku/flax) Module is redundant
+<ul>
+<li>Module only has “model settings” such as output dimensions</li>
+</ul></li>
+<li>Direct access to parameter elements is cumbersome
+<ul>
+<li>For example, in haiku, each parameter element can be accessed with <code>params["Linear/~/w"]</code>, so we need to understand this naming scheme for keys to check parameters</li>
+</ul></li>
+<li>Not very object oriented
+<ul>
+<li>Because classes don’t have data</li>
+</ul></li>
+<li>(Only haiku/flax) Parameter calls in Module need to be converted to functions that can be used by <code>jax.grad</code>.
+<ul>
+<li>For example, <code>haiku.transform</code> converts functions that include parameter calls with <code>haiku.get_parameter</code> into functions that take parameters as arguments</li>
+</ul></li>
+</ul>
 </section>
-<section id="equinoxの特徴" class="level1">
-<h1>equinoxの特徴</h1>
-<p>equinoxの特徴は、init-applyアプローチと異なり、「よりオブジェクト指向的な」（または、PyTorchに近い）インターフェースを志向している点にあります。 ドキュメントのトップページにある<a href="https://docs.kidger.site/equinox/#quick-example">Quick example</a>を見てみましょう。</p>
+</section>
+<section id="equinox-features" class="level1">
+<h1>equinox Features</h1>
+<p>Equinox is geared toward “more object-oriented” (or PyTorch-like) interface, compared to the init-apply approach. Take a look at <a href="https://docs.kidger.site/equinox/#quick-example">Quick example</a> on the top page of the documentation.</p>
 <div class="cell" data-tags="[]" data-execution_count="3">
 <details>
 <summary>Code</summary>
@@ -336,27 +338,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 </div>
 </div>
-<p>ここで、equinoxの最大の特徴は</p>
+<p>Here, the most significant feature of equinox is that the Module directly has parameters, as show in:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Linear(eqx.Module):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    weight: jax.Array</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    bias: jax.Array</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>というコードに表れていますが、「Moduleがパラメタを直接持つ」という点です。init-applyアプローチと比べると、これはどのような利点・欠点があるでしょうか？</p>
-<p><strong>メリット</strong></p>
+<p>Compared to the init-apply approach, what pros and cons does this approach have?</p>
+<p><strong>Pros</strong></p>
 <ul>
-<li>わかりやすい</li>
-<li>デバッグしやすい
+<li>Easy to understand</li>
+<li>Easy to debug
 <ul>
-<li>flax/haikuは一度<code>transform</code>しないとデバッグできない</li>
-<li><code>net = Module(...); net(input)</code>のように短い行数でテストコードが書ける</li>
+<li>In flax and haiku, we need to <code>transform</code> the module for debugging</li>
+<li>We can write test codes in a few lines, like <code>net = Module(...); net(input)</code></li>
 </ul></li>
-<li>パラメタを直接操作するのが簡単</li>
+<li>Easy to manually manipulate parameters</li>
 </ul>
-<p><strong>デメリット</strong></p>
+<p><strong>Cons</strong></p>
 <ul>
-<li>モデルを初期化する時に、入力する特徴量の次元が必要</li>
-<li><code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある</li>
+<li>Modules require input dimensions when initialization</li>
+<li>Modules need to be separtated into NN parameters and other constants before applying<code>grad</code>, <code>jit</code>, and <code>scan</code> or some other jax decorators</li>
 </ul>
-<p>ここで、最後の「<code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある」というのは、どういう意味でしょうか？例えば、self-attentionを計算する以下のようなModuleを考えます。</p>
+<p>What does the last sentence <code>Modules need to be separtated into NN parameters and other constants</code> mean? Let’s consider Self-Attention example below:</p>
 <div class="cell" data-tags="[]" data-execution_count="17">
 <details>
 <summary>Code</summary>
@@ -380,7 +382,7 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> jax.vmap(<span class="va">self</span>.v)(e) <span class="op">@</span> alpha.T</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p><code>eqx.Module</code>は内部で<code>dataclasses.dataclass</code>を使うので、<code>__init__</code>等の初期化メソッドはあらかじめ用意されていますが、これをオーバーライドしてパラメタの初期化に使います。 <span class="math inline">\(\sqrt{d_\mathrm{attn}}\)</span>は定数なので、これもメンバ変数にしてしまいましょう。勾配を計算してみます。</p>
+<p>While initialization methods such as <code>__init__</code> are prepared in advance since <code>eqx.Module</code> uses <code>dataclasses.dataclass</code> internally, but let’s override them to initialize parameters. Since <span class="math inline">\(\sqrt{d_\mathrm{attn}}\)</span> is a constant, let’s make it a member variable as well. Let’s compute gradients:</p>
 <div class="cell" data-tags="[]" data-execution_count="18">
 <details>
 <summary>Code</summary>
@@ -414,7 +416,7 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 )</code></pre>
 </div>
 </div>
-<p>ここで困ったことに、<code>sqrt_d_attn</code>での偏微分も計算されてしまいました。<code>eqx.Module</code>そのものがパラメタを持つことによって、定数であるようなメンバ変数に対しても偏微分が計算されてしまいます。この問題を、equinoxでは、<a href="https://docs.kidger.site/equinox/api/filtering/partition-combine/#equinox.partition"><code>eqx.partition</code></a>と<a href="https://docs.kidger.site/equinox/api/filtering/partition-combine/#equinox.is_inexact_array"><code>eqx.is_inexact_array</code></a>を使って、「32bit浮動小数点の<code>jax.Array</code>または<code>numpy.ndarray</code>」と「その他のメンバ変数」を分離することにより解決しています。やってみましょう。</p>
+<p>The trouble here is that the partial derivative in <code>sqrt_d_attn</code> is also computed. The fact that <code>eqx.Module</code> itself has a parameter causes partial derivatives to be computed even for member variables that would otherwise be constants. This problem is solved in equinox by using <a href="https://docs.kidger.site/equinox/api/filtering/partition-combine/#equinox.partition"><code>eqx.partition</code></a> and <a href="https://docs.kidger.site/equinox/api/filtering/partition-combine/#equinox.is_inexact_array"><code>eqx.is_inexact_array</code></a> to separate a module instance to a “32-bit floating-point <code>jax. Array</code> or <code>numpy.ndarray</code>” and “other member variables”. Let’s try it.</p>
 <div class="cell" data-tags="[]" data-execution_count="19">
 <details>
 <summary>Code</summary>
@@ -453,13 +455,14 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
  ))</code></pre>
 </div>
 </div>
-<p><code>sqrt_d_attn=None</code>のものと、全てのパラメタがNoneで<code>sqrt_d_attn=2.8284270763397217</code>のものに分離されています。なので、定数を持つModuleに対して勾配を計算したい場合は</p>
+<p>We can see the struct is divided into one with <code>sqrt_d_attn=None</code> and one with<code>sqrt_d_attn=2.8284270763397217</code>. To summarize, when we want to compute the gradients of w.r.t. all parameters in the module with non-parameter member variables,</p>
 <ol type="1">
-<li>Moduleをパラメタとそれ以外に分割</li>
-<li>勾配を求めたい関数<code>f(module, ...)</code>をラップする関数<code>g(params, others, ..)</code>みたいなものを作る</li>
-<li><code>jax.grad(g)(params, others, ...)</code>で勾配を計算</li>
+<li>Split Module into parameters and others.</li>
+<li>Creaate a function <code>f(module, ...)</code> of which you want the gradient.</li>
+<li>Create a function that wraps <code>f</code> with separated arguments for paremters and non-parameters. Say, <code>wrapped_f(params, others, ...)</code></li>
+<li>compute the gradient with <code>jax.grad(wrapped_f)(params, others, ...)</code></li>
 </ol>
-<p>という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<a href="https://docs.kidger.site/equinox/api/filtering/transformations/#equinox.filter_grad"><code>equinox.filter_grad</code></a>です。基本何も考えずにこれを使えばいいです。やってみましょう。</p>
+<p>It’s tiring. But a good news is that <a href="https://docs.kidger.site/equinox/api/filtering/transformations/#equinox.filter_%20grad"><code>equinox.filter_grad</code></a> can do all of this tiring procedure for us. You can use it for most cases. Let’s try it.</p>
 <div class="cell" data-tags="[]" data-execution_count="20">
 <details>
 <summary>Code</summary>
@@ -492,13 +495,13 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 )</code></pre>
 </div>
 </div>
-<p>勾配を返してくれました。定数の<code>sqrt_d_attn</code>はきっちり<code>None</code>でマスクされています。なので、Moduleで定数を持ちたかったらとりあえず<code>jax.Array</code>か<code>ndarray</code>以外の型にしておけばいいです。じゃあ32bit浮動小数点型の<code>jax.Array</code>を定数として持ちたかったらどうすればいいんだというと、<code>filter_value_and_grad</code>を直接使えずめちゃくちゃ面倒になるので、避けたほうが良さげです。ただPython組み込みの<code>float</code>や<code>bool</code>もjitコンパイルしてしまえばただの定数になるので、パフォーマンス的には気にする必要はないです。</p>
+<p>It returned the gradient correctly. The constant <code>sqrt_d_attn</code> is exactly masked by <code>None</code>. So, if you want to have a constant in a Module, just use a type other than <code>jax.Array</code> or <code>ndarray</code> for now. If you want to have a constant as <code>jax.Array</code>, you can’t <code>filter_value_and_grad</code> directly and you need to manually decompose the struct. So I recommend to just have constants as Python built-in types such as <code>float</code>. If you use <code>jax.jit</code>, they are just compiled to a part of binary code, so it adds no overhead.</p>
+<section id="try-reinforcement-learning" class="level2">
+<h2 class="anchored" data-anchor-id="try-reinforcement-learning">Try reinforcement learning</h2>
 </section>
-<section id="強化学習してみる" class="level1">
-<h1>強化学習してみる</h1>
-<section id="環境" class="level2">
-<h2 class="anchored" data-anchor-id="環境">環境</h2>
-<p>一通り<code>equinox</code>の特徴を紹介したところで、これを使って強化学習してみます。せっかくjaxを使っているの<del>とgymのAPIが変わりまくった上にgymnasiumに変わって全然ついていけないの</del>で、jax製の環境を使ってみましょう。ここでは<a href="https://instadeepai.github.io/jumanji/">jumanji</a>というライブラリの<a href="https://instadeepai.github.io/jumanji/environments/maze/?h=maze">Maze</a>を使ってみます。</p>
+<section id="environment" class="level2">
+<h2 class="anchored" data-anchor-id="environment">Environment</h2>
+<p>Now that we have introduced the features of <code>equinox</code>, let’s try reinforcement learning with it. Since we are using jax <del>and since the API of Gym has changed a lot and changed to gymnasium we can’t keep up with it at all</del>, let’s use an environment made by jax. Here I use <a href="https://instadeepai.github.io/jumanji/environments/maze/">Maze</a> from the <a href="https://instadeepai.github.io/jumanji/">jumanji</a>.</p>
 <div class="cell" data-tags="[]" data-execution_count="21">
 <details>
 <summary>Code</summary>
@@ -1583,14 +1586,14 @@ AQAAAABMYXZmNjAuMy4xMDA=
 </video>
 </div>
 </div>
-<p>使いやすそうですね。ただデフォルトだと動画がハチャメチャなサイズだったので適当にHTMLのタグを書き換えて小さくしてます。 実際に学習するときには<code>vmap</code>や<code>jit</code>と組み合わせて使えるようです。</p>
+<p>It looks easy to use. However, the default size of the video was too big, so I replaced the HTML tags to make it smaller. It seems to be usable in combination with <code>vmap</code> and <code>jit</code> for actual learning.</p>
 </section>
-<section id="ppoを実装してみる" class="level2">
-<h2 class="anchored" data-anchor-id="ppoを実装してみる">PPOを実装してみる</h2>
-<p>ということで、この環境を学習してみましょう。ここでは定番かつ学習が高速な<a href="https://arxiv.org/abs/1707.06347">PPO</a>を実装してみます。</p>
-<section id="入力" class="level3">
-<h3 class="anchored" data-anchor-id="入力">入力</h3>
-<p>それぞれ壁の位置、エージェントの位置、ゴールの位置をそれぞれ10x10のバイナリ画像で表現し、<code>3x10x10</code>の配列として入力します。</p>
+<section id="lets-implement-ppo." class="level2">
+<h2 class="anchored" data-anchor-id="lets-implement-ppo.">Let’s implement PPO.</h2>
+<p>So, let’s try to learn this environment. Here we will implement <a href="https://arxiv.org/abs/1707.06347">PPO</a>, because it’s fast.</p>
+<section id="input" class="level3">
+<h3 class="anchored" data-anchor-id="input">Input</h3>
+<p>Input as an array with <code>3x10x10</code> shape, each representing a 10x10 binary image of the position of the wall, the position of the agent, and the position of the goal, respectively.</p>
 <div class="cell" data-tags="[]" data-execution_count="22">
 <details>
 <summary>Code</summary>
@@ -1604,9 +1607,9 @@ AQAAAABMYXZmNjAuMy4xMDA=
 </details>
 </div>
 </section>
-<section id="ネットワーク" class="level3">
-<h3 class="anchored" data-anchor-id="ネットワーク">ネットワーク</h3>
-<p>たたみこんでからReLU + 線形レイヤを2回というシンプルな構成にします。途中までは価値関数と方策は共通でいいでしょう。方策はカテゴリカル分布とします。面倒なので、入力サイズ<span class="math inline">\(3 \times 10 \times 10\)</span>、行動数<span class="math inline">\(4\)</span>として入出力サイズをベタ書きしてしまいます。</p>
+<section id="network" class="level3">
+<h3 class="anchored" data-anchor-id="network">Network</h3>
+<p>I use a simple network with a 2D convolution layer, followed by ReLU activations and two linear layers. Policy and value networks share the first two layers, and the policy is modeled by a categorical distribution. To make things simpler, I will write the input and output sizes as <span class="math inline">\(3 \times 10 \times 10\)</span> and <span class="math inline">\(4\)</span> for the number of actions.</p>
 <div class="cell" data-tags="[]" data-execution_count="164">
 <details>
 <summary>Code</summary>
@@ -1658,9 +1661,9 @@ AQAAAABMYXZmNjAuMy4xMDA=
 </details>
 </div>
 </section>
-<section id="ロールアウト" class="level3">
-<h3 class="anchored" data-anchor-id="ロールアウト">ロールアウト</h3>
-<p>PPOの実装では1000~8000ステップ程度環境で行動した履歴を集めてそれを使って何度かネットワークを更新するのが普通です。ここでは<a href="https://jax.readthedocs.io/en/latest/jaxpr.html#scan">jax.lax.scan</a>を使って、Pythonのループを使うより高速なロールアウトを実装します。scanの速度面での恩恵は大きいですが、使い方には少し注意が必要です。特に、1ステップ進める関数の二番目の出力を<code>results: list[Result]</code> とすると、最終的に返ってくるのが<code>Result(member1=stack([m1 for m1 in results.member1]), ...)</code>になることは把握しておきましょう。 また、<code>exec_rollout</code>の引数が<code>eqx.Module</code>のインスタンスである<code>SoftmaxPPONet</code>を含んでいるので、<code>eqx.filter_jit</code>でjitしてあげるとうまいことjitできない値を除外してjitしてくれます。 行動は方策ネットワークの出力をsoftmaxしてサンプルしますが、<code>Observation</code>に迷路で移動可能な方向を教えてくれる<code>action_mask</code>が入っているので、これを使って取れない行動には<code>-inf</code>をかけてマスクしておきましょう。簡単な環境ならこれをやらなくても大丈夫だと思うのですが、壁を多いときはこれがないとけっこう難しいです。</p>
+<section id="rollout" class="level3">
+<h3 class="anchored" data-anchor-id="rollout">Rollout</h3>
+<p>In PPO implementations, it is common to collect a history of environmental interaction about 500~8000 steps and use it to update the network several times. Here we use <a href="https://jax.readthedocs.io/en/latest/jaxpr.html#scan">jax.lax.scan</a> to implement a rollout that is faster than native Python for loop. While scan is super fast, its usage requires a bit of care. In particular, if you set the second output of the function that moves forward one step to <code>results: list[Result]</code>, keep in mind that the final return will be <code>Result(member1=stack([m1 for m1 in results.member1]), ...)</code> Also, since the argument of <code>exec_rollout</code> contains a <code>SoftmaxPPONet</code> which is an instance of <code>eqx.Module</code>, you can’t use <code>jax.jit</code> directly. Instead, you need to use <code>eqx.filter_jit</code> that decomposes the module to parameters and non-parameters automatically. Actions are sampled by a categorical distribution obtained by applying softmax to the output of the policy network, but since <code>Observation</code> contains an <code>action_mask</code> that tells you the direction in which you can move in the maze, you can mask the actions you cannot take with this by applying <code>-inf</code> to policy logits. In a simple environment, you don’t need to do this, but mazes with many walls are difficult to solve without this masking.</p>
 <div class="cell" data-tags="[]" data-execution_count="165">
 <details>
 <summary>Code</summary>
@@ -1730,7 +1733,7 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> state, rollout, obs, next_value</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>テストしてみましょう。<code>jax.vmap</code>で簡単に環境をベクトル並列化できるのがjax製環境の利点なので、今回は16並列で動かしてみます。<code>reset</code>を<code>vmap</code>してPRNGKeyを16個突っ込むと勝手に16並列の<code>State</code>がでてきます。</p>
+<p>Let’s test it. The advantage of the jax environment is that you can easily vector-parallelize the environment with <code>jax.vmap</code>, so this time we will run it in 16 parallel. If you apply <code>vmap</code> to <code>reset</code> and give it 16 PRNGKeys, you will get 16 parallel <code>State</code>.</p>
 <div class="cell" data-tags="[]" data-execution_count="145">
 <details>
 <summary>Code</summary>
@@ -1751,11 +1754,11 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <pre><code>(512, 16)</code></pre>
 </div>
 </div>
-<p>入力が16並列になっていること、Rolloutの各メンバがステップ数x環境数x…の大きさになっていることが確認できました。</p>
+<p>We can confirm that the inputs are 16 in parallel, and each member of Rollout has <code>n. steps x n. env x ....</code> shape.</p>
 </section>
-<section id="学習" class="level3">
-<h3 class="anchored" data-anchor-id="学習">学習</h3>
-<p>データが集められたので後はネットワークを更新するコードを書きましょう。まず<a href="https://arxiv.org/abs/1506.02438">GAE</a>を計算します。意外とボトルネックになるので<a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.lax.fori_loop.html#jax.lax.fori_loop"><code>fori_loop</code></a>で高速化しておきましょう。</p>
+<section id="learning" class="level3">
+<h3 class="anchored" data-anchor-id="learning">Learning</h3>
+<p>Now that the data has been collected, it is time to write the code to update the network. First, compute <a href="https://arxiv.org/abs/1506.02438">GAE</a>. Since it is unexpectedly a bottleneck, let’s speed it up with <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.lax.fori_loop.html#jax.lax.fori_loop"><code>fori_loop</code></a>.</p>
 <div class="cell" data-tags="[]" data-execution_count="166">
 <details>
 <summary>Code</summary>
@@ -1849,19 +1852,19 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <pre><code>((8192,), (8192, 4), (8192,))</code></pre>
 </div>
 </div>
-<p><span class="math inline">\(512 \times 16 = 8192\)</span>なので大丈夫そうですね。あとはこれで作った<code>Batch</code>からミニバッチをサンプルして、損失関数を最小化するように勾配降下で更新します。jax界隈では定番の<a href="https://optax.readthedocs.io">optax</a>を使いましょう。この時、以下の3点に注意します。</p>
+<p>Looks OK. Now we can sample a mini-batch from the <code>Batch</code> we created with this and update it with gradient descent to minimize the loss function. Here I use <a href="https://optax.readthedocs.io">optax</a>, which is a standard in the jax community. At this point, note the following three points.</p>
 <ul>
-<li>前節で説明したように、<code>jax.grad</code>のかわりに<code>eqx.filter_grad</code>を使う</li>
-<li><code>SoftmaxPPONet</code>は<code>jax.nn.relu</code>など<code>jax.jit</code>の引数として使えない型を持っているので、<code>jax.lax.scan</code>の引数にする前に<code>eqx.partition</code>で分解する</li>
-<li>同様に、<code>SoftmaxPPONet</code>はそのまま<code>optax</code>の初期化・アップデート関数の引数にできないので、<code>eqx.partition</code>で分解するか<code>eqx.filter</code>で<code>jax.Array</code>以外のメンバを除外しておく</li>
+<li>Use <code>eqx.filter_grad</code> instead of <code>jax.grad</code> as explained in the previous sections</li>
+<li><code>SoftmaxPPONet</code> has types that cannot be used as <code>jax.jit</code> arguments, such as <code>jax.nn.relu</code>, so use <code>eqx.partition</code> to break them up before using them as <code>jax.lax.scan</code> arguments</li>
+<li>Similarly, <code>SoftmaxPPONet</code> cannot be used as an argument to <code>optax</code> initialization/update functions as is, so it should be broken down with <code>eqx.partition</code> or <code>eqx.filter</code> to exclude members other than <code>jax.Array</code>.</li>
 </ul>
-<p>また、ミニバッチ更新のループで<code>jax.lax.scan</code>を使いたい場合、いくつか方法があると思うのですが、ここではミニバッチサイズ<span class="math inline">\(N\)</span>、更新回数<span class="math inline">\(M\)</span>、更新エポック数<span class="math inline">\(K\)</span>回、全体のバッチサイズ<span class="math inline">\(N \times M\)</span>として、</p>
+<p>Also, if you want to use <code>jax.lax.scan</code> in a mini-batch update loop, there are several ways to do it. What I do here is that, assuming mini-batch size <span class="math inline">\(N\)</span>, number of updates <span class="math inline">\(M\)</span>, number of update epochs <span class="math inline">\(K\)</span> times, overall batch size <span class="math inline">\(N \times M\)</span>,</p>
 <ol type="1">
-<li><span class="math inline">\(0, 1, 2, ..., NM - 1\)</span>の順列を<span class="math inline">\(K\)</span>個作る</li>
-<li>バッチの各要素を1で作った順列のもと並び替えたものを<span class="math inline">\(K\)</span>個作る</li>
-<li>各メンバを<code>jnp.concatenate</code>でくっつけて大きさ<span class="math inline">\(MK \times N \times ...\)</span>の配列にreshapeする</li>
+<li>Make permutations of <span class="math inline">\(0, 1, 2, ... , NM - 1\)</span> <span class="math inline">\(K\)</span> times.</li>
+<li>Make <span class="math inline">\(K\)</span> copies of <code>Batch</code> shuffled by the permutations we made</li>
+<li>Concatenate each member with <code>jnp.concatenate</code> and reshape to an array with size <span class="math inline">\(MK \times N \times ...\)</span>.</li>
 </ol>
-<p>という方法を使いました。ちょっと面倒ですし、正直ここまで高速化しなくてもいいかもしれませんね。メモリ使用量が不安な場合は<span class="math inline">\(K\)</span>のループをPythonで書くのもアリかなと思いますが、今回は入力が<span class="math inline">\(3\times 10\times 10\)</span>なので大丈夫そうですね。</p>
+<p>It’s a bit difficult, and you may not need to speed it up this fast. If you are worried about memory usage, you could write a <span class="math inline">\(K\)</span> loop in Python, but in this case, the input is <span class="math inline">\(3\times 10\times 10\)</span>, so it seems to be ok.</p>
 <div class="cell" data-tags="[]" data-execution_count="168">
 <details>
 <summary>Code</summary>
@@ -1942,8 +1945,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <span id="cb24-75"><a href="#cb24-75" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> opt_state, eqx.combine(updated_dynet, static_net)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>というわけで、部品が全部できたので学習を回してみましょう。まず何も壁がない簡単な迷路で試してみます。簡単な迷路を作りましょう。 <a href="https://github.com/instadeepai/jumanji/blob/v0.3.1/jumanji/environments/routing/maze/generator.py">junmanjiのデフォルトの迷路ジェネレーター</a>をコピペして適当に書き換えました。また、この環境ではゴールでのみ報酬が与えられるので、単純に報酬和/終了したエピソードの数 でエピソードあたりの平均リターンが求められます。これを訓練状況の指標として出力しておきましょう。ハイパーパラメータはわりと勘で決めました。</p>
-<div class="cell" data-tags="[]" data-execution_count="169">
+<p>So now that we have all the components, let’s start learning. First, let’s try a simple maze with no walls. I copied and pasted <a href="https://github.com/instadeepai/jumanji/blob/v0.3.1/jumanji/environments/routing/maze/generator.py">junmanji’s default maze generator</a> and rewrote it. In this environment, the reward is given only at the goal, so the average return per episode is simply calculated by <span class="math inline">\(\frac{\sum R}{\mathrm{Num.~episodes}}\)</span>, which is used as a progress indicator. I selected each hyperparameter from my experience.</p>
+<div class="cell" data-tags="[]">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.environments.routing.maze.generator <span class="im">import</span> Generator</span>
@@ -2052,7 +2055,7 @@ Mean episodic return: 1.0
 Elapsed time: 3.2s</code></pre>
 </div>
 </div>
-<p>約8万ステップが3秒ちょっとで学習できました。速いですね。学習したエージェントがどんなもんか見てみましょう。</p>
+<p>About 80,000 steps were learned in a little over 3 seconds. That’s fast. Let’s see what the trained agent looks like.</p>
 <div class="cell" data-execution_count="207">
 <details>
 <summary>Code</summary>
@@ -3241,7 +3244,7 @@ AExhdmY2MC4zLjEwMA==
 </video>
 </div>
 </div>
-<p>さすがにこのくらいなら簡単そうですね。次はもう少し難しくしてみたいところです。デフォルトの完全ランダム生成される迷路はやたら遅かったので、適当に自作してみましょう。スタート、ゴールをそれぞれ3箇所から同確率でサンプルし、合計9通りの組み合わせを解きます。まあこのくらいならたぶんいけるでしょう。10倍の80万ステップ学習させてみます。</p>
+<p>As expected, this one looks easy enough. Next time, we would like to make it a little more difficult. The default maze, which is generated completely at random, is very slow, so let’s make our own maze. The maze samples the start and the goal from 3 different locations with the same probability, and solves a total of 9 combinations. Let’s try to train the maze with 800,000 steps, which is 10 times as many as the default maze.</p>
 <div class="cell" data-tags="[]" data-execution_count="209">
 <details>
 <summary>Code</summary>
@@ -4734,13 +4737,13 @@ AAAALGlsc3QAAAAkqXRvbwAAABxkYXRhAAAAAQAAAABMYXZmNjAuMy4xMDA=
 </video>
 </div>
 </div>
-<p>やや逡巡が見られますがゴールには行けてるっぽいですね。</p>
+<p>There is some hesitation, but it looks like we are getting to the goal.</p>
 </section>
 </section>
 </section>
-<section id="まとめ" class="level1">
-<h1>まとめ</h1>
-<p>このブログではjaxでニューラルネットワークを扱うためのライブラリであるequinoxを紹介し、またequinoxを使った高速なPPOの実装例を示しました。haikuやflaxを使っている人には何が嬉しいのかというのが理解してもらえたのではないかと思います。やはり<code>eqx.filter_jit</code>が便利ですね。これに慣れたら<code>@partial(jax.jit, static_argnums=(2, 3))</code>とかいちいち書いてられないです。 ただ<code>jax.lax.scan</code>の引数にしたい場合は<code>eqx.partition</code>で手動で分割する必要がありちょっと面倒だなと思いました。</p>
+<section id="summary" class="level1">
+<h1>Summary</h1>
+<p>In this blog, I introduced equinox, a library for handling neural networks with jax, and showed an example of a fast PPO implementation using equinox. Through writing this post, I found <code>eqx.filter_jit</code> very useful. Since I already get used to it, I feel a bit more frastration to write <code>@partial(jax.jit, static_argnums=(2, 3))</code> every time. However, if you want to use <code>jax.lax.scan</code> as an argument, you need to split it manually with <code>eqx.partition</code>, which was a bit troublesome.</p>
 
 
 </section>
