@@ -205,13 +205,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Semi-implicit Eulerで物体を動かす</h1>
 <p>とりあえず、衝突のことはいったん忘れて、物体を動かしてみましょう。物体の位置・速度を<span class="math inline">\(x, v\)</span>、その時間微分を<span class="math inline">\(\dot{x} = \frac{dx}{dt}, \dot{v} = \frac{dv}{dt}\)</span>とおきます。ニュートンの運動の第二法則から、<span class="math inline">\(F(t) = m \frac{d^2 x}{dt^2}(t)\)</span>ですから、最も単純な速度・位置更新の近似は、適当な十分短い時間間隔<span class="math inline">\(\Delta t\)</span>をとって、</p>
 <p><span class="math display">\[
-\dot{x}_{t + 1} = \dot{v}_t \Delta t \\
-\dot{v}_{t + 1} = \frac{F}{m} \Delta t
+\begin{align*}
+\dot{x}_{t + 1} &amp;= \dot{v}_t \Delta t \\
+\dot{v}_{t + 1} &amp;= \frac{F}{m} \Delta t
+\end{align*}
 \]</span></p>
 <p>と表せます（Explicit Euler)。これは不安定になるので、今回は安定しやすい<a href="https://en.wikipedia.org/wiki/Semi-implicit_Euler_method">Semi-implicit Euler</a>を使います。これはアルゴリズム上はすごく単純で、</p>
 <p><span class="math display">\[
-\dot{v}_{t + 1} = \frac{F}{m} \Delta t \\
-\dot{x}_{t + 1} = \dot{v}_{t + 1} \Delta t
+\begin{align*}
+\dot{v}_{t + 1} &amp;= \frac{F}{m} \Delta t \\
+\dot{x}_{t + 1} &amp;= \dot{v}_{t + 1} \Delta t
+\end{align*}
 \]</span></p>
 <p>とすればいいです。</p>
 <p>まず<code>Velocity</code>など、必要なものを適当に定義しておきます。剛体ですが、とりあえずこの世界には丸いものしかないことにして、<code>Circle</code>だけ定義しましょう。</p>
