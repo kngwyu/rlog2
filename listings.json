@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/fast_2d_physics_in_jax_en.html",
       "/posts/fast_2d_physics_in_jax.html",
       "/posts/try_equinox_for_rl_en.html",
       "/posts/try_equinox_for_rl_jp.html",
