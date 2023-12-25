@@ -187,7 +187,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#move-things-by-semi-implicit-euler" id="toc-move-things-by-semi-implicit-euler" class="nav-link active" data-scroll-target="#move-things-by-semi-implicit-euler">Move things by semi-implicit Euler</a>
   <ul class="collapse">
   <li><a href="#check-contacts" id="toc-check-contacts" class="nav-link" data-scroll-target="#check-contacts">Check contacts</a></li>
-  <li><a href="#衝突した後どうすればいいの" id="toc-衝突した後どうすればいいの" class="nav-link" data-scroll-target="#衝突した後どうすればいいの">衝突した後どうすればいいの</a></li>
+  <li><a href="#what-to-do-after-collision-detection" id="toc-what-to-do-after-collision-detection" class="nav-link" data-scroll-target="#what-to-do-after-collision-detection">What to do after collision detection</a></li>
   <li><a href="#線分" id="toc-線分" class="nav-link" data-scroll-target="#線分">線分</a></li>
   </ul></li>
   <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">まとめ</a></li>
@@ -503,7 +503,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>object_1, object_2 <span class="op">=</span> make_pair(objects)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>jax.vmap(check_contact)(object1, object2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>How to make pairs? There are various ways, what I found the simplest is <a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.triu_indices.html">triu_indices</a>, which is a function that produces the indices of upper triangular matrix with some offsets.</p>
-<div class="cell" data-tags="[]" data-execution_count="7">
+<div class="cell" data-tags="[]" data-execution_count="5">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Any, Callable</span>
@@ -565,7 +565,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> contacts, circle1, circle2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="8">
+<div class="cell" data-tags="[]" data-execution_count="6">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
@@ -615,21 +615,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    ax.add_patch(arrow)</span>
 <span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>fig</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="6">
 <p><img src="fast_2d_physics_in_jax_en_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
 </div>
 </div>
-<p>衝突後の処理を実装していないので物体がすりぬけていますが、衝突自体はきちんと検出されているようです。</p>
+<p>Objects are overlapping since I haven’t implemented resolving collision, but the dected collision looks correct.</p>
 </section>
-<section id="衝突した後どうすればいいの" class="level2">
-<h2 class="anchored" data-anchor-id="衝突した後どうすればいいの">衝突した後どうすればいいの</h2>
-<p>衝突を検出した後は、物体が重ならないように衝突時に発生したインパルスに関する制約つき方程式を解く必要があります。そのために色々な方法があるのですが、今回は<a href="https://github.com/slembcke/Chipmunk2D">Chipmunk</a>など2次元物理エンジンでよく使われている<a href="https://box2d.org/files/ErinCatto_SequentialImpulses_GDC2006.pdf">Sequential Impulse</a>と呼ばれる方法を使ってみます。なお、この資料は<a href="https://box2d.org">Box2D</a>のWebページで公開されているものです。</p>
-<p>では、Sequential Impulseではどのようにして衝突を解決するのでしょうか。まず、物体の衝突時にインパルスが発生するという衝突モデルを仮定し、発生したインパルスを<span class="math inline">\(\mathbf{p}\)</span>とおきます。面倒なので角速度は一切考えないことにします。このとき、物体1の速度を<span class="math inline">\(\mathbf{v}_1\)</span>、質量を<span class="math inline">\(m_1\)</span>、物体2の速度を<span class="math inline">\(\mathbf{v}_2\)</span>、質量を<span class="math inline">\(m_2\)</span>とおくと、インパルスが発生した後の速度は <span class="math display">\[
+<section id="what-to-do-after-collision-detection" class="level2">
+<h2 class="anchored" data-anchor-id="what-to-do-after-collision-detection">What to do after collision detection</h2>
+<p>I’m not quite familiar with physics actually, but in the real world, collisions are <em>automatically</em> resolved by each small molecule. But in the game physics engine, we want to get results faster by enforcing <em>physically acurate</em> constraints, such as:</p>
+<ul>
+<li>Speed changes by collision</li>
+<li>No overlap between objects</li>
+</ul>
+<p>So, I’m just solving these constraints. There are many ways to solve these, but here, I employ a common approach called <a href="https://box2d.org/files/ErinCatto_SequentialImpulses_GDC2006.pdf">Sequential Impulse</a>, which is used in a famous physics engines including <a href="https://github.com/slembcke/Chipmunk2D">Chipmunk</a> and <a href="https://box2d.org/">Box2D</a>. Other approaches includes recently trending <a href="https://matthias-research.github.io/pages/publications/posBasedDyn.pdf">position-based dynamics</a>, but sequatinal impulse caught my eyes because of its simplicity.</p>
+<p>Anyway, let me explain how sequential impulse method resolves collision. First, let’s assume a collision model in which collision produces impulse, and let the generated impulse be <span class="math inline">\(\mathbf{p}\)</span>. I don’t use angular velocity here for simplicity. Let the velocity and mass of object 1 be <span class="math inline">\(\mathbf{v}_1\)</span> and <span class="math inline">\(m_1\)</span>, and the velocity and mass of object 2 be <span class="math inline">\(\mathbf{v}_2\)</span> and <span class="math inline">\(m_2\)</span>, respectively, then the velocity after the impulse occurs is</p>
+<p><span class="math display">\[
 \begin{align*}
 \mathbf{v}_1 = \mathbf{v}_1^{\mathrm{old}} - \mathbf{p} / m_1 \\
 \mathbf{v}_2 = \mathbf{v}_2^{\mathrm{old}} + \mathbf{p} / m_2
 \end{align*}
-\]</span> となります。このとき、<span class="math inline">\(\mathbf{p}\)</span>の方向は衝突の法線ベクトル<span class="math inline">\(\mathbf{n}\)</span>なので<span class="math inline">\(\mathbf{p} = p\mathbf{n}\)</span>と表せます。よって、結局<span class="math inline">\(p\)</span>を求めればいいです。衝突した点における相対速度を<span class="math inline">\(\Delta \mathbf{v} = \mathbf{v}_2 - \mathbf{v}_1\)</span>とおきます。このとき、<span class="math inline">\(\Delta \mathbf{v} \cdot n = 0\)</span>なので、上の2式と合わせて、<span class="math inline">\(p = \frac{-\Delta \mathbf{v}^{\mathrm{old}}\cdot \mathbf{n}}{\frac{1}{m_1} + \frac{1}{m_2}}\)</span>となります。角速度や摩擦を考慮するともう少しややこしくなりますが、基本はこんな感じです。</p>
+\]</span></p>
+<p>Here, because the direction of <span class="math inline">\(\mathbf{p}\)</span> is the normal vector of collision <span class="math inline">\(\mathbf{n}\)</span>, we can write that <span class="math inline">\(\mathbf{p} = p\mathbf{n}\)</span>. Hence, we just need to compute <span class="math inline">\(p\)</span>. Let the relative velocity at the collision point be <span class="math inline">\(\Delta \mathbf{v} = \mathbf{v}_2 - \mathbf{v}_1\)</span>. Here combining the avove two equalities with <span class="math inline">\(\Delta \mathbf{v} \cdot n = 0\)</span>, <span class="math inline">\(p = \frac{-\Delta \mathbf{v}^{\mathrm{old}}\cdot \mathbf{n}}{\frac{1}{m_1} + \frac{1}{m_2}}\)</span>. Angle makes this a bit more complicated, but the core equation is just like this.</p>
 <p>こうして計算したインパルスを全ての衝突に対して適用し、インパルスが小さくなるまで繰り返します。しかし、この手法は物体のめりこみを考慮していないので、これだけだと物体がめりこんだままになってしまうことがあります。 めり込みを減らすための手法はいくつかありますが、主に</p>
 <ol type="1">
 <li>どのくらいめり込んでいるかに応じてバイアス速度<span class="math inline">\(v_\mathrm{bias} = \frac{\beta}{\Delta t}\max(0, \delta - \delta_\mathrm{slop})\)</span>(<span class="math inline">\(\delta\)</span>はめりこみの長さ、<span class="math inline">\(\delta_\mathrm{slop}\)</span>は許容されるめりこみの長さ)を加え<span class="math inline">\(p = \frac{-\Delta \mathbf{v}^{\mathrm{old}}\cdot \mathbf{n} + v_\mathrm{bias}}{\frac{1}{m_1} + \frac{1}{m_2}}\)</span>とする (Baumegarte)</li>
