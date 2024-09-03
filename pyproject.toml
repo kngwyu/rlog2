@@ -1,0 +1,19 @@
+[project]
+name = "rlog2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "black",
+  "ipympl",
+  "ipywidgets",
+  "isort",
+  "jupyterlab",
+  "jupyterlab_code_formatter",
+  "jupyterlab-lsp",
+  "matplotlib",
+  "pandas",
+  "pillow",
+  "seaborn",
+]
