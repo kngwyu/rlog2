@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.450">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2022-07-03">
 
-<title>RLog2 - Exercise 5.12 Racetrack from the Reinforcement Learning textbook</title>
+<title>Exercise 5.12 Racetrack from the Reinforcement Learning textbook – RLog2</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,7 +23,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -34,7 +34,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -58,7 +58,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -80,7 +80,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -89,6 +95,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -100,12 +107,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }
 </script>
 <script async="" src="https://hypothes.is/embed.js"></script>
+<script>
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    document.body.classList.add('hypothesis-enabled');
+  });
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -113,38 +152,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">RLog2</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../about.html" rel="" target="">
- <span class="menu-text">RLog2: RL blog 2</span></a>
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">RLog2: RL blog 2</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://sigmoid.social/@kngwyu" rel="" target=""><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://sigmoid.social/@kngwyu"> <i class="bi bi-mastodon" role="img">
 </i> 
- <span class="menu-text">Mastodon</span></a>
+<span class="menu-text">Mastodon</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://github.com/kngwyu" rel="" target=""><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/kngwyu"> <i class="bi bi-github" role="img">
 </i> 
- <span class="menu-text">Github</span></a>
+<span class="menu-text">Github</span></a>
   </li>  
 </ul>
+          </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
-          </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -197,6 +236,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
+
 <p>Here I demonstrate the execise 5.12 of the textbook <a href="http://incompleteideas.net/book/the-book.html">Reinforcement Learning: An Introduction</a> by Richard Sutton and Andrew G. Barto, using both of planning method and Monte Carlo method. Basic knowledge of Python (&gt;= 3.7) and <a href="https://numpy.org/">NumPy</a> are assumed. Some konwledge of <a href="https://matplotlib.org/">matplotlib</a> and <a href="https://docs.python.org/3/library/typing.html">Python typing library</a> also helps.</p>
 <p>Contact: <code>yuji.kanagawa@oist.jp</code></p>
 <section id="modeling-the-problem-in-code" class="level2">
@@ -208,8 +248,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </blockquote>
 <p>So there are 9 actions for each direction (↓↙←↖↑↗→↘ or no acceleration). Here, we can also notice that the total number of states is given by <span class="math inline">\(\textrm{Num. positions} \times \textrm{Num. choices of velocity}\)</span>. And the texbook also says &gt; Both velocity components are restricted to be nonnegative and less than 5, and they cannot both be zero except at the starting line.</p>
 <p>So there are 24 possible velocity at the non-starting positions:</p>
-<div class="cell" data-execution_count="7">
-<details>
+<div id="4e536d05-5cbf-4bca-8c91-d5a6631861b0" class="cell" data-execution_count="7">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> itertools</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">list</span>(itertools.product(<span class="bu">range</span>(<span class="dv">5</span>), <span class="bu">range</span>(<span class="dv">5</span>)))[<span class="dv">1</span>:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -244,8 +284,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Again, number of states is given by (roughly) <span class="math inline">\(24 \times \textrm{Num. positions}\)</span> and number of actions is <span class="math inline">\(9\)</span>. Sounds not very easy problem with many positions.</p>
 <p>So, let’s start the coding from representing the state and actions. There are multiple ways, but I prefer to NumPy array for representing everything.</p>
 <p>Let’s consider a ASCII representation of the map (or track) like this:</p>
-<div class="cell" data-execution_count="8">
-<details>
+<div id="cfb3612e-1918-4fa9-a066-fba8e92515c6" class="cell" data-execution_count="8">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>SMALL_TRACK <span class="op">=</span> <span class="st">"""</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="st">###      F</span></span>
@@ -259,8 +299,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p>Here, <code>S</code> denotes a starting positiona, <code>F</code> denotes a finishing position, <code>#</code> denotes a wall, and <code></code> denotes a road. We have this track as a 2D NumPy Array, and encode agent’s position as an index of this array.</p>
-<div class="cell" data-execution_count="9">
-<details>
+<div id="49c92d83-3948-475d-a8ca-156a210f05ab" class="cell" data-execution_count="9">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -290,8 +330,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Then, agent’s velocity and acceleration are also naturally represented by an array. And, we represent an action as an index of an array consisting of all possible acceleration vetors:</p>
-<div class="cell" data-execution_count="10">
-<details>
+<div id="8de3683e-95cb-48b7-b08a-3cfc20e4745d" class="cell" data-execution_count="10">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>np.array(<span class="bu">list</span>(itertools.product([<span class="op">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>], [<span class="op">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>])))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -310,8 +350,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The next step is to represent a transition function as a <strong>black box simulator</strong>. Note that we will visit another representation by <strong>transition matrix</strong>, but implementing the simulator is easier. Basically, the simulator should take an agent’s action and current state, and then return the next state. Let’s call this function <code>step</code>. However, let’s make it return some other things to make the implementation easier. Reward function sounds fairly easy to implement given the agent’s position. &gt; The rewards are −1 for each step until the car crosses the finish line.</p>
 <p>Also, we have to handle the <em>termination</em> of the episode. &gt; Each episode begins in one of the randomly selected start states with both velocity components zero and ends when the car crosses the finish line.</p>
 <p>So the resulting <code>step</code> function should return a tuple <code>(state, reward, termination)</code>. The below cell contains my implementation of the simulator with matplotlib visualization. The <code>step</code> function is so complicated to handle the case where the agent goes through a wall, so readers are encouraged to just run their eyes through.</p>
-<div class="cell" data-execution_count="11">
-<details>
+<div id="6f7e4677-64f6-43dd-9ef1-f5ea7ca95918" class="cell" data-execution_count="11">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse-hide</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -494,17 +534,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-179"><a href="#cb9-179" aria-hidden="true" tabindex="-1"></a>smalltrack.render(state<span class="op">=</span>next_state)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>State(position=array([6, 5]), velocity=array([0, 0]))
-State(position=array([5, 5]), velocity=array([1, 0]))</code></pre>
+<pre><code>State(position=array([6, 5]), velocity=array([0, 0]))</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-6-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-6-output-2.png" class="img-fluid figure-img"></p>
+</figure>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="11">
-<pre><code>&lt;AxesSubplot:&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>State(position=array([5, 5]), velocity=array([1, 0]))</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-6-output-4.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-6-output-4.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Note that the vertical velocity is negative, so that we can simply represent the coordinate by an array index.</p>
@@ -512,8 +559,8 @@ State(position=array([5, 5]), velocity=array([1, 0]))</code></pre>
 <section id="solve-a-small-problem-by-dynamic-programming" class="level2">
 <h2 class="anchored" data-anchor-id="solve-a-small-problem-by-dynamic-programming">Solve a small problem by dynamic programming</h2>
 <p>OK, now we have a simulator, so let’s solve the problem! However, before stepping into reinforcement learning, it’s better to compute an optimal policy in a small problem for sanity check. To do so, we need a transition matrix <code>p</code>, which is a <span class="math inline">\(|\mathcal{S}| \times |\mathcal{A}| \times |\mathcal{S}|\)</span> NumPy array where <code>p[i][j][k]</code> is the probability of transiting from <code>i</code> to <code>k</code> when action <code>j</code> is taken. Also, we need a <span class="math inline">\(|\mathcal{S}| \times |\mathcal{A}| \times |\mathcal{S}|\)</span> reward matrix <code>r</code>. Note that this representation is not general as <span class="math inline">\(R_t\)</span> can be stochastic, but since the only stochasticity of rewards is the noise to actions in this problem, this notion suffices. It is often not very straightforward to get <code>p</code> and <code>r</code> from the problem definition, but basically we need to give 0-indexd indices to each state (<code>0, 1, 2, ...</code>) and fill the array. Here, I index each state by <span class="math inline">\(\textrm{Idx(S)} = y \times 25 \times W + x \times 25 + vy \times 5 + vx\)</span>, where <span class="math inline">\((x, y)\)</span> is a position, <span class="math inline">\((vx, vy\)</span>) is a velocity, and <span class="math inline">\(W\)</span> is the width of the map.</p>
-<div class="cell" data-execution_count="12">
-<details>
+<div id="45668f8f-2939-4af8-83a9-af0132735d43" class="cell" data-execution_count="12">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse-hide</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Iterable</span>
@@ -595,8 +642,8 @@ State(position=array([5, 5]), velocity=array([1, 0]))</code></pre>
 </details>
 </div>
 <p>Then, let’s compute the optimal Q value by value iteration. So far, we only learned dynamic programming with discount factor <span class="math inline">\(\gamma\)</span>, so let’s use <span class="math inline">\(\gamma =0.95\)</span> that is sufficiently large for this small problem. <span class="math inline">\(\epsilon = 0.000001\)</span> is used as a convergence threshold. Let’s show the elapsed time and the required number of iteration.</p>
-<div class="cell" data-execution_count="13">
-<details>
+<div id="6739f4e7-3cb6-4255-9839-fb402d94b190" class="cell" data-execution_count="13">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -643,8 +690,8 @@ State(position=array([5, 5]), velocity=array([1, 0]))</code></pre>
 </div>
 <p>It took longer that a second on my laptop, even for this small problem. Some technical notes on value iteration (<span class="math inline">\(R_\textrm{max} = 1.0\)</span> is assumed for simplicity): - Each iteration takes <span class="math inline">\(O(|\mathcal{S}| ^ 2 |\mathcal{A}|)\)</span> time - The required iteration number is bounded by <span class="math inline">\(\frac{\log \epsilon}{\gamma - 1}\)</span> - In our case, <span class="math inline">\(\frac{\log \epsilon}{\gamma - 1} \approx 270\)</span>, so our computation converged quicker than theory - Thus the total computation time is bounded by <span class="math inline">\(O(|\mathcal{S}| ^ 2 |\mathcal{A}|\frac{\log \epsilon}{\gamma - 1})\)</span> - For a convergence threshold <span class="math inline">\(\epsilon\)</span>, <span class="math inline">\(\max |V(s) - V^*(s)| &lt; \frac{\gamma\epsilon}{1 - \gamma}\)</span> is guranteed - In our case, <span class="math inline">\(\frac{\gamma\epsilon}{1 - \gamma} \approx 0.00002\)</span> - This is called <em>relative error</em></p>
 <p>Let’s visualize the V value and an optimal trajectory. <a href="https://github.com/jwkvam/celluloid">celluloid)</a> is used for making an animation.</p>
-<div class="cell" data-execution_count="14">
-<details>
+<div id="1427b9bd-14fe-456a-b6df-b2ba9cfff3d3" class="cell" data-execution_count="14">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Callable</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1592,7 +1639,11 @@ I4AAgHQEEACQjgACANIRQABAOv8fPC+PCDUNoLwAAAAASUVORK5CYII=\
 </script>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-9-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-9-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>The computed optimal policy and value seems correct.</p>
@@ -1600,8 +1651,8 @@ I4AAgHQEEACQjgACANIRQABAOv8fPC+PCDUNoLwAAAAASUVORK5CYII=\
 <section id="monte-carlo-prediction" class="level2">
 <h2 class="anchored" data-anchor-id="monte-carlo-prediction">Monte-Carlo prediction</h2>
 <p>Then let’s try ‘reinforcement learning’. First, I implemeted ‘First visit Monte-Carlo prediction’, which evaluates a (Markovian) policy <span class="math inline">\(\pi\)</span> by doing a simulation multiple times, and calculates the average of received returns. Here, I evaluate the optimal policy <span class="math inline">\(\pi^*\)</span> obtained by value iteration.</p>
-<div class="cell" data-execution_count="15">
-<details>
+<div id="3ce7f89f-492b-4e69-b890-ae70156076d4" class="cell" data-execution_count="15">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse-hide</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1677,12 +1728,16 @@ I4AAgHQEEACQjgACANIRQABAOv8fPC+PCDUNoLwAAAAASUVORK5CYII=\
 <pre><code>Text(0, 0.5, 'Avg. |V* - V|')</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-10-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-10-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>It looks like that the difference between <span class="math inline">\(V^*\)</span> and the value function estimated by MC prediction converges after 600 steps, but it’s still larger than <span class="math inline">\(0\)</span>, because <strong><span class="math inline">\(\pi^*\)</span> doesn’t visit all states</strong>. Let’s plot the difference between value functions only on starting states.</p>
-<div class="cell" data-execution_count="16">
-<details>
+<div id="52f4b6e4-e2df-48ee-a019-57eb8fa2bbdd" class="cell" data-execution_count="16">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>start_states <span class="op">=</span> []</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">6</span>):</span>
@@ -1696,11 +1751,12 @@ I4AAgHQEEACQjgACANIRQABAOv8fPC+PCDUNoLwAAAAASUVORK5CYII=\
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"|V*(start) - V(start)| only on possible states"</span>)</span>
 <span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>plt.ylim((<span class="fl">0.0</span>, <span class="fl">0.5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-display" data-execution_count="16">
-<pre><code>(0.0, 0.5)</code></pre>
-</div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-11-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>Here, we can confirm that the estimated value certainly converged close to 0.0, while fractuating a bit. Note that the magnitude of fractuation is larger than the relative error we allowed for value iteration (<span class="math inline">\(0.00002\)</span>), implying the difficulty of convergence.</p>
@@ -1710,290 +1766,294 @@ I4AAgHQEEACQjgACANIRQABAOv8fPC+PCDUNoLwAAAAASUVORK5CYII=\
 <p>Now we successfully estimate <span class="math inline">\(V^\pi\)</span> using Monte Carlo method, so then let’s try to learn a sub-optimal <span class="math inline">\(\pi\)</span> directly using Monte Carlo method. In the textbook, three methods are introduced: - Monte Carlo ES (Exploring Starts) - On-policy first visit Monte Carlo Control - Off-policy first visit Monte Carlo Control</p>
 <p>Here, let’s try all three methods and compare the resulting value functions. However, we cannot naively implement the pseudo code in the textbook, due to a ‘loop’ problem. Since the car that crashed into the wall is returned to a starting point, the episode length can be infinitte depending on a policy. As a remedy for this problem, I limit the length of the episode as <span class="math inline">\(H\)</span>. Supposing that we ignore the future rewards smaller than <span class="math inline">\(\epsilon\)</span>, how to set <span class="math inline">\(H\)</span>? Just by solving <span class="math inline">\(\gamma^H R &lt; \epsilon\)</span>, we get <span class="math inline">\(H &gt; \frac{\log \epsilon}{\log \gamma}\)</span>, which is about <span class="math inline">\(270\)</span> in case <span class="math inline">\(\gamma = 0.95\)</span> and <span class="math inline">\(\epsilon = 0.000001\)</span>.</p>
 <p>Below are the implementation of three methods. A few notes about implementation: - Monte Carlo ES requires a set of all possible states, which is implemented in <code>valid_states</code> function. - For On-Policy MC, <span class="math inline">\(\epsilon\)</span> is decreased from 0.5 to 0.01 - We can use arbitary policy in Off-Policy MC, but I used the same <span class="math inline">\(\epsilon\)</span>-soft policy as On-Policy MC.</p>
-<div class="cell" data-execution_count="18">
-<details>
+<div id="c6bd5615-26d8-47b4-bbb1-b4bc0f1163a5" class="cell" data-execution_count="18">
+<details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse-hide</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> valid_states(env: RacetrackEnv) <span class="op">-&gt;</span> List[State]:</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    states <span class="op">=</span> []</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(env._max_height):</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(env._max_width):</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>            track <span class="op">=</span> env._track[y][x]</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> track <span class="op">==</span> env.WALL:</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> y_velocity <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> x_velocity <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>                    state <span class="op">=</span> State(np.array([y, x]), np.array([y_velocity, x_velocity]))</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> track <span class="op">!=</span> env.START <span class="kw">and</span> (x_velocity <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">or</span> y_velocity <span class="op">&gt;</span> <span class="dv">0</span>):</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>                        states.append(state)</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> states</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mc_es(</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    env: RacetrackEnv,</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    n_episodes: <span class="bu">int</span>,</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    discount: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    record_all_values: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">999</span>,</span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Tuple[np.ndarray, List[np.ndarray]]:</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Monte-Carlo Control with Exploring Starts"""</span></span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    n_states <span class="op">=</span> env._max_width <span class="op">*</span> env._max_height <span class="op">*</span> <span class="dv">25</span></span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> <span class="bu">len</span>(env._actions)</span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span>seed)</span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> np.zeros((n_states, n_actions))</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> random_state.randint(<span class="dv">9</span>, size<span class="op">=</span>n_states)</span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> []</span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    all_returns <span class="op">=</span> [[[] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_actions)] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_states)]</span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    possible_starts <span class="op">=</span> valid_states(env)</span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    max_episode_length <span class="op">=</span> <span class="bu">int</span>(np.ceil(np.log(<span class="fl">1e-6</span>) <span class="op">/</span> np.log(discount)))</span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_episodes):</span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> record_all_values:</span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>            all_values.append(q.copy())</span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> possible_starts[random_state.choice(<span class="bu">len</span>(possible_starts))]</span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>        visited_states <span class="op">=</span> [env.state_index(state)]</span>
-<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>        taken_actions <span class="op">=</span> []</span>
-<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>        received_rewards <span class="op">=</span> []</span>
-<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>        initial <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_episode_length):</span>
-<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> initial:</span>
-<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Randomly sample the first action</span></span>
-<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> random_state.randint(<span class="dv">9</span>)</span>
-<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>                initial <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Take an action following the policy</span></span>
-<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> pi[env.state_index(state)]</span>
-<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>            taken_actions.append(action)</span>
-<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Step the simulator</span></span>
-<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>            state, reward, termination <span class="op">=</span> env.step(state, action)</span>
-<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>            visited_states.append(env.state_index(state))</span>
-<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>            received_rewards.append(reward)</span>
-<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> termination:</span>
-<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
-<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute return</span></span>
-<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a>        traj_len <span class="op">=</span> <span class="bu">len</span>(received_rewards)</span>
-<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>        returns <span class="op">=</span> np.zeros(traj_len)</span>
-<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Gt = Rt when t = T</span></span>
-<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>        returns[<span class="op">-</span><span class="dv">1</span>] <span class="op">=</span> received_rewards[<span class="op">-</span><span class="dv">1</span>]</span>
-<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Iterating from T - 2, T - 1, ..., to 0</span></span>
-<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">reversed</span>(<span class="bu">range</span>(traj_len <span class="op">-</span> <span class="dv">1</span>)):</span>
-<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Gt = Rt + γGt+1</span></span>
-<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>            returns[t] <span class="op">=</span> received_rewards[t] <span class="op">+</span> discount <span class="op">*</span> returns[t <span class="op">+</span> <span class="dv">1</span>]</span>
-<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>        updated <span class="op">=</span> <span class="bu">set</span>()</span>
-<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Update the value</span></span>
-<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (state, action) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(visited_states[:<span class="op">-</span><span class="dv">1</span>], taken_actions)):</span>
-<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a>            <span class="co"># If the state is already visited, skip it</span></span>
-<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (state, action) <span class="kw">in</span> updated:</span>
-<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a>            updated.add((state, action))</span>
-<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>            all_returns[state][action].append(returns[i].item())</span>
-<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Q(St, At) ← average(Returns(St, At))</span></span>
-<span id="cb20-76"><a href="#cb20-76" aria-hidden="true" tabindex="-1"></a>            q[state, action] <span class="op">=</span> np.mean(all_returns[state][action])</span>
-<span id="cb20-77"><a href="#cb20-77" aria-hidden="true" tabindex="-1"></a>            pi[state] <span class="op">=</span> np.argmax(q[state])</span>
-<span id="cb20-78"><a href="#cb20-78" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q, all_values</span>
-<span id="cb20-79"><a href="#cb20-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-80"><a href="#cb20-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-81"><a href="#cb20-81" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> on_policy_fist_visit_mc(</span>
-<span id="cb20-82"><a href="#cb20-82" aria-hidden="true" tabindex="-1"></a>    env: RacetrackEnv,</span>
-<span id="cb20-83"><a href="#cb20-83" aria-hidden="true" tabindex="-1"></a>    n_episodes: <span class="bu">int</span>,</span>
-<span id="cb20-84"><a href="#cb20-84" aria-hidden="true" tabindex="-1"></a>    discount: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span id="cb20-85"><a href="#cb20-85" aria-hidden="true" tabindex="-1"></a>    epsilon: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span id="cb20-86"><a href="#cb20-86" aria-hidden="true" tabindex="-1"></a>    epsilon_final: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span id="cb20-87"><a href="#cb20-87" aria-hidden="true" tabindex="-1"></a>    record_all_values: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb20-88"><a href="#cb20-88" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">999</span>,</span>
-<span id="cb20-89"><a href="#cb20-89" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Tuple[np.ndarray, List[np.ndarray]]:</span>
-<span id="cb20-90"><a href="#cb20-90" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""On-policy first visit Monte-Carlo"""</span></span>
-<span id="cb20-91"><a href="#cb20-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-92"><a href="#cb20-92" aria-hidden="true" tabindex="-1"></a>    n_states <span class="op">=</span> env._max_width <span class="op">*</span> env._max_height <span class="op">*</span> <span class="dv">25</span></span>
-<span id="cb20-93"><a href="#cb20-93" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> <span class="bu">len</span>(env._actions)</span>
-<span id="cb20-94"><a href="#cb20-94" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span>seed)</span>
-<span id="cb20-95"><a href="#cb20-95" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> np.zeros((n_states, n_actions))</span>
-<span id="cb20-96"><a href="#cb20-96" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> random_state.randint(<span class="dv">9</span>, size<span class="op">=</span>n_states)</span>
-<span id="cb20-97"><a href="#cb20-97" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> []</span>
-<span id="cb20-98"><a href="#cb20-98" aria-hidden="true" tabindex="-1"></a>    all_returns <span class="op">=</span> [[[] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_actions)] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_states)]</span>
-<span id="cb20-99"><a href="#cb20-99" aria-hidden="true" tabindex="-1"></a>    possible_starts <span class="op">=</span> valid_states(env)</span>
-<span id="cb20-100"><a href="#cb20-100" aria-hidden="true" tabindex="-1"></a>    max_episode_length <span class="op">=</span> <span class="bu">int</span>(np.ceil(np.log(<span class="fl">1e-6</span>) <span class="op">/</span> np.log(discount)))</span>
-<span id="cb20-101"><a href="#cb20-101" aria-hidden="true" tabindex="-1"></a>    epsilon_decay <span class="op">=</span> (epsilon <span class="op">-</span> epsilon_final) <span class="op">/</span> n_episodes</span>
-<span id="cb20-102"><a href="#cb20-102" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_episodes):</span>
-<span id="cb20-103"><a href="#cb20-103" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> record_all_values:</span>
-<span id="cb20-104"><a href="#cb20-104" aria-hidden="true" tabindex="-1"></a>            all_values.append(q.copy())</span>
-<span id="cb20-105"><a href="#cb20-105" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> env.reset()</span>
-<span id="cb20-106"><a href="#cb20-106" aria-hidden="true" tabindex="-1"></a>        visited_states <span class="op">=</span> [env.state_index(state)]</span>
-<span id="cb20-107"><a href="#cb20-107" aria-hidden="true" tabindex="-1"></a>        taken_actions <span class="op">=</span> []</span>
-<span id="cb20-108"><a href="#cb20-108" aria-hidden="true" tabindex="-1"></a>        received_rewards <span class="op">=</span> []</span>
-<span id="cb20-109"><a href="#cb20-109" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_episode_length):</span>
-<span id="cb20-110"><a href="#cb20-110" aria-hidden="true" tabindex="-1"></a>            <span class="co"># ε-soft policy</span></span>
-<span id="cb20-111"><a href="#cb20-111" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> random_state.rand() <span class="op">&lt;</span> epsilon:</span>
-<span id="cb20-112"><a href="#cb20-112" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> random_state.randint(<span class="dv">9</span>)</span>
-<span id="cb20-113"><a href="#cb20-113" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb20-114"><a href="#cb20-114" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> pi[env.state_index(state)]</span>
-<span id="cb20-115"><a href="#cb20-115" aria-hidden="true" tabindex="-1"></a>            taken_actions.append(action)</span>
-<span id="cb20-116"><a href="#cb20-116" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Step the simulator</span></span>
-<span id="cb20-117"><a href="#cb20-117" aria-hidden="true" tabindex="-1"></a>            state, reward, termination <span class="op">=</span> env.step(state, action)</span>
-<span id="cb20-118"><a href="#cb20-118" aria-hidden="true" tabindex="-1"></a>            visited_states.append(env.state_index(state))</span>
-<span id="cb20-119"><a href="#cb20-119" aria-hidden="true" tabindex="-1"></a>            received_rewards.append(reward)</span>
-<span id="cb20-120"><a href="#cb20-120" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> termination:</span>
-<span id="cb20-121"><a href="#cb20-121" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
-<span id="cb20-122"><a href="#cb20-122" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Below code is the same as mc_es</span></span>
-<span id="cb20-123"><a href="#cb20-123" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute return</span></span>
-<span id="cb20-124"><a href="#cb20-124" aria-hidden="true" tabindex="-1"></a>        traj_len <span class="op">=</span> <span class="bu">len</span>(received_rewards)</span>
-<span id="cb20-125"><a href="#cb20-125" aria-hidden="true" tabindex="-1"></a>        returns <span class="op">=</span> np.zeros(traj_len)</span>
-<span id="cb20-126"><a href="#cb20-126" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Gt = Rt when t = T</span></span>
-<span id="cb20-127"><a href="#cb20-127" aria-hidden="true" tabindex="-1"></a>        returns[<span class="op">-</span><span class="dv">1</span>] <span class="op">=</span> received_rewards[<span class="op">-</span><span class="dv">1</span>]</span>
-<span id="cb20-128"><a href="#cb20-128" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Iterating from T - 2, T - 1, ..., to 0</span></span>
-<span id="cb20-129"><a href="#cb20-129" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">reversed</span>(<span class="bu">range</span>(traj_len <span class="op">-</span> <span class="dv">1</span>)):</span>
-<span id="cb20-130"><a href="#cb20-130" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Gt = Rt + γGt+1</span></span>
-<span id="cb20-131"><a href="#cb20-131" aria-hidden="true" tabindex="-1"></a>            returns[t] <span class="op">=</span> received_rewards[t] <span class="op">+</span> discount <span class="op">*</span> returns[t <span class="op">+</span> <span class="dv">1</span>]</span>
-<span id="cb20-132"><a href="#cb20-132" aria-hidden="true" tabindex="-1"></a>        updated <span class="op">=</span> <span class="bu">set</span>()</span>
-<span id="cb20-133"><a href="#cb20-133" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Update the value</span></span>
-<span id="cb20-134"><a href="#cb20-134" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (state, action) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(visited_states[:<span class="op">-</span><span class="dv">1</span>], taken_actions)):</span>
-<span id="cb20-135"><a href="#cb20-135" aria-hidden="true" tabindex="-1"></a>            <span class="co"># If the state is already visited, skip it</span></span>
-<span id="cb20-136"><a href="#cb20-136" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (state, action) <span class="kw">in</span> updated:</span>
-<span id="cb20-137"><a href="#cb20-137" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
-<span id="cb20-138"><a href="#cb20-138" aria-hidden="true" tabindex="-1"></a>            updated.add((state, action))</span>
-<span id="cb20-139"><a href="#cb20-139" aria-hidden="true" tabindex="-1"></a>            all_returns[state][action].append(returns[i].item())</span>
-<span id="cb20-140"><a href="#cb20-140" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Q(St, At) ← average(Returns(St, At))</span></span>
-<span id="cb20-141"><a href="#cb20-141" aria-hidden="true" tabindex="-1"></a>            q[state, action] <span class="op">=</span> np.mean(all_returns[state][action])</span>
-<span id="cb20-142"><a href="#cb20-142" aria-hidden="true" tabindex="-1"></a>            pi[state] <span class="op">=</span> np.argmax(q[state])</span>
-<span id="cb20-143"><a href="#cb20-143" aria-hidden="true" tabindex="-1"></a>        epsilon <span class="op">-=</span> epsilon_decay</span>
-<span id="cb20-144"><a href="#cb20-144" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q, all_values</span>
-<span id="cb20-145"><a href="#cb20-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-146"><a href="#cb20-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-147"><a href="#cb20-147" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> off_policy_mc(</span>
-<span id="cb20-148"><a href="#cb20-148" aria-hidden="true" tabindex="-1"></a>    env: RacetrackEnv,</span>
-<span id="cb20-149"><a href="#cb20-149" aria-hidden="true" tabindex="-1"></a>    n_episodes: <span class="bu">int</span>,</span>
-<span id="cb20-150"><a href="#cb20-150" aria-hidden="true" tabindex="-1"></a>    discount: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span id="cb20-151"><a href="#cb20-151" aria-hidden="true" tabindex="-1"></a>    record_all_values: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb20-152"><a href="#cb20-152" aria-hidden="true" tabindex="-1"></a>    epsilon: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span id="cb20-153"><a href="#cb20-153" aria-hidden="true" tabindex="-1"></a>    epsilon_final: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span id="cb20-154"><a href="#cb20-154" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">999</span>,</span>
-<span id="cb20-155"><a href="#cb20-155" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Tuple[np.ndarray, List[np.ndarray]]:</span>
-<span id="cb20-156"><a href="#cb20-156" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Off-policy MC control"""</span></span>
-<span id="cb20-157"><a href="#cb20-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-158"><a href="#cb20-158" aria-hidden="true" tabindex="-1"></a>    n_states <span class="op">=</span> env._max_width <span class="op">*</span> env._max_height <span class="op">*</span> <span class="dv">25</span></span>
-<span id="cb20-159"><a href="#cb20-159" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> <span class="bu">len</span>(env._actions)</span>
-<span id="cb20-160"><a href="#cb20-160" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span>seed)</span>
-<span id="cb20-161"><a href="#cb20-161" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> np.zeros((n_states, n_actions))</span>
-<span id="cb20-162"><a href="#cb20-162" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> np.zeros_like(q)</span>
-<span id="cb20-163"><a href="#cb20-163" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> np.argmax(q, axis<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb20-164"><a href="#cb20-164" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> []</span>
-<span id="cb20-165"><a href="#cb20-165" aria-hidden="true" tabindex="-1"></a>    possible_starts <span class="op">=</span> valid_states(env)</span>
-<span id="cb20-166"><a href="#cb20-166" aria-hidden="true" tabindex="-1"></a>    max_episode_length <span class="op">=</span> <span class="bu">int</span>(np.ceil(np.log(<span class="fl">1e-6</span>) <span class="op">/</span> np.log(discount)))</span>
-<span id="cb20-167"><a href="#cb20-167" aria-hidden="true" tabindex="-1"></a>    epsilon_decay <span class="op">=</span> (epsilon <span class="op">-</span> epsilon_final) <span class="op">/</span> n_episodes</span>
-<span id="cb20-168"><a href="#cb20-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_episodes):</span>
-<span id="cb20-169"><a href="#cb20-169" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> record_all_values:</span>
-<span id="cb20-170"><a href="#cb20-170" aria-hidden="true" tabindex="-1"></a>            all_values.append(q.copy())</span>
-<span id="cb20-171"><a href="#cb20-171" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> env.reset()</span>
-<span id="cb20-172"><a href="#cb20-172" aria-hidden="true" tabindex="-1"></a>        visited_states <span class="op">=</span> [env.state_index(state)]</span>
-<span id="cb20-173"><a href="#cb20-173" aria-hidden="true" tabindex="-1"></a>        taken_actions <span class="op">=</span> []</span>
-<span id="cb20-174"><a href="#cb20-174" aria-hidden="true" tabindex="-1"></a>        received_rewards <span class="op">=</span> []</span>
-<span id="cb20-175"><a href="#cb20-175" aria-hidden="true" tabindex="-1"></a>        acted_optimally <span class="op">=</span> []</span>
-<span id="cb20-176"><a href="#cb20-176" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_episode_length):</span>
-<span id="cb20-177"><a href="#cb20-177" aria-hidden="true" tabindex="-1"></a>            <span class="co"># ε-soft policy</span></span>
-<span id="cb20-178"><a href="#cb20-178" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> random_state.rand() <span class="op">&lt;</span> epsilon:</span>
-<span id="cb20-179"><a href="#cb20-179" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> random_state.randint(<span class="dv">9</span>)</span>
-<span id="cb20-180"><a href="#cb20-180" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb20-181"><a href="#cb20-181" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> pi[env.state_index(state)]</span>
-<span id="cb20-182"><a href="#cb20-182" aria-hidden="true" tabindex="-1"></a>            acted_optimally.append(action <span class="op">==</span> pi[env.state_index(state)])</span>
-<span id="cb20-183"><a href="#cb20-183" aria-hidden="true" tabindex="-1"></a>            taken_actions.append(action)</span>
-<span id="cb20-184"><a href="#cb20-184" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Step the simulator</span></span>
-<span id="cb20-185"><a href="#cb20-185" aria-hidden="true" tabindex="-1"></a>            state, reward, termination <span class="op">=</span> env.step(state, action)</span>
-<span id="cb20-186"><a href="#cb20-186" aria-hidden="true" tabindex="-1"></a>            visited_states.append(env.state_index(state))</span>
-<span id="cb20-187"><a href="#cb20-187" aria-hidden="true" tabindex="-1"></a>            received_rewards.append(reward)</span>
-<span id="cb20-188"><a href="#cb20-188" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> termination:</span>
-<span id="cb20-189"><a href="#cb20-189" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
-<span id="cb20-190"><a href="#cb20-190" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb20-191"><a href="#cb20-191" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> <span class="fl">1.0</span></span>
-<span id="cb20-192"><a href="#cb20-192" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (state, action) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(visited_states[:<span class="op">-</span><span class="dv">1</span>], taken_actions)):</span>
-<span id="cb20-193"><a href="#cb20-193" aria-hidden="true" tabindex="-1"></a>            g <span class="op">=</span> discount <span class="op">*</span> g <span class="op">+</span> received_rewards[i]</span>
-<span id="cb20-194"><a href="#cb20-194" aria-hidden="true" tabindex="-1"></a>            c[state, action] <span class="op">+=</span> w</span>
-<span id="cb20-195"><a href="#cb20-195" aria-hidden="true" tabindex="-1"></a>            q[state, action] <span class="op">+=</span> w <span class="op">/</span> c[state, action] <span class="op">*</span> (g <span class="op">-</span> q[state, action])</span>
-<span id="cb20-196"><a href="#cb20-196" aria-hidden="true" tabindex="-1"></a>            pi[state] <span class="op">=</span> np.argmax(q[state])</span>
-<span id="cb20-197"><a href="#cb20-197" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> action <span class="op">==</span> pi[state]:</span>
-<span id="cb20-198"><a href="#cb20-198" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
-<span id="cb20-199"><a href="#cb20-199" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb20-200"><a href="#cb20-200" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> acted_optimally[i]:</span>
-<span id="cb20-201"><a href="#cb20-201" aria-hidden="true" tabindex="-1"></a>                    w <span class="op">*=</span> <span class="fl">1.0</span> <span class="op">-</span> epsilon <span class="op">+</span> epsilon <span class="op">/</span> n_actions</span>
-<span id="cb20-202"><a href="#cb20-202" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
-<span id="cb20-203"><a href="#cb20-203" aria-hidden="true" tabindex="-1"></a>                    w <span class="op">*=</span> epsilon <span class="op">/</span> n_actions</span>
-<span id="cb20-204"><a href="#cb20-204" aria-hidden="true" tabindex="-1"></a>        epsilon <span class="op">-=</span> epsilon_decay</span>
-<span id="cb20-205"><a href="#cb20-205" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q, all_values</span>
-<span id="cb20-206"><a href="#cb20-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-207"><a href="#cb20-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-208"><a href="#cb20-208" aria-hidden="true" tabindex="-1"></a>mces_result <span class="op">=</span> mc_es(smalltrack, <span class="dv">3000</span>, record_all_values<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb20-209"><a href="#cb20-209" aria-hidden="true" tabindex="-1"></a>on_mc_result <span class="op">=</span> on_policy_fist_visit_mc(</span>
-<span id="cb20-210"><a href="#cb20-210" aria-hidden="true" tabindex="-1"></a>    smalltrack,</span>
-<span id="cb20-211"><a href="#cb20-211" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3000</span>,</span>
-<span id="cb20-212"><a href="#cb20-212" aria-hidden="true" tabindex="-1"></a>    epsilon<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span id="cb20-213"><a href="#cb20-213" aria-hidden="true" tabindex="-1"></a>    epsilon_final<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb20-214"><a href="#cb20-214" aria-hidden="true" tabindex="-1"></a>    record_all_values<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb20-215"><a href="#cb20-215" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb20-216"><a href="#cb20-216" aria-hidden="true" tabindex="-1"></a>off_mc_result <span class="op">=</span> off_policy_mc(</span>
-<span id="cb20-217"><a href="#cb20-217" aria-hidden="true" tabindex="-1"></a>    smalltrack,</span>
-<span id="cb20-218"><a href="#cb20-218" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3000</span>,</span>
-<span id="cb20-219"><a href="#cb20-219" aria-hidden="true" tabindex="-1"></a>    epsilon<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span id="cb20-220"><a href="#cb20-220" aria-hidden="true" tabindex="-1"></a>    epsilon_final<span class="op">=</span><span class="fl">0.01</span>,</span>
-<span id="cb20-221"><a href="#cb20-221" aria-hidden="true" tabindex="-1"></a>    record_all_values<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb20-222"><a href="#cb20-222" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># collapse-hide</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> valid_states(env: RacetrackEnv) <span class="op">-&gt;</span> List[State]:</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    states <span class="op">=</span> []</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(env._max_height):</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(env._max_width):</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>            track <span class="op">=</span> env._track[y][x]</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> track <span class="op">==</span> env.WALL:</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> y_velocity <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> x_velocity <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                    state <span class="op">=</span> State(np.array([y, x]), np.array([y_velocity, x_velocity]))</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> track <span class="op">!=</span> env.START <span class="kw">and</span> (x_velocity <span class="op">&gt;</span> <span class="dv">0</span> <span class="kw">or</span> y_velocity <span class="op">&gt;</span> <span class="dv">0</span>):</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>                        states.append(state)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> states</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mc_es(</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    env: RacetrackEnv,</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    n_episodes: <span class="bu">int</span>,</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    discount: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>    record_all_values: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">999</span>,</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Tuple[np.ndarray, List[np.ndarray]]:</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Monte-Carlo Control with Exploring Starts"""</span></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>    n_states <span class="op">=</span> env._max_width <span class="op">*</span> env._max_height <span class="op">*</span> <span class="dv">25</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> <span class="bu">len</span>(env._actions)</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span>seed)</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> np.zeros((n_states, n_actions))</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> random_state.randint(<span class="dv">9</span>, size<span class="op">=</span>n_states)</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> []</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>    all_returns <span class="op">=</span> [[[] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_actions)] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_states)]</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>    possible_starts <span class="op">=</span> valid_states(env)</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>    max_episode_length <span class="op">=</span> <span class="bu">int</span>(np.ceil(np.log(<span class="fl">1e-6</span>) <span class="op">/</span> np.log(discount)))</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_episodes):</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> record_all_values:</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>            all_values.append(q.copy())</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> possible_starts[random_state.choice(<span class="bu">len</span>(possible_starts))]</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>        visited_states <span class="op">=</span> [env.state_index(state)]</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>        taken_actions <span class="op">=</span> []</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>        received_rewards <span class="op">=</span> []</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>        initial <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_episode_length):</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> initial:</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Randomly sample the first action</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> random_state.randint(<span class="dv">9</span>)</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>                initial <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Take an action following the policy</span></span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> pi[env.state_index(state)]</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>            taken_actions.append(action)</span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Step the simulator</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>            state, reward, termination <span class="op">=</span> env.step(state, action)</span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a>            visited_states.append(env.state_index(state))</span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>            received_rewards.append(reward)</span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> termination:</span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute return</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a>        traj_len <span class="op">=</span> <span class="bu">len</span>(received_rewards)</span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a>        returns <span class="op">=</span> np.zeros(traj_len)</span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Gt = Rt when t = T</span></span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a>        returns[<span class="op">-</span><span class="dv">1</span>] <span class="op">=</span> received_rewards[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Iterating from T - 2, T - 1, ..., to 0</span></span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">reversed</span>(<span class="bu">range</span>(traj_len <span class="op">-</span> <span class="dv">1</span>)):</span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Gt = Rt + γGt+1</span></span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a>            returns[t] <span class="op">=</span> received_rewards[t] <span class="op">+</span> discount <span class="op">*</span> returns[t <span class="op">+</span> <span class="dv">1</span>]</span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a>        updated <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Update the value</span></span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (state, action) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(visited_states[:<span class="op">-</span><span class="dv">1</span>], taken_actions)):</span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a>            <span class="co"># If the state is already visited, skip it</span></span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (state, action) <span class="kw">in</span> updated:</span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a>            updated.add((state, action))</span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a>            all_returns[state][action].append(returns[i].item())</span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Q(St, At) ← average(Returns(St, At))</span></span>
+<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a>            q[state, action] <span class="op">=</span> np.mean(all_returns[state][action])</span>
+<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a>            pi[state] <span class="op">=</span> np.argmax(q[state])</span>
+<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q, all_values</span>
+<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> on_policy_fist_visit_mc(</span>
+<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a>    env: RacetrackEnv,</span>
+<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a>    n_episodes: <span class="bu">int</span>,</span>
+<span id="cb19-84"><a href="#cb19-84" aria-hidden="true" tabindex="-1"></a>    discount: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span id="cb19-85"><a href="#cb19-85" aria-hidden="true" tabindex="-1"></a>    epsilon: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span id="cb19-86"><a href="#cb19-86" aria-hidden="true" tabindex="-1"></a>    epsilon_final: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span id="cb19-87"><a href="#cb19-87" aria-hidden="true" tabindex="-1"></a>    record_all_values: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb19-88"><a href="#cb19-88" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">999</span>,</span>
+<span id="cb19-89"><a href="#cb19-89" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Tuple[np.ndarray, List[np.ndarray]]:</span>
+<span id="cb19-90"><a href="#cb19-90" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""On-policy first visit Monte-Carlo"""</span></span>
+<span id="cb19-91"><a href="#cb19-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-92"><a href="#cb19-92" aria-hidden="true" tabindex="-1"></a>    n_states <span class="op">=</span> env._max_width <span class="op">*</span> env._max_height <span class="op">*</span> <span class="dv">25</span></span>
+<span id="cb19-93"><a href="#cb19-93" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> <span class="bu">len</span>(env._actions)</span>
+<span id="cb19-94"><a href="#cb19-94" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span>seed)</span>
+<span id="cb19-95"><a href="#cb19-95" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> np.zeros((n_states, n_actions))</span>
+<span id="cb19-96"><a href="#cb19-96" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> random_state.randint(<span class="dv">9</span>, size<span class="op">=</span>n_states)</span>
+<span id="cb19-97"><a href="#cb19-97" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> []</span>
+<span id="cb19-98"><a href="#cb19-98" aria-hidden="true" tabindex="-1"></a>    all_returns <span class="op">=</span> [[[] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_actions)] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(n_states)]</span>
+<span id="cb19-99"><a href="#cb19-99" aria-hidden="true" tabindex="-1"></a>    possible_starts <span class="op">=</span> valid_states(env)</span>
+<span id="cb19-100"><a href="#cb19-100" aria-hidden="true" tabindex="-1"></a>    max_episode_length <span class="op">=</span> <span class="bu">int</span>(np.ceil(np.log(<span class="fl">1e-6</span>) <span class="op">/</span> np.log(discount)))</span>
+<span id="cb19-101"><a href="#cb19-101" aria-hidden="true" tabindex="-1"></a>    epsilon_decay <span class="op">=</span> (epsilon <span class="op">-</span> epsilon_final) <span class="op">/</span> n_episodes</span>
+<span id="cb19-102"><a href="#cb19-102" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_episodes):</span>
+<span id="cb19-103"><a href="#cb19-103" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> record_all_values:</span>
+<span id="cb19-104"><a href="#cb19-104" aria-hidden="true" tabindex="-1"></a>            all_values.append(q.copy())</span>
+<span id="cb19-105"><a href="#cb19-105" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> env.reset()</span>
+<span id="cb19-106"><a href="#cb19-106" aria-hidden="true" tabindex="-1"></a>        visited_states <span class="op">=</span> [env.state_index(state)]</span>
+<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a>        taken_actions <span class="op">=</span> []</span>
+<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a>        received_rewards <span class="op">=</span> []</span>
+<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_episode_length):</span>
+<span id="cb19-110"><a href="#cb19-110" aria-hidden="true" tabindex="-1"></a>            <span class="co"># ε-soft policy</span></span>
+<span id="cb19-111"><a href="#cb19-111" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> random_state.rand() <span class="op">&lt;</span> epsilon:</span>
+<span id="cb19-112"><a href="#cb19-112" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> random_state.randint(<span class="dv">9</span>)</span>
+<span id="cb19-113"><a href="#cb19-113" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb19-114"><a href="#cb19-114" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> pi[env.state_index(state)]</span>
+<span id="cb19-115"><a href="#cb19-115" aria-hidden="true" tabindex="-1"></a>            taken_actions.append(action)</span>
+<span id="cb19-116"><a href="#cb19-116" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Step the simulator</span></span>
+<span id="cb19-117"><a href="#cb19-117" aria-hidden="true" tabindex="-1"></a>            state, reward, termination <span class="op">=</span> env.step(state, action)</span>
+<span id="cb19-118"><a href="#cb19-118" aria-hidden="true" tabindex="-1"></a>            visited_states.append(env.state_index(state))</span>
+<span id="cb19-119"><a href="#cb19-119" aria-hidden="true" tabindex="-1"></a>            received_rewards.append(reward)</span>
+<span id="cb19-120"><a href="#cb19-120" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> termination:</span>
+<span id="cb19-121"><a href="#cb19-121" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb19-122"><a href="#cb19-122" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Below code is the same as mc_es</span></span>
+<span id="cb19-123"><a href="#cb19-123" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute return</span></span>
+<span id="cb19-124"><a href="#cb19-124" aria-hidden="true" tabindex="-1"></a>        traj_len <span class="op">=</span> <span class="bu">len</span>(received_rewards)</span>
+<span id="cb19-125"><a href="#cb19-125" aria-hidden="true" tabindex="-1"></a>        returns <span class="op">=</span> np.zeros(traj_len)</span>
+<span id="cb19-126"><a href="#cb19-126" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Gt = Rt when t = T</span></span>
+<span id="cb19-127"><a href="#cb19-127" aria-hidden="true" tabindex="-1"></a>        returns[<span class="op">-</span><span class="dv">1</span>] <span class="op">=</span> received_rewards[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb19-128"><a href="#cb19-128" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Iterating from T - 2, T - 1, ..., to 0</span></span>
+<span id="cb19-129"><a href="#cb19-129" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">reversed</span>(<span class="bu">range</span>(traj_len <span class="op">-</span> <span class="dv">1</span>)):</span>
+<span id="cb19-130"><a href="#cb19-130" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Gt = Rt + γGt+1</span></span>
+<span id="cb19-131"><a href="#cb19-131" aria-hidden="true" tabindex="-1"></a>            returns[t] <span class="op">=</span> received_rewards[t] <span class="op">+</span> discount <span class="op">*</span> returns[t <span class="op">+</span> <span class="dv">1</span>]</span>
+<span id="cb19-132"><a href="#cb19-132" aria-hidden="true" tabindex="-1"></a>        updated <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb19-133"><a href="#cb19-133" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Update the value</span></span>
+<span id="cb19-134"><a href="#cb19-134" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (state, action) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(visited_states[:<span class="op">-</span><span class="dv">1</span>], taken_actions)):</span>
+<span id="cb19-135"><a href="#cb19-135" aria-hidden="true" tabindex="-1"></a>            <span class="co"># If the state is already visited, skip it</span></span>
+<span id="cb19-136"><a href="#cb19-136" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> (state, action) <span class="kw">in</span> updated:</span>
+<span id="cb19-137"><a href="#cb19-137" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb19-138"><a href="#cb19-138" aria-hidden="true" tabindex="-1"></a>            updated.add((state, action))</span>
+<span id="cb19-139"><a href="#cb19-139" aria-hidden="true" tabindex="-1"></a>            all_returns[state][action].append(returns[i].item())</span>
+<span id="cb19-140"><a href="#cb19-140" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Q(St, At) ← average(Returns(St, At))</span></span>
+<span id="cb19-141"><a href="#cb19-141" aria-hidden="true" tabindex="-1"></a>            q[state, action] <span class="op">=</span> np.mean(all_returns[state][action])</span>
+<span id="cb19-142"><a href="#cb19-142" aria-hidden="true" tabindex="-1"></a>            pi[state] <span class="op">=</span> np.argmax(q[state])</span>
+<span id="cb19-143"><a href="#cb19-143" aria-hidden="true" tabindex="-1"></a>        epsilon <span class="op">-=</span> epsilon_decay</span>
+<span id="cb19-144"><a href="#cb19-144" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q, all_values</span>
+<span id="cb19-145"><a href="#cb19-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-146"><a href="#cb19-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-147"><a href="#cb19-147" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> off_policy_mc(</span>
+<span id="cb19-148"><a href="#cb19-148" aria-hidden="true" tabindex="-1"></a>    env: RacetrackEnv,</span>
+<span id="cb19-149"><a href="#cb19-149" aria-hidden="true" tabindex="-1"></a>    n_episodes: <span class="bu">int</span>,</span>
+<span id="cb19-150"><a href="#cb19-150" aria-hidden="true" tabindex="-1"></a>    discount: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span id="cb19-151"><a href="#cb19-151" aria-hidden="true" tabindex="-1"></a>    record_all_values: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
+<span id="cb19-152"><a href="#cb19-152" aria-hidden="true" tabindex="-1"></a>    epsilon: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span id="cb19-153"><a href="#cb19-153" aria-hidden="true" tabindex="-1"></a>    epsilon_final: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span id="cb19-154"><a href="#cb19-154" aria-hidden="true" tabindex="-1"></a>    seed: <span class="bu">int</span> <span class="op">=</span> <span class="dv">999</span>,</span>
+<span id="cb19-155"><a href="#cb19-155" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Tuple[np.ndarray, List[np.ndarray]]:</span>
+<span id="cb19-156"><a href="#cb19-156" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Off-policy MC control"""</span></span>
+<span id="cb19-157"><a href="#cb19-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-158"><a href="#cb19-158" aria-hidden="true" tabindex="-1"></a>    n_states <span class="op">=</span> env._max_width <span class="op">*</span> env._max_height <span class="op">*</span> <span class="dv">25</span></span>
+<span id="cb19-159"><a href="#cb19-159" aria-hidden="true" tabindex="-1"></a>    n_actions <span class="op">=</span> <span class="bu">len</span>(env._actions)</span>
+<span id="cb19-160"><a href="#cb19-160" aria-hidden="true" tabindex="-1"></a>    random_state <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span>seed)</span>
+<span id="cb19-161"><a href="#cb19-161" aria-hidden="true" tabindex="-1"></a>    q <span class="op">=</span> np.zeros((n_states, n_actions))</span>
+<span id="cb19-162"><a href="#cb19-162" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> np.zeros_like(q)</span>
+<span id="cb19-163"><a href="#cb19-163" aria-hidden="true" tabindex="-1"></a>    pi <span class="op">=</span> np.argmax(q, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb19-164"><a href="#cb19-164" aria-hidden="true" tabindex="-1"></a>    all_values <span class="op">=</span> []</span>
+<span id="cb19-165"><a href="#cb19-165" aria-hidden="true" tabindex="-1"></a>    possible_starts <span class="op">=</span> valid_states(env)</span>
+<span id="cb19-166"><a href="#cb19-166" aria-hidden="true" tabindex="-1"></a>    max_episode_length <span class="op">=</span> <span class="bu">int</span>(np.ceil(np.log(<span class="fl">1e-6</span>) <span class="op">/</span> np.log(discount)))</span>
+<span id="cb19-167"><a href="#cb19-167" aria-hidden="true" tabindex="-1"></a>    epsilon_decay <span class="op">=</span> (epsilon <span class="op">-</span> epsilon_final) <span class="op">/</span> n_episodes</span>
+<span id="cb19-168"><a href="#cb19-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_episodes):</span>
+<span id="cb19-169"><a href="#cb19-169" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> record_all_values:</span>
+<span id="cb19-170"><a href="#cb19-170" aria-hidden="true" tabindex="-1"></a>            all_values.append(q.copy())</span>
+<span id="cb19-171"><a href="#cb19-171" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> env.reset()</span>
+<span id="cb19-172"><a href="#cb19-172" aria-hidden="true" tabindex="-1"></a>        visited_states <span class="op">=</span> [env.state_index(state)]</span>
+<span id="cb19-173"><a href="#cb19-173" aria-hidden="true" tabindex="-1"></a>        taken_actions <span class="op">=</span> []</span>
+<span id="cb19-174"><a href="#cb19-174" aria-hidden="true" tabindex="-1"></a>        received_rewards <span class="op">=</span> []</span>
+<span id="cb19-175"><a href="#cb19-175" aria-hidden="true" tabindex="-1"></a>        acted_optimally <span class="op">=</span> []</span>
+<span id="cb19-176"><a href="#cb19-176" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(max_episode_length):</span>
+<span id="cb19-177"><a href="#cb19-177" aria-hidden="true" tabindex="-1"></a>            <span class="co"># ε-soft policy</span></span>
+<span id="cb19-178"><a href="#cb19-178" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> random_state.rand() <span class="op">&lt;</span> epsilon:</span>
+<span id="cb19-179"><a href="#cb19-179" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> random_state.randint(<span class="dv">9</span>)</span>
+<span id="cb19-180"><a href="#cb19-180" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb19-181"><a href="#cb19-181" aria-hidden="true" tabindex="-1"></a>                action <span class="op">=</span> pi[env.state_index(state)]</span>
+<span id="cb19-182"><a href="#cb19-182" aria-hidden="true" tabindex="-1"></a>            acted_optimally.append(action <span class="op">==</span> pi[env.state_index(state)])</span>
+<span id="cb19-183"><a href="#cb19-183" aria-hidden="true" tabindex="-1"></a>            taken_actions.append(action)</span>
+<span id="cb19-184"><a href="#cb19-184" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Step the simulator</span></span>
+<span id="cb19-185"><a href="#cb19-185" aria-hidden="true" tabindex="-1"></a>            state, reward, termination <span class="op">=</span> env.step(state, action)</span>
+<span id="cb19-186"><a href="#cb19-186" aria-hidden="true" tabindex="-1"></a>            visited_states.append(env.state_index(state))</span>
+<span id="cb19-187"><a href="#cb19-187" aria-hidden="true" tabindex="-1"></a>            received_rewards.append(reward)</span>
+<span id="cb19-188"><a href="#cb19-188" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> termination:</span>
+<span id="cb19-189"><a href="#cb19-189" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb19-190"><a href="#cb19-190" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb19-191"><a href="#cb19-191" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb19-192"><a href="#cb19-192" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, (state, action) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(visited_states[:<span class="op">-</span><span class="dv">1</span>], taken_actions)):</span>
+<span id="cb19-193"><a href="#cb19-193" aria-hidden="true" tabindex="-1"></a>            g <span class="op">=</span> discount <span class="op">*</span> g <span class="op">+</span> received_rewards[i]</span>
+<span id="cb19-194"><a href="#cb19-194" aria-hidden="true" tabindex="-1"></a>            c[state, action] <span class="op">+=</span> w</span>
+<span id="cb19-195"><a href="#cb19-195" aria-hidden="true" tabindex="-1"></a>            q[state, action] <span class="op">+=</span> w <span class="op">/</span> c[state, action] <span class="op">*</span> (g <span class="op">-</span> q[state, action])</span>
+<span id="cb19-196"><a href="#cb19-196" aria-hidden="true" tabindex="-1"></a>            pi[state] <span class="op">=</span> np.argmax(q[state])</span>
+<span id="cb19-197"><a href="#cb19-197" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> action <span class="op">==</span> pi[state]:</span>
+<span id="cb19-198"><a href="#cb19-198" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb19-199"><a href="#cb19-199" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb19-200"><a href="#cb19-200" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> acted_optimally[i]:</span>
+<span id="cb19-201"><a href="#cb19-201" aria-hidden="true" tabindex="-1"></a>                    w <span class="op">*=</span> <span class="fl">1.0</span> <span class="op">-</span> epsilon <span class="op">+</span> epsilon <span class="op">/</span> n_actions</span>
+<span id="cb19-202"><a href="#cb19-202" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
+<span id="cb19-203"><a href="#cb19-203" aria-hidden="true" tabindex="-1"></a>                    w <span class="op">*=</span> epsilon <span class="op">/</span> n_actions</span>
+<span id="cb19-204"><a href="#cb19-204" aria-hidden="true" tabindex="-1"></a>        epsilon <span class="op">-=</span> epsilon_decay</span>
+<span id="cb19-205"><a href="#cb19-205" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> q, all_values</span>
+<span id="cb19-206"><a href="#cb19-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-207"><a href="#cb19-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-208"><a href="#cb19-208" aria-hidden="true" tabindex="-1"></a>mces_result <span class="op">=</span> mc_es(smalltrack, <span class="dv">3000</span>, record_all_values<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-209"><a href="#cb19-209" aria-hidden="true" tabindex="-1"></a>on_mc_result <span class="op">=</span> on_policy_fist_visit_mc(</span>
+<span id="cb19-210"><a href="#cb19-210" aria-hidden="true" tabindex="-1"></a>    smalltrack,</span>
+<span id="cb19-211"><a href="#cb19-211" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3000</span>,</span>
+<span id="cb19-212"><a href="#cb19-212" aria-hidden="true" tabindex="-1"></a>    epsilon<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb19-213"><a href="#cb19-213" aria-hidden="true" tabindex="-1"></a>    epsilon_final<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb19-214"><a href="#cb19-214" aria-hidden="true" tabindex="-1"></a>    record_all_values<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb19-215"><a href="#cb19-215" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-216"><a href="#cb19-216" aria-hidden="true" tabindex="-1"></a>off_mc_result <span class="op">=</span> off_policy_mc(</span>
+<span id="cb19-217"><a href="#cb19-217" aria-hidden="true" tabindex="-1"></a>    smalltrack,</span>
+<span id="cb19-218"><a href="#cb19-218" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3000</span>,</span>
+<span id="cb19-219"><a href="#cb19-219" aria-hidden="true" tabindex="-1"></a>    epsilon<span class="op">=</span><span class="fl">0.5</span>,</span>
+<span id="cb19-220"><a href="#cb19-220" aria-hidden="true" tabindex="-1"></a>    epsilon_final<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb19-221"><a href="#cb19-221" aria-hidden="true" tabindex="-1"></a>    record_all_values<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb19-222"><a href="#cb19-222" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <p>Let’s plot the results. Here I plotted the difference from the optimal value function and the number of states that the policy choices the optimal action.</p>
-<div class="cell" data-execution_count="19">
-<details>
+<div id="a1b845c7-9e84-46c6-8593-e1c0b1b04686" class="cell" data-execution_count="19">
+<details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> value_diff(q_values: List[np.ndarray]) <span class="op">-&gt;</span> List[<span class="bu">float</span>]:</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    diffs <span class="op">=</span> []</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, q <span class="kw">in</span> <span class="bu">enumerate</span>(q_values):</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        diff <span class="op">=</span> np.<span class="bu">abs</span>(np.<span class="bu">max</span>(q, axis<span class="op">=-</span><span class="dv">1</span>) <span class="op">-</span> vi_result.v)[start_states]</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        diffs.append(np.mean(diff))</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> diffs</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> n_optimal_actions(q_values: List[np.ndarray]) <span class="op">-&gt;</span> List[<span class="bu">int</span>]:</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    n_optimal <span class="op">=</span> []</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    optimal_actions <span class="op">=</span> np.argmax(vi_result.q, axis<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, q <span class="kw">in</span> <span class="bu">enumerate</span>(q_values):</span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>        greedy <span class="op">=</span> np.argmax(q, axis<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>        n_optimal.append(np.<span class="bu">sum</span>(greedy <span class="op">==</span> optimal_actions))</span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_optimal</span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>_, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>mc_es_value_diff <span class="op">=</span> value_diff([mces_result[<span class="dv">0</span>]] <span class="op">+</span> mces_result[<span class="dv">1</span>])</span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>on_mc_value_diff <span class="op">=</span> value_diff([on_mc_result[<span class="dv">0</span>]] <span class="op">+</span> on_mc_result[<span class="dv">1</span>])</span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>off_mc_value_diff <span class="op">=</span> value_diff([off_mc_result[<span class="dv">0</span>]] <span class="op">+</span> off_mc_result[<span class="dv">1</span>])</span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>ax1.plot(mc_es_value_diff, label<span class="op">=</span><span class="st">"MC-ES"</span>)</span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>ax1.plot(on_mc_value_diff, label<span class="op">=</span><span class="st">"On-Policy"</span>)</span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>ax1.plot(off_mc_value_diff, label<span class="op">=</span><span class="st">"Off-Policy"</span>)</span>
-<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>ax1.set_xlabel(<span class="st">"Num. Episodes"</span>)</span>
-<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">"Avg. |V* - V|"</span>)</span>
-<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>ax1.set_title(<span class="st">"Diff. from V*"</span>)</span>
-<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>mc_es_nopt <span class="op">=</span> n_optimal_actions([mces_result[<span class="dv">0</span>]] <span class="op">+</span> mces_result[<span class="dv">1</span>])</span>
-<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>on_mc_nopt <span class="op">=</span>  n_optimal_actions([on_mc_result[<span class="dv">0</span>]] <span class="op">+</span> on_mc_result[<span class="dv">1</span>])</span>
-<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>off_mc_nopt <span class="op">=</span>  n_optimal_actions([off_mc_result[<span class="dv">0</span>]] <span class="op">+</span> off_mc_result[<span class="dv">1</span>])</span>
-<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>ax1.legend(fontsize<span class="op">=</span><span class="dv">12</span>, loc<span class="op">=</span><span class="st">"upper right"</span>)</span>
-<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>ax2.plot(mc_es_nopt, label<span class="op">=</span><span class="st">"MC-ES"</span>)</span>
-<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>ax2.plot(on_mc_nopt, label<span class="op">=</span><span class="st">"On-Policy"</span>)</span>
-<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>ax2.plot(off_mc_nopt, label<span class="op">=</span><span class="st">"Off-Policy"</span>)</span>
-<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>ax2.set_xlabel(<span class="st">"Num. Episodes"</span>)</span>
-<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">"Num. Optimal Actions"</span>)</span>
-<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>ax2.legend(fontsize<span class="op">=</span><span class="dv">12</span>, loc<span class="op">=</span><span class="st">"upper right"</span>)</span>
-<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>ax2.set_title(<span class="st">"Num. of optimal actions"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> value_diff(q_values: List[np.ndarray]) <span class="op">-&gt;</span> List[<span class="bu">float</span>]:</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    diffs <span class="op">=</span> []</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, q <span class="kw">in</span> <span class="bu">enumerate</span>(q_values):</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        diff <span class="op">=</span> np.<span class="bu">abs</span>(np.<span class="bu">max</span>(q, axis<span class="op">=-</span><span class="dv">1</span>) <span class="op">-</span> vi_result.v)[start_states]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>        diffs.append(np.mean(diff))</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> diffs</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> n_optimal_actions(q_values: List[np.ndarray]) <span class="op">-&gt;</span> List[<span class="bu">int</span>]:</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    n_optimal <span class="op">=</span> []</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    optimal_actions <span class="op">=</span> np.argmax(vi_result.q, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, q <span class="kw">in</span> <span class="bu">enumerate</span>(q_values):</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>        greedy <span class="op">=</span> np.argmax(q, axis<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>        n_optimal.append(np.<span class="bu">sum</span>(greedy <span class="op">==</span> optimal_actions))</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n_optimal</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>_, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">6</span>))</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>mc_es_value_diff <span class="op">=</span> value_diff([mces_result[<span class="dv">0</span>]] <span class="op">+</span> mces_result[<span class="dv">1</span>])</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>on_mc_value_diff <span class="op">=</span> value_diff([on_mc_result[<span class="dv">0</span>]] <span class="op">+</span> on_mc_result[<span class="dv">1</span>])</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>off_mc_value_diff <span class="op">=</span> value_diff([off_mc_result[<span class="dv">0</span>]] <span class="op">+</span> off_mc_result[<span class="dv">1</span>])</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>ax1.plot(mc_es_value_diff, label<span class="op">=</span><span class="st">"MC-ES"</span>)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>ax1.plot(on_mc_value_diff, label<span class="op">=</span><span class="st">"On-Policy"</span>)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>ax1.plot(off_mc_value_diff, label<span class="op">=</span><span class="st">"Off-Policy"</span>)</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>ax1.set_xlabel(<span class="st">"Num. Episodes"</span>)</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">"Avg. |V* - V|"</span>)</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>ax1.set_title(<span class="st">"Diff. from V*"</span>)</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>mc_es_nopt <span class="op">=</span> n_optimal_actions([mces_result[<span class="dv">0</span>]] <span class="op">+</span> mces_result[<span class="dv">1</span>])</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>on_mc_nopt <span class="op">=</span>  n_optimal_actions([on_mc_result[<span class="dv">0</span>]] <span class="op">+</span> on_mc_result[<span class="dv">1</span>])</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>off_mc_nopt <span class="op">=</span>  n_optimal_actions([off_mc_result[<span class="dv">0</span>]] <span class="op">+</span> off_mc_result[<span class="dv">1</span>])</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>ax1.legend(fontsize<span class="op">=</span><span class="dv">12</span>, loc<span class="op">=</span><span class="st">"upper right"</span>)</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>ax2.plot(mc_es_nopt, label<span class="op">=</span><span class="st">"MC-ES"</span>)</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>ax2.plot(on_mc_nopt, label<span class="op">=</span><span class="st">"On-Policy"</span>)</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>ax2.plot(off_mc_nopt, label<span class="op">=</span><span class="st">"Off-Policy"</span>)</span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>ax2.set_xlabel(<span class="st">"Num. Episodes"</span>)</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">"Num. Optimal Actions"</span>)</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>ax2.legend(fontsize<span class="op">=</span><span class="dv">12</span>, loc<span class="op">=</span><span class="st">"upper right"</span>)</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>ax2.set_title(<span class="st">"Num. of optimal actions"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display" data-execution_count="19">
 <pre><code>Text(0.5, 1.0, 'Num. of optimal actions')</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-13-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-13-output-2.png" class="img-fluid figure-img"></p>
+</figure>
 </div>
 </div>
-<p>Some observations from the results: - On-Policy MC converges to the optimal policy the fastest, though the convergence of its value function is the slowest - MC-ES struggles to distinguish optimal and non-optimal actions at some states, probably because of the lack of exploration during an episode. - Compared to MC-ES and On-Policy MC, the peak of value differences of Off-Policy MC is much milder. - A randomly initialized policy is often caught in a loop and cannot reach to the goal. The value of such a policy is really small (<span class="math inline">\(-1 -1 * 0.95 - 1 * 0.95^2 - ... \approx -20\)</span>). However, Off-Policy MC uses important sampling to decay the rewards by uncertain actions, resulting the smaller value differences.</p>
+</div>
+<p>Some observations from the results: - On-Policy MC converges to the optimal policy the fastest, though the convergence of its value function is the slowest - MC-ES struggles to distinguish optimal and non-optimal actions at some states, probably because of the lack of exploration during an episode. - Compared to MC-ES and On-Policy MC, the peak of value differences of Off-Policy MC is much milder. - A randomly initialized policy is often caught in a loop and cannot reach to the goal. The value of such a policy is really small (<span class="math inline">\(-1  -1 * 0.95 - 1 * 0.95^2 - ... \approx -20\)</span>). However, Off-Policy MC uses important sampling to decay the rewards by uncertain actions, resulting the smaller value differences.</p>
 <p>Here I visualized sampled plays from all three methods. On-Policy MC looks the most efficient.</p>
-<div class="cell" data-execution_count="33">
-<details>
+<div id="29f290a0-2cd2-4ee2-8ea9-120989d6245b" class="cell" data-execution_count="33">
+<details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> q, name <span class="kw">in</span> <span class="bu">zip</span>([mces_result[<span class="dv">0</span>], on_mc_result[<span class="dv">0</span>], off_mc_result[<span class="dv">0</span>]], [<span class="st">"MC-ES"</span>, <span class="st">"On-Policy"</span>, <span class="st">"Off-Policy"</span>]):</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    display(show_rollout(smalltrack, <span class="kw">lambda</span> i: np.argmax(q[i]), np.argmax(q, axis<span class="op">=-</span><span class="dv">1</span>), name))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> q, name <span class="kw">in</span> <span class="bu">zip</span>([mces_result[<span class="dv">0</span>], on_mc_result[<span class="dv">0</span>], off_mc_result[<span class="dv">0</span>]], [<span class="st">"MC-ES"</span>, <span class="st">"On-Policy"</span>, <span class="st">"Off-Policy"</span>]):</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    display(show_rollout(smalltrack, <span class="kw">lambda</span> i: np.argmax(q[i]), np.argmax(q, axis<span class="op">=-</span><span class="dv">1</span>), name))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
 
@@ -5443,13 +5503,25 @@ YDiX6MiS/gAAAABJRU5ErkJggg==\
 </script>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-14-output-4.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-14-output-4.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-14-output-5.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-14-output-5.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="sandb-exercise-racetrack_files/figure-html/cell-14-output-6.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="sandb-exercise-racetrack_files/figure-html/cell-14-output-6.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 
@@ -5492,18 +5564,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -5535,11 +5596,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/kngwyu\.github\.io\/rlog2\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -5549,8 +5649,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -5562,7 +5671,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -5606,6 +5838,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -5631,6 +5864,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -5691,6 +5950,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.450">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -47,7 +47,13 @@ ul.task-list li input[type="checkbox"] {
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -56,6 +62,7 @@ ul.task-list li input[type="checkbox"] {
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -91,8 +98,35 @@ ul.task-list li input[type="checkbox"] {
   })
   </script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -100,38 +134,38 @@ ul.task-list li input[type="checkbox"] {
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">RLog2</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html" rel="" target="">
- <span class="menu-text">RLog2: RL blog 2</span></a>
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">RLog2: RL blog 2</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://sigmoid.social/@kngwyu" rel="" target=""><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://sigmoid.social/@kngwyu"> <i class="bi bi-mastodon" role="img">
 </i> 
- <span class="menu-text">Mastodon</span></a>
+<span class="menu-text">Mastodon</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://github.com/kngwyu" rel="" target=""><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/kngwyu"> <i class="bi bi-github" role="img">
 </i> 
- <span class="menu-text">Github</span></a>
+<span class="menu-text">Github</span></a>
   </li>  
 </ul>
+          </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
-          </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -144,7 +178,7 @@ ul.task-list li input[type="checkbox"] {
   </div>
     
   
-  <div class="quarto-title-meta">
+  <div class="quarto-title-meta column-page-left">
 
       
     
@@ -157,7 +191,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(9)</span></div><div class="category" data-category="NLP">NLP <span class="quarto-category-count">(2)</span></div><div class="category" data-category="RL">RL <span class="quarto-category-count">(7)</span></div><div class="category" data-category="basic">basic <span class="quarto-category-count">(2)</span></div><div class="category" data-category="deep">deep <span class="quarto-category-count">(5)</span></div><div class="category" data-category="en">en <span class="quarto-category-count">(3)</span></div><div class="category" data-category="ja">ja <span class="quarto-category-count">(6)</span></div><div class="category" data-category="physics">physics <span class="quarto-category-count">(2)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(10)</span></div><div class="category" data-category="NLP">NLP <span class="quarto-category-count">(2)</span></div><div class="category" data-category="RL">RL <span class="quarto-category-count">(7)</span></div><div class="category" data-category="basic">basic <span class="quarto-category-count">(2)</span></div><div class="category" data-category="deep">deep <span class="quarto-category-count">(5)</span></div><div class="category" data-category="education">education <span class="quarto-category-count">(1)</span></div><div class="category" data-category="en">en <span class="quarto-category-count">(4)</span></div><div class="category" data-category="ja">ja <span class="quarto-category-count">(6)</span></div><div class="category" data-category="physics">physics <span class="quarto-category-count">(2)</span></div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
@@ -168,21 +202,55 @@ ul.task-list li input[type="checkbox"] {
 
 
 
+
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="en,RL,physics" data-listing-date-sort="1700179200000" data-listing-file-modified-sort="1703481324332" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5">
+<div class="quarto-post image-right" data-index="0" data-categories="en,education" data-listing-date-sort="1725235200000" data-listing-file-modified-sort="1725358318325" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="845">
 <div class="thumbnail">
-<p><a href="./posts/fast_2d_physics_in_jax_en.html"> <p class="card-img-top"><img src="posts/fast_2d_physics_in_jax_en_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/python_basic_en.html" class="no-external"></a></p><a href="./posts/python_basic_en.html" class="no-external">
+<p class="card-img-top"><img src="posts/python_basic_en_files/figure-html/cell-3-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/python_basic_en.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/fast_2d_physics_in_jax_en.html">
 <h3 class="no-anchor listing-title">
-Implement fast 2D physics simulation with Jax
+<a href="./posts/python_basic_en.html" class="no-external">Quick Python basic course for OIST new students</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/python_basic_en.html" class="no-external"></a>
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('en'); return false;">
+en
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('education'); return false;">
+education
+</div>
+</div>
+<div class="listing-description">
+<a href="./posts/python_basic_en.html" class="no-external">In this course, I aim to cover introductory topics in software engeneering and Python programming in 4~5 hours.</a>
+</div>
+</div>
+<div class="metadata">
+<a href="./posts/python_basic_en.html" class="no-external">
+<div class="listing-date">
+Sep 2, 2024
 </div>
 </a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="1" data-categories="en,RL,physics" data-listing-date-sort="1700179200000" data-listing-file-modified-sort="1725358318313" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="5" data-listing-word-count-sort="900">
+<div class="thumbnail">
+<p><a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external"></a></p><a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external">
+<p class="card-img-top"><img src="posts/fast_2d_physics_in_jax_en_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external"></a></p>
+</div>
+<div class="body">
+<h3 class="no-anchor listing-title">
+<a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external">Implement fast 2D physics simulation with Jax</a>
+</h3>
+<div class="listing-subtitle">
+<a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external"></a>
+</div>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('en'); return false;">
 en
@@ -194,33 +262,31 @@ RL
 physics
 </div>
 </div>
-<a href="./posts/fast_2d_physics_in_jax_en.html">
 <div class="listing-description">
-※ This article is translated from Japanese version with some improvements on code.
+<a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external">※ This article is translated from Japanese version with some improvements on code.</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/fast_2d_physics_in_jax_en.html">
+<a href="./posts/fast_2d_physics_in_jax_en.html" class="no-external">
 <div class="listing-date">
 Nov 17, 2023
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="ja,RL,physics" data-listing-date-sort="1695427200000" data-listing-file-modified-sort="1703481324320" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2">
+<div class="quarto-post image-right" data-index="2" data-categories="ja,RL,physics" data-listing-date-sort="1695427200000" data-listing-file-modified-sort="1725358318297" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="204">
 <div class="thumbnail">
-<p><a href="./posts/fast_2d_physics_in_jax.html"> <p class="card-img-top"><img src="posts/fast_2d_physics_in_jax_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/fast_2d_physics_in_jax.html" class="no-external"></a></p><a href="./posts/fast_2d_physics_in_jax.html" class="no-external">
+<p class="card-img-top"><img src="posts/fast_2d_physics_in_jax_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/fast_2d_physics_in_jax.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/fast_2d_physics_in_jax.html">
 <h3 class="no-anchor listing-title">
-Jaxで高速な2D物理シミュレーションを実装してみる
+<a href="./posts/fast_2d_physics_in_jax.html" class="no-external">Jaxで高速な2D物理シミュレーションを実装してみる</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/fast_2d_physics_in_jax.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('ja'); return false;">
 ja
@@ -232,33 +298,31 @@ RL
 physics
 </div>
 </div>
-<a href="./posts/fast_2d_physics_in_jax.html">
 <div class="listing-description">
-GPU上での高速な物理シミュレーションは、(RLHFやOffline RLに押され気味とはいえ)強化学習界隈では話題のトピックですよね。また単純に、GPU上で爆速でシミュレーションが終わるのはなかなか楽しいものです。 NVIDIA IsaacSymもありますが、jaxで強化学習パイプライン全体を高速化したいならbraxが便利です。以前紹介するブログも書きましたが、現在のバージョンではより精度のいい手法が選べるようになっていて、普通にMuJoCoの代わりに使えそうな感じです。しかし、最近単純な2次元物理シミュレーションでbraxが使えないかな？と思って検討してみたところ、無理ではないのだけれどどうにも使いづらいな…という印象でした。また、二次元物理シミュレーションをするのに、三次元のボールと…
+<a href="./posts/fast_2d_physics_in_jax.html" class="no-external">GPU上での高速な物理シミュレーションは、(RLHFやOffline RLに押され気味とはいえ)強化学習界隈では話題のトピックですよね。また単純に、GPU上で爆速でシミュレーションが終わるのはなかなか楽しいものです。 NVIDIA IsaacSymもありますが、jaxで強化学習パイプライン全体を高速化したいならbraxが便利です。以前紹介するブログ…</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/fast_2d_physics_in_jax.html">
+<a href="./posts/fast_2d_physics_in_jax.html" class="no-external">
 <div class="listing-date">
 Sep 23, 2023
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="ja,RL,deep" data-listing-date-sort="1690070400000" data-listing-file-modified-sort="1703481324348" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12">
+<div class="quarto-post image-right" data-index="3" data-categories="ja,RL,deep" data-listing-date-sort="1690070400000" data-listing-file-modified-sort="1725358318329" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2280">
 <div class="thumbnail">
-<p><a href="./posts/try_equinox_for_rl_en.html"> <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div> </a></p>
+<p><a href="./posts/try_equinox_for_rl_en.html" class="no-external"></a></p><a href="./posts/try_equinox_for_rl_en.html" class="no-external">
+<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
+</a><p><a href="./posts/try_equinox_for_rl_en.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/try_equinox_for_rl_en.html">
 <h3 class="no-anchor listing-title">
-Try reinforcement learning with equinox
+<a href="./posts/try_equinox_for_rl_en.html" class="no-external">Try reinforcement learning with equinox</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/try_equinox_for_rl_en.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('ja'); return false;">
 ja
@@ -270,33 +334,31 @@ RL
 deep
 </div>
 </div>
-<a href="./posts/try_equinox_for_rl_en.html">
 <div class="listing-description">
-I recently tried equinox, a jax-based library for defining and managing neural nets, and I liked it.…<code></code>
+<a href="./posts/try_equinox_for_rl_en.html" class="no-external">I recently tried equinox, a jax-based library for defining and managing neural nets, and I liked it. So in this blog post I will introduce equinox and demonstrate its use…<code></code></a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/try_equinox_for_rl_en.html">
+<a href="./posts/try_equinox_for_rl_en.html" class="no-external">
 <div class="listing-date">
 Jul 23, 2023
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="ja,RL,deep" data-listing-date-sort="1686268800000" data-listing-file-modified-sort="1703481324348" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2">
+<div class="quarto-post image-right" data-index="4" data-categories="ja,RL,deep" data-listing-date-sort="1686268800000" data-listing-file-modified-sort="1725358318333" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="226">
 <div class="thumbnail">
-<p><a href="./posts/try_equinox_for_rl_jp.html"> <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div> </a></p>
+<p><a href="./posts/try_equinox_for_rl_jp.html" class="no-external"></a></p><a href="./posts/try_equinox_for_rl_jp.html" class="no-external">
+<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
+</a><p><a href="./posts/try_equinox_for_rl_jp.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/try_equinox_for_rl_jp.html">
 <h3 class="no-anchor listing-title">
-equinoxで強化学習してみる
+<a href="./posts/try_equinox_for_rl_jp.html" class="no-external">equinoxで強化学習してみる</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/try_equinox_for_rl_jp.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('ja'); return false;">
 ja
@@ -308,33 +370,31 @@ RL
 deep
 </div>
 </div>
-<a href="./posts/try_equinox_for_rl_jp.html">
 <div class="listing-description">
-最近equinoxというjaxベースの深層学習モデルを定義するライブラリを使ってみたのですが、これが中々いいと思ったので紹介ついでに強化学習してみます。他のjaxベースのライブラリにはDeepmindのhaikuやGoogle Researchのflaxがあります。…<code></code>
+<a href="./posts/try_equinox_for_rl_jp.html" class="no-external">最近equinoxというjaxベースの深層学習モデルを定義するライブラリを使ってみたのですが、これが中々いいと思ったので紹介ついでに強化学習してみます。他のjaxベースのライブラリにはDeepmindのhaikuやGoogle Researchのflaxがあります。この2つのライブラリは実際のところあまり変わりはありません。というのも、jaxには…<code></code></a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/try_equinox_for_rl_jp.html">
+<a href="./posts/try_equinox_for_rl_jp.html" class="no-external">
 <div class="listing-date">
 Jun 9, 2023
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="en,NLP,deep" data-listing-date-sort="1683676800000" data-listing-file-modified-sort="1703481324352" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11">
+<div class="quarto-post image-right" data-index="5" data-categories="en,NLP,deep" data-listing-date-sort="1683676800000" data-listing-file-modified-sort="1725358318337" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-word-count-sort="2098">
 <div class="thumbnail">
-<p><a href="./posts/understanding-attention-en.html"> <p class="card-img-top"><img src="posts/understanding-attention-en_files/figure-html/cell-2-output-2.png"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/understanding-attention-en.html" class="no-external"></a></p><a href="./posts/understanding-attention-en.html" class="no-external">
+<p class="card-img-top"><img src="posts/understanding-attention-en_files/figure-html/cell-2-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/understanding-attention-en.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/understanding-attention-en.html">
 <h3 class="no-anchor listing-title">
-Understanding what self-attention is doing
+<a href="./posts/understanding-attention-en.html" class="no-external">Understanding what self-attention is doing</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/understanding-attention-en.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('en'); return false;">
 en
@@ -346,33 +406,31 @@ NLP
 deep
 </div>
 </div>
-<a href="./posts/understanding-attention-en.html">
 <div class="listing-description">
-ChatGPT is getting a lot of buzz these days. I don’t use it much because I don’t like to worry about prompts, but my friend uses it to write papers, and my mom uses it to…
+<a href="./posts/understanding-attention-en.html" class="no-external">ChatGPT is getting a lot of buzz these days. I don’t use it much because I don’t like to worry about prompts, but my friend uses it to write papers, and my mom uses it to…</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/understanding-attention-en.html">
+<a href="./posts/understanding-attention-en.html" class="no-external">
 <div class="listing-date">
 May 10, 2023
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="5" data-categories="ja,NLP,deep" data-listing-date-sort="1683590400000" data-listing-file-modified-sort="1703481324356" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2">
+<div class="quarto-post image-right" data-index="6" data-categories="ja,NLP,deep" data-listing-date-sort="1683590400000" data-listing-file-modified-sort="1725358318341" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="226">
 <div class="thumbnail">
-<p><a href="./posts/understanding-attention.html"> <p class="card-img-top"><img src="posts/understanding-attention_files/figure-html/cell-2-output-2.png"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/understanding-attention.html" class="no-external"></a></p><a href="./posts/understanding-attention.html" class="no-external">
+<p class="card-img-top"><img src="posts/understanding-attention_files/figure-html/cell-2-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/understanding-attention.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/understanding-attention.html">
 <h3 class="no-anchor listing-title">
-Attentionが何をやっているのか理解しよう
+<a href="./posts/understanding-attention.html" class="no-external">Attentionが何をやっているのか理解しよう</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/understanding-attention.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('ja'); return false;">
 ja
@@ -384,33 +442,31 @@ NLP
 deep
 </div>
 </div>
-<a href="./posts/understanding-attention.html">
 <div class="listing-description">
-ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたりするようです。親不孝な息子でごめんなさいという感じもします。…
+<a href="./posts/understanding-attention.html" class="no-external">ChatGPTが大バズリしている昨今です。僕はプロンプトを考えるのが面倒なので（ええ…)あまり使わないのですが、友人が論文を書くのに使っていたり、僕の母親が話し相手に使っていたりするようです。親不孝な息子でごめんなさいという感じもします。…</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/understanding-attention.html">
+<a href="./posts/understanding-attention.html" class="no-external">
 <div class="listing-date">
 May 9, 2023
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="6" data-categories="en,RL,basic" data-listing-date-sort="1656806400000" data-listing-file-modified-sort="1703481324344" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8">
+<div class="quarto-post image-right" data-index="7" data-categories="en,RL,basic" data-listing-date-sort="1656806400000" data-listing-file-modified-sort="1725358318329" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1419">
 <div class="thumbnail">
-<p><a href="./posts/sandb-exercise-racetrack.html"> <p class="card-img-top"><img src="posts/sandb-exercise-racetrack_files/figure-html/cell-6-output-2.png"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/sandb-exercise-racetrack.html" class="no-external"></a></p><a href="./posts/sandb-exercise-racetrack.html" class="no-external">
+<p class="card-img-top"><img src="posts/sandb-exercise-racetrack_files/figure-html/cell-6-output-2.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/sandb-exercise-racetrack.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/sandb-exercise-racetrack.html">
 <h3 class="no-anchor listing-title">
-Exercise 5.12 Racetrack from the Reinforcement Learning textbook
+<a href="./posts/sandb-exercise-racetrack.html" class="no-external">Exercise 5.12 Racetrack from the Reinforcement Learning textbook</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/sandb-exercise-racetrack.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('en'); return false;">
 en
@@ -422,33 +478,31 @@ RL
 basic
 </div>
 </div>
-<a href="./posts/sandb-exercise-racetrack.html">
 <div class="listing-description">
-Here I demonstrate the execise 5.12 of the textbook Reinforcement Learning: An Introduction by Richard Sutton and Andrew G. Barto, using…
+<a href="./posts/sandb-exercise-racetrack.html" class="no-external">Here I demonstrate the execise 5.12 of the textbook Reinforcement Learning: An Introduction by Richard Sutton and Andrew G. Barto, using both of planning method and Monte…</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/sandb-exercise-racetrack.html">
+<a href="./posts/sandb-exercise-racetrack.html" class="no-external">
 <div class="listing-date">
 Jul 3, 2022
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="7" data-categories="ja,RL,deep" data-listing-date-sort="1639785600000" data-listing-file-modified-sort="1703481324344" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2">
+<div class="quarto-post image-right" data-index="8" data-categories="ja,RL,deep" data-listing-date-sort="1639785600000" data-listing-file-modified-sort="1725358318321" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="222">
 <div class="thumbnail">
-<p><a href="./posts/jax-brax-haiku.html"> <p class="card-img-top"><img src="https://gym.openai.com/videos/2019-10-21--mqt8Qj1mwo/HalfCheetah-v2/poster.jpg"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/jax-brax-haiku.html" class="no-external"></a></p><a href="./posts/jax-brax-haiku.html" class="no-external">
+<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
+</a><p><a href="./posts/jax-brax-haiku.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/jax-brax-haiku.html">
 <h3 class="no-anchor listing-title">
-Jax・Brax・HaikuでGPU引きこもり学習
+<a href="./posts/jax-brax-haiku.html" class="no-external">Jax・Brax・HaikuでGPU引きこもり学習</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/jax-brax-haiku.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('ja'); return false;">
 ja
@@ -460,33 +514,31 @@ RL
 deep
 </div>
 </div>
-<a href="./posts/jax-brax-haiku.html">
 <div class="listing-description">
-強化学習若手の会 Advent Calendar 2021 18日目
+<a href="./posts/jax-brax-haiku.html" class="no-external">強化学習若手の会 Advent Calendar 2021 18日目</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/jax-brax-haiku.html">
+<a href="./posts/jax-brax-haiku.html" class="no-external">
 <div class="listing-date">
 Dec 18, 2021
 </div>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="8" data-categories="ja,RL,basic" data-listing-date-sort="1608595200000" data-listing-file-modified-sort="1703481324360" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4">
+<div class="quarto-post image-right" data-index="9" data-categories="ja,RL,basic" data-listing-date-sort="1608595200000" data-listing-file-modified-sort="1725358318341" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="704">
 <div class="thumbnail">
-<p><a href="./posts/understanding-what-makes-rl-difficult.html"> <p class="card-img-top"><img src="posts/understanding-what-makes-rl-difficult_files/figure-html/cell-3-output-1.png"  class="thumbnail-image card-img"/></p> </a></p>
+<p><a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external"></a></p><a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external">
+<p class="card-img-top"><img src="posts/understanding-what-makes-rl-difficult_files/figure-html/cell-3-output-1.png"  class="thumbnail-image card-img"/></p>
+</a><p><a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external"></a></p>
 </div>
 <div class="body">
-<a href="./posts/understanding-what-makes-rl-difficult.html">
 <h3 class="no-anchor listing-title">
-より良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう
+<a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external">より良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう</a>
 </h3>
 <div class="listing-subtitle">
-
+<a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external"></a>
 </div>
-</a>
 <div class="listing-categories">
 <div class="listing-category" onclick="window.quartoListingCategory('ja'); return false;">
 ja
@@ -498,14 +550,12 @@ RL
 basic
 </div>
 </div>
-<a href="./posts/understanding-what-makes-rl-difficult.html">
 <div class="listing-description">
-強化学習苦手の会 Advent Calendar 2020 20日目 # 1. はじめに
+<a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external">強化学習苦手の会 Advent Calendar 2020 20日目 # 1. はじめに</a>
 </div>
-</a>
 </div>
 <div class="metadata">
-<a href="./posts/understanding-what-makes-rl-difficult.html">
+<a href="./posts/understanding-what-makes-rl-difficult.html" class="no-external">
 <div class="listing-date">
 Dec 22, 2020
 </div>
@@ -552,18 +602,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -595,11 +634,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/kngwyu\.github\.io\/rlog2\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -609,8 +687,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -622,7 +709,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -666,6 +876,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -691,6 +902,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -751,6 +988,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.450">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2020-12-22">
 
-<title>RLog2 - より良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう</title>
+<title>より良い問題設計へ向けて： 何が強化学習を難しくするのかを理解しよう – RLog2</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,7 +23,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -34,7 +34,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -80,7 +80,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -89,6 +95,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -100,9 +107,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }
 </script>
 <script async="" src="https://hypothes.is/embed.js"></script>
+<script>
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    document.body.classList.add('hypothesis-enabled');
+  });
+</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -110,38 +149,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">RLog2</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../about.html" rel="" target="">
- <span class="menu-text">RLog2: RL blog 2</span></a>
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">RLog2: RL blog 2</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://sigmoid.social/@kngwyu" rel="" target=""><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://sigmoid.social/@kngwyu"> <i class="bi bi-mastodon" role="img">
 </i> 
- <span class="menu-text">Mastodon</span></a>
+<span class="menu-text">Mastodon</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://github.com/kngwyu" rel="" target=""><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/kngwyu"> <i class="bi bi-github" role="img">
 </i> 
- <span class="menu-text">Github</span></a>
+<span class="menu-text">Github</span></a>
   </li>  
 </ul>
+          </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
-          </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -205,6 +244,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
+
 <blockquote class="blockquote">
 <p>強化学習苦手の会 Advent Calendar 2020 20日目 # 1. はじめに</p>
 </blockquote>
@@ -224,7 +264,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>2. 最適化問題としての側面: MDPを解くことの難しさ</h1>
 <p>強化学習は、エージェントが集めてきたデータを使って、マルコフ決定過程上で「いい感じ」に行動する方策を 訓練する問題のことです。 しかしこの章では、いったん「学習」のことは忘れましょう。 学習しないでいいのは、環境の情報を全部知っているからです。 このとき、どのくらい問題を解くのが大変なのでしょうか？</p>
 <p>ではまず、マルコフ決定過程 (Markov Decision Process, 以後MDPと呼ぶ)を導入します。</p>
-<table class="table">
+<table class="caption-top table">
 <colgroup>
 <col style="width: 9%">
 </colgroup>
@@ -238,8 +278,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <p>なんだか、記号で言われてもよくわからないですね。 せっかくなので、お絵描きしてみましょう。</p>
-<div class="cell" data-execution_count="1">
-<details>
+<div id="cell-3" class="cell" data-execution_count="1">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Dict, List, Optional, Sequence, Tuple, TypeVar</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -455,8 +495,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="2">
-<details>
+<div id="cell-4" class="cell" data-execution_count="2">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>mdp1 <span class="op">=</span> ChainMDP(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="fl">0.6</span>, <span class="fl">0.7</span>], [<span class="fl">0.2</span>, <span class="fl">0.4</span>], [<span class="fl">0.3</span>, <span class="fl">0.7</span>]], [[<span class="fl">0.6</span>, <span class="fl">0.2</span>], [<span class="fl">0.0</span>, <span class="fl">0.1</span>], [<span class="op">-</span><span class="fl">0.1</span>, <span class="fl">0.5</span>]]</span>
@@ -464,12 +504,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> mdp1.show(title<span class="op">=</span><span class="st">"MDP1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-3-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-3-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>MDPはこのように、状態を頂点とするグラフとして表現できます。 このMDPには3つの状態(図中のState 0, 1, 2)があり、各状態で、2つの行動のどちらかを選択できます。 よって <span class="math inline">\(\mathcal{S} = \{s_0, s_1, s_2\}, \mathcal{A} = \{a_0, a_1\}\)</span>です。 各行動は、以下のように特徴づけられます。 - 赤の行動(Action 0) をとると、一つ右の頂点へ遷移するか、失敗して今の頂点にとどまる - 青の行動(Action 1) をとると、一つ左の頂点へ遷移するか、失敗して今の頂点にとどまる</p>
 <p>このような確率的なグラフの上で、ある行動方針 <span class="math inline">\(\pi: \mathcal{S} \times \mathcal{A} \rightarrow \mathbb{R}\)</span> に従って行動するエージェントを考えます。 行動方針が決まれば、貰える割引報酬和の期待値が、以下のように定まります。 これを状態価値と呼びます。</p>
-<table class="table">
+<table class="caption-top table">
 <colgroup>
 <col style="width: 9%">
 </colgroup>
@@ -484,8 +528,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>この時、強化学習は <span class="math inline">\(\sum_{s \in \mathcal{S}} V^\pi(s)\)</span> を最大化するような <span class="math inline">\(\pi\)</span>を求める問題になります。<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> そのような <span class="math inline">\(\pi\)</span> を <strong>最適方策</strong> <span class="math inline">\(\pi^*\)</span> と呼びます。また、<span class="math inline">\(V^{\pi^*}\)</span> を略記して <span class="math inline">\(V^*\)</span> と書きます。</p>
 <p>手始めに、簡単な問題で <span class="math inline">\(V^*\)</span> を求めてみましょう。</p>
-<div class="cell" data-execution_count="3">
-<details>
+<div id="cell-6" class="cell" data-execution_count="3">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>mdp2 <span class="op">=</span> ChainMDP(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">0.0</span>]], [[<span class="fl">0.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">0.0</span>]]</span>
@@ -493,7 +537,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> mdp2.show(<span class="st">"MDP2"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-4-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-4-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>この問題の最適方策 <span class="math inline">\(\pi^*\)</span> は、明らかですね。 一番右の状態でしか報酬が出ないので、全ての状態において右に行けばいいです。</p>
@@ -521,8 +569,8 @@ V^*(0) &amp;= 0.0 + \gamma * V^*(1) = 8.1
 <section id="vpicdot-vを評価する難しさ" class="level2">
 <h2 class="anchored" data-anchor-id="vpicdot-vを評価する難しさ">2.1: <span class="math inline">\(V^\pi\cdot V^*\)</span>を評価する難しさ</h2>
 <p>では、もう少し難しいMDPを考えてみましょう。</p>
-<div class="cell" data-execution_count="4">
-<details>
+<div id="cell-8" class="cell" data-execution_count="4">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>mdp3 <span class="op">=</span> ChainMDP(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.8</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">0.9</span>]], [[<span class="fl">0.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.5</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]]</span>
@@ -530,7 +578,11 @@ V^*(0) &amp;= 0.0 + \gamma * V^*(1) = 8.1
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> mdp3.show(<span class="st">"MDP3"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-5-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>今度は、State 1で右に、State 2で左に行けば良さそうです。 <span class="math display">\[
@@ -543,8 +595,8 @@ V^* (2) = 1.0 + \gamma (0.8 * V^*(1) + 0.2 * V^*(2))
 <p>とはいえ、コンピューターで数値的に解くのは簡単です。 状態<span class="math inline">\(s\)</span>にいて、あと<span class="math inline">\(n\)</span>回行動できる時の価値関数を<span class="math inline">\(V_n^\pi(s)\)</span>と書きます。 任意の<span class="math inline">\(s\)</span>について、<span class="math inline">\(V_0^\pi(s) = 0\)</span>です（1回も行動できないので!）。 <span class="math inline">\(V_i^\pi\)</span> から <span class="math inline">\(V_{i + 1}^\pi\)</span> を求めるには、1ステップだけ先読みすればいいので、 <span class="math display">\[
 V_{i + 1}^\pi(s) = \sum_{a \in \mathcal{A}} \pi(a|s) \left( r(s, a) + \gamma \sum_{s' \in \mathcal{S}} P(s'|s, a) V_{i}^\pi(s') \right)
 \]</span> で計算できます。<span class="math inline">\(\gamma &lt; 1\)</span>によりこの反復計算は収束し、<span class="math inline">\(V^\pi\)</span> が求まります。 実際にプログラムで書いてみましょう。</p>
-<div class="cell" data-execution_count="5">
-<details>
+<div id="cell-10" class="cell" data-execution_count="5">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>MAX_ITER_V_PI: <span class="bu">int</span> <span class="op">=</span> <span class="bu">int</span>(<span class="fl">1e5</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -587,8 +639,8 @@ V_n^\pi(s) = \mathbb{E}_{s, \pi} \left[ R_1 + \gamma R_2 + \gamma^2 R_3 + ... \r
 k &lt; \frac{\log\epsilon}{\log\gamma} + 1
 \]</span> となります。 コードの中で <span class="math inline">\(\gamma = 0.9, \epsilon = 0.0001\)</span> としたので、たかだか89回の反復で収束することがわかります。 実験結果では86回だったので、だいたい同じくらいですね。</p>
 <p>よって、<span class="math inline">\(V^\pi\)</span>を反復法により評価した時、その反復回数は報酬・<span class="math inline">\(\epsilon\)</span>・<span class="math inline">\(\gamma\)</span>に依存することがわかりました。 報酬と<span class="math inline">\(\epsilon\)</span>には<span class="math inline">\(\log\)</span>のオーダーでしか依存しないのに対し、<span class="math inline">\(\gamma\)</span>に対しては <span class="math inline">\(O((-\log\gamma)^{-1})\)</span>のオーダーで依存していることに注意してください。 試しに、<span class="math inline">\(\epsilon=0.0001\)</span>の時の<span class="math inline">\(\frac{\log\epsilon}{\log\gamma}\)</span>をプロットしてみましょう。</p>
-<div class="cell" data-execution_count="6">
-<details>
+<div id="cell-12" class="cell" data-execution_count="6">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#hide_input</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>_, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>)</span>
@@ -599,7 +651,11 @@ k &lt; \frac{\log\epsilon}{\log\gamma} + 1
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.plot(x, y, <span class="st">"b-"</span>, lw<span class="op">=</span><span class="dv">3</span>, alpha<span class="op">=</span><span class="fl">0.7</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>このように、<span class="math inline">\(\gamma\)</span>が大きくなると一気に反復回数が増えることがわかります。 また、この数値計算が収束した時、真の<span class="math inline">\(V^\pi\)</span>との差が <span class="math display">\[
@@ -611,8 +667,8 @@ V^\pi(s) - V_k^\pi(s) &amp;= \mathbb{E}_{s, \pi} \left[ \gamma^k R_{k + 1} + \ga
 <p>次は、いきなり<span class="math inline">\(V^*\)</span>を求めてみましょう。 <span class="math inline">\(V^\pi\)</span>を求めた時と同じように、状態<span class="math inline">\(s\)</span>にいて、 あと<span class="math inline">\(n\)</span>回行動できる時の最適価値関数を<span class="math inline">\(V_n^*(s)\)</span>と書きます。 先ほどと同様に、<span class="math inline">\(V_i^*\)</span>から1ステップ先読みして<span class="math inline">\(V^*_{i + 1}\)</span>を求めます。 残り<span class="math inline">\(i + 1\)</span>ステップある時、 <span class="math inline">\(r(s, a) + \sum_{s' \in \mathcal{S}} P(s'|s, a) V_i^*(s)\)</span> が最大になるような行動<span class="math inline">\(a\)</span>を選ぶのが最適です。 ですから、<span class="math inline">\(V^*_{i + 1}\)</span>は <span class="math display">\[
 V_{i + 1}^*(s) = \max_a \left( r(s, a) + \gamma \sum_{s' \in \mathcal{S}} P(s'|s, a) V_{i}^\pi(s') \right)
 \]</span> で求められます。 さっきより簡単な式になってしまいました。 プログラムで書いてみます。</p>
-<div class="cell" data-execution_count="7">
-<details>
+<div id="cell-14" class="cell" data-execution_count="7">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>MAX_ITER_VI: <span class="bu">int</span> <span class="op">=</span> <span class="bu">int</span>(<span class="fl">1e6</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -659,8 +715,8 @@ A_\textrm{min}^*(s, a_k) &lt; \frac{\epsilon\gamma}{1 -\gamma}
 <h2 class="anchored" data-anchor-id="方策最適化の難しさ">2.2: 方策最適化の難しさ</h2>
 <p>前節で用いた再帰的な数値計算は<strong>動的計画法</strong>(DP)と呼ばれるものです。 Q学習など、多くの強化学習アルゴリズムがDPをもとにしています。 一方で、単に強化学習をブラックボックス最適化だと考えることもできます。 特に、方策パラメタ<span class="math inline">\(\theta\)</span>を最適化して解く方法を<strong>方策最適化</strong>と呼びます。</p>
 <p>いま、<span class="math inline">\(\pi(0|s) = \theta(s), \pi(1|s) = 1.0 - \theta(s)\)</span>によって<span class="math inline">\(\pi\)</span>をパラメタ<span class="math inline">\(\theta\)</span>により表すことにします （これをdirect parameterizationと呼びます）。 ためしに、先ほどのMDP3で<span class="math inline">\(\pi(0|0)=1.0\)</span>を固定して、<span class="math inline">\(\theta(1), \theta(2)\)</span>を動かした時の<span class="math inline">\(\sum_{s \in \mathcal{S}} V^\pi(s)\)</span>の変動をプロットしてみましょう。</p>
-<div class="cell" data-execution_count="8">
-<details>
+<div id="cell-16" class="cell" data-execution_count="8">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> v_pi_sum_2dim(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    r: Array2,</span>
@@ -714,13 +770,17 @@ A_\textrm{min}^*(s, a_k) &lt; \frac{\epsilon\gamma}{1 -\gamma}
 <span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> ax.set_ylim(<span class="bu">tuple</span>(<span class="bu">reversed</span>(ax.get_ylim())))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>なんかいい感じに山になっていますね。 この問題の場合は、山登り法（勾配上昇法）で<span class="math inline">\(\theta\)</span>を更新していけば大域解 <span class="math inline">\(\theta(1) = 0.0, \theta(2) = 1.0\)</span>にたどり着きそうです<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>。</p>
 <p>しかし、<span class="math inline">\(f(\theta) = \sum_{s\in\mathcal{S}} V^{\pi_\theta}(s)\)</span>は、いつもこのような性質 のいい関数になっているのでしょうが？ 結論から言うと<strong>そうではないです</strong>。 例えば、以下のようなMDPではどうでしょうか？(<span class="math inline">\(\gamma=0.95\)</span>にしています)</p>
-<div class="cell" data-execution_count="9">
-<details>
+<div id="cell-18" class="cell" data-execution_count="9">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mdp4 <span class="op">=</span> ChainMDP(</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.6</span>, <span class="fl">0.9</span>], [<span class="fl">0.9</span>, <span class="fl">0.6</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]],</span>
@@ -746,7 +806,11 @@ f(θ(1) = 0.5, θ(2) = 0.5): 72.01388270994806
 f(θ(1) = 1.0, θ(2) = 1.0): 70.6327625115528</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-10-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-10-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>一番右だと永遠に0.9がもらえて、一番左だと1.0がもらえるので、より<strong>最適方策を見分けるのが難しそう</strong>な感じがします。</p>
@@ -768,8 +832,8 @@ V^\pi(s) \geq \max_{a \in \mathcal{A}} r(s, a) + \gamma \sum_{s' \in \mathcal{S}
 \end{cases}
 \]</span> の方が性能が良くなり、<span class="math inline">\(\pi\)</span>が最適であることと矛盾します。</p>
 <p>では、この性質が成り立つまで方策を改善し続けるというアルゴリズムを試してみましょう。 さっき書いた<code>v_pi</code>関数を使って実装できます。</p>
-<div class="cell" data-execution_count="10">
-<details>
+<div id="cell-20" class="cell" data-execution_count="10">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>MAX_ITER_PI: <span class="bu">int</span> <span class="op">=</span> <span class="dv">10000</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -823,8 +887,8 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <section id="報酬なし探査の問題" class="level2">
 <h2 class="anchored" data-anchor-id="報酬なし探査の問題">3.1 報酬なし探査の問題</h2>
 <p>というわけで、とりあえず別に学習しなくていいので、環境から情報を集めてこよう、という問題を考えてみましょう。</p>
-<div class="cell" data-execution_count="11">
-<details>
+<div id="cell-22" class="cell" data-execution_count="11">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.figure <span class="im">import</span> Figure</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.image <span class="im">import</span> FigureImage</span>
@@ -1042,8 +1106,8 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb15-214"><a href="#cb15-214" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.map_ax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="12">
-<details>
+<div id="cell-23" class="cell" data-execution_count="12">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>grid_mdp1 <span class="op">=</span> GridMDP(</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>],</span>
@@ -1056,7 +1120,11 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> grid_mdp1.show(<span class="st">"GridMDP1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-13-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>GridMDPと題されたこちらが、今回使用する「環境」になります。 環境の中で行動する主体をエージェントと呼びます。 今回は、<a href="https://www.irasutoya.com/">いらすとや</a>様のロボットの画像を使用させていただきました。 各マス目の中で、エージェントは行動は上下左右に移動の4種類の行動を選択できます。 行動は時々失敗して、一様ランダムな状態遷移が発生します。 ここで、前章で用いなかったいくつかの新しい概念を導入します。</p>
@@ -1079,8 +1147,8 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 </ul></li>
 </ul>
 <p>ではさっそく、適当に行動してもらいましょう。 エージェントをランダムに行動させて、訪問した場所に色をつけていきます。 なお、エピソード長さは50とします。</p>
-<div class="cell" data-execution_count="13">
-<details>
+<div id="cell-25" class="cell" data-execution_count="13">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> abc <span class="im">import</span> ABC, abstractmethod</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Callable</span>
@@ -1209,15 +1277,23 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb17-125"><a href="#cb17-125" aria-hidden="true" tabindex="-1"></a>simulation(grid_mdp1, <span class="dv">1000</span>, <span class="kw">lambda</span> _: np.random.randint(<span class="dv">4</span>), vis_freq<span class="op">=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-14-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-14-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-14-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>ランダムに行動させただけですが、それなりにまんべんなく色が塗られていて、まあまあいいのではないか、という気がします。 しかし、もっと広い環境ではどうでしょうか。</p>
-<div class="cell" data-execution_count="14">
-<details>
+<div id="cell-27" class="cell" data-execution_count="14">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>grid_mdp2_map <span class="op">=</span> [[<span class="dv">0</span>] <span class="op">*</span> <span class="dv">15</span> <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">15</span>)]</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>grid_mdp2_map[<span class="dv">7</span>][<span class="dv">7</span>] <span class="op">=</span> <span class="dv">2</span></span>
@@ -1234,16 +1310,24 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-15-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-15-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-15-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>なんか駄目っぽい感じですね。 場所によっては全く色がついていません。 環境が広いと、ランダムに歩き回るのでは、効率よく情報を集めてこれないようです。 具体的にどのくらい難しいのかと言うと、平均一回訪問するのにかかる時間が、だいたい - 一方通行の直線: <span class="math inline">\(O(|S|)\)</span> - 二次元ランダムウォーク: <span class="math inline">\(O(|S|^2)\)</span>? (参考: <a href="https://mathworld.wolfram.com/RandomWalk2-Dimensional.html">plane上のランダムウォーク</a>） - 最悪ケース: <span class="math inline">\(O(2^{|S|})\)</span></p>
 <p>くらいになります。 一方通行なのはなんとなくわかりますね。 ランダムウォークの場合、同じ場所を行ったりきたりできるので、そのぶん時間がかかってしまいます。 最悪ケースは、以下のように構成すればいいです。</p>
-<div class="cell" data-execution_count="15">
-<details>
+<div id="cell-29" class="cell" data-execution_count="15">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hide-input</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WorstCaseMDP(ChainMDP):</span>
@@ -1343,7 +1427,11 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb19-96"><a href="#cb19-96" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> WorstCaseMDP(<span class="dv">6</span>).show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-16-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-16-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>この環境で状態<span class="math inline">\(0\)</span>からランダムに行動すると、右端にたどり着くまでに平均<span class="math inline">\(2^5\)</span>くらいのステップ数がかかります。 そんなんありかよ…って感じですが。</p>
@@ -1357,8 +1445,8 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <p>など、色々な方法が考えられると思いますが、ここでは1の方法を使ってみましょう。</p>
 <p>以下のようなアルゴリズムを考えます。 1. 適当な方策<span class="math inline">\(\pi_0\)</span>から開始する 2. 状態行動訪問回数<span class="math inline">\(n(s, a)\)</span>、状態行動次状態訪問回数<span class="math inline">\(n(s, a, s')\)</span>を記録しておく - ただし、初期値は<span class="math inline">\(n_0(s, a) = 1.0, n_0(s, a, s) = \frac{1}{|S|}\)</span>とする(0除算防止のため) 3. エピソードが終わったとき、以下のように方策を更新する 1. 状態遷移関数の推定値<span class="math inline">\(\hat{P}(s'|s, a) = \frac{n(s, a, s')}{n(s, a}\)</span>、<strong>疑似報酬</strong><span class="math inline">\(r_k(s, a)=\frac{1}{n(s, a)}\)</span>、適当な<span class="math inline">\(\gamma\)</span>から成るMDP<span class="math inline">\(\mathcal{M}_k\)</span>を解く 2. <span class="math inline">\(\mathcal{M}_k\)</span>の最適価値関数<span class="math inline">\(V^*_k,Q^*_k\)</span>から以下のように方策<span class="math inline">\(pi_{k+1}\)</span>を構成する - <span class="math inline">\(V^*_k(s) &lt; \frac{1}{|S|}\sum_{s'\in\mathcal{S}}V^*_k(s')\)</span> なら <span class="math inline">\(\pi_{k+1}(s)\)</span>は<span class="math inline">\(Q^*_k\)</span>に基づく貪欲行動 - それ以外の場合、<span class="math inline">\(\pi_{k+1}(s)\)</span>は一様ランダムな行動をとる (=方策を<strong>緩和</strong>する)</p>
 <p>疑似報酬<span class="math inline">\(r_k=\frac{1}{n(s, a)}\)</span>を使用してプランニングするのが、最も重要なポイントです。 この値は、一度も状態行動ペア<span class="math inline">\((s,a)\)</span>を経験していないなら<span class="math inline">\(1\)</span>、一度経験したら<span class="math inline">\(1/2\)</span>、2回経験したら<span class="math inline">\(1/3\)</span>のように減衰します。 これを報酬とするMDPを解くことで、あまり経験していない状態行動ペアをとろうとする方策が得られます。 完全な貪欲方策ではなく緩和をいれているのは、高い報酬の状態をループしないようにするためです。 では、やってみましょう。</p>
-<div class="cell" data-execution_count="16">
-<details>
+<div id="cell-31" class="cell" data-execution_count="16">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RewardFreeExplore:</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(</span>
@@ -1422,7 +1510,11 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-17-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-17-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>さっきよりも満遍なく、色々な状態を訪問してくれるようになりましたね。</p>
@@ -1431,8 +1523,8 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <h2 class="anchored" data-anchor-id="報酬あり探査">3.2 報酬あり探査</h2>
 <p>次は、環境から報酬が与えられるので、なるべく早く学習を終わらせたい、という問題を考えます。 訪問していない場所に積極的にいけばいい、という方針はさっきと変わりません。 一方で、<strong>あまりに報酬がもらえなさそうな状態はとっとと諦める</strong>ことをしなくてはいけない点が異なっています。</p>
 <p>例えば、報酬の推定値を<span class="math inline">\(\hat{r}(s, a)\)</span>とするとき、先ほどのアルゴリズムの疑似報酬を <span class="math inline">\(r_k(s, a)=\hat{r}(s, a)+\frac{\beta}{\sqrt{n(s, a)}}\)</span>とすればいいです。 これを、単に<span class="math inline">\(r_k(s, a)=\hat{r}(s, a)\)</span>とするアルゴリズム(Approximate Value Iteration)と比較してみましょう。 こちらは、確率<span class="math inline">\(\epsilon\)</span>で一様分布から行動をサンプリングし、<span class="math inline">\(1-\epsilon\)</span>で<span class="math inline">\(Q^*_k\)</span>が一番大きい行動を選択するという行動方策を使ってみましょう（<span class="math inline">\(\epsilon\)</span>-Greedyと言います）。 今回は<span class="math inline">\(\epsilon=0.9 \rightarrow 0.4\)</span>とします。</p>
-<div class="cell" data-execution_count="17">
-<details>
+<div id="cell-33" class="cell" data-execution_count="17">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>grid_mdp3 <span class="op">=</span> GridMDP(</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">3</span>],</span>
@@ -1461,12 +1553,16 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> grid_mdp3.show(<span class="st">"GridMDP3"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-18-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-18-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>まず、こちらの環境で実験してみます。素直に<span class="math inline">\(0.1\)</span>の報酬→<span class="math inline">\(9.0\)</span>の報酬を目指せばいい感じです。 また、<span class="math inline">\(\gamma=0.99\)</span>とします。</p>
-<div class="cell" data-execution_count="18">
-<details>
+<div id="cell-35" class="cell" data-execution_count="18">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EpsgApproxVI:</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(</span>
@@ -1592,15 +1688,23 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb22-122"><a href="#cb22-122" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-19-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-19-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-19-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-19-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>両方とも、いい感じに探査してくれているように見えます。 <span class="math inline">\(\epsilon\)</span>-Greedyの方が、<span class="math inline">\(R_t=9.0\)</span>がもらえるゴールの周辺を多く探査していて、 良さそうに見えます。 一方で、もう少し意地悪な環境の場合はどうでしょうか？</p>
-<div class="cell" data-execution_count="19">
-<details>
+<div id="cell-37" class="cell" data-execution_count="19">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>grid_mdp4 <span class="op">=</span> GridMDP(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    [[<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">3</span>],</span>
@@ -1629,12 +1733,16 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> grid_mdp4.show(<span class="st">"GridMDP3"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-20-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-20-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>この環境では、<span class="math inline">\(+5.0\)</span>とかいう邪魔くさい報酬があります。 しかもここはゴールなので、ここに行くとまたリセットしてやり直しです。 ここを目指すように学習してしまうと、なかなか<span class="math inline">\(+9.0\)</span>の方に行くのは厳しそうに見えます。 実験してみましょう。</p>
-<div class="cell" data-execution_count="20">
-<details>
+<div id="cell-39" class="cell" data-execution_count="20">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>epsg_vi <span class="op">=</span> EpsgApproxVI(grid_mdp4.n_states(), grid_mdp4.n_actions())</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>simulation(</span>
@@ -1658,10 +1766,18 @@ V(0): 6.49 V(1): 7.21 V(2): 7.51</code></pre>
 <span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-21-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-21-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-21-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="understanding-what-makes-rl-difficult_files/figure-html/cell-21-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>予想通り、<span class="math inline">\(\epsilon\)</span>-Greedyの方は右上ばかり行ってしまってイマイチな感じになりました。</p>
@@ -1742,18 +1858,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -1785,11 +1890,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/kngwyu\.github\.io\/rlog2\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -1799,8 +1943,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -1812,7 +1965,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -1856,6 +2132,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -1881,6 +2158,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1941,6 +2244,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

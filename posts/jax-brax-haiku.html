@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.450">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2021-12-18">
 
-<title>RLog2 - Jax・Brax・HaikuでGPU引きこもり学習</title>
+<title>Jax・Brax・HaikuでGPU引きこもり学習 – RLog2</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,7 +23,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -34,7 +34,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -58,7 +58,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -80,7 +80,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -89,6 +95,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -100,13 +107,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }
 </script>
 <script async="" src="https://hypothes.is/embed.js"></script>
+<script>
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    document.body.classList.add('hypothesis-enabled');
+  });
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 <script src="https://unpkg.com/@jupyter-widgets/html-manager@*/dist/embed-amd.js" crossorigin="anonymous"></script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -114,38 +153,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">RLog2</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../about.html" rel="" target="">
- <span class="menu-text">RLog2: RL blog 2</span></a>
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">RLog2: RL blog 2</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://sigmoid.social/@kngwyu" rel="" target=""><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://sigmoid.social/@kngwyu"> <i class="bi bi-mastodon" role="img">
 </i> 
- <span class="menu-text">Mastodon</span></a>
+<span class="menu-text">Mastodon</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://github.com/kngwyu" rel="" target=""><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/kngwyu"> <i class="bi bi-github" role="img">
 </i> 
- <span class="menu-text">Github</span></a>
+<span class="menu-text">Github</span></a>
   </li>  
 </ul>
+          </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
-          </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -201,6 +240,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
+
 <blockquote class="blockquote">
 <p>強化学習若手の会 Advent Calendar 2021 18日目</p>
 </blockquote>
@@ -229,7 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="https://gym.openai.com/videos/2019-10-21--mqt8Qj1mwo/HalfCheetah-v2/poster.jpg" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">HalfCheetah</figcaption>
+<figcaption>HalfCheetah</figcaption>
 </figure>
 </div>
 <p>これはOpen AI gymのHalfCheetahというロボットです。足が2本なのでハーフなのだと思いますが、なんとも残酷なネーミングです。愛玩されるため病気のまま品種改良されてきた犬猫のような哀愁が漂います。</p>
@@ -240,8 +280,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="jaxでnumpy演算を高速化してみる" class="level1">
 <h1>2. Jaxでnumpy演算を高速化してみる</h1>
 <p>では、braxはCUDAか何かで書かれているのかな？と思ったかもしれませんが、なんと全てPythonで書かれているのです。 その鍵となるのが<a href="https://jax.readthedocs.io">jax</a>というライブラリです。 おもむろに、インストールしてみましょう。</p>
-<div class="cell">
-<details>
+<div id="0406451e-ee66-4821-aa8b-58b25df068ce" class="cell">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">!</span> pip install jax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -250,8 +290,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>の2つのコア機能を核とするライブラリです。 この節では、ひとまず前者の「XLAに変換するコンパイラ」としての機能に焦点を当ててみます。</p>
 <p>コンパイラは<a href="https://ja.wikipedia.org/wiki/%E5%AE%9F%E8%A1%8C%E6%99%82%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%A9">JIT</a>方式で実装されており、 1. <a href="https://jax.readthedocs.io/en/latest/jax.html#jax.jit"><code>jax.jit</code></a>に関数<code>f</code>を渡す (<code>f_compiled = jax.jit(f)</code>） 2. コンパイルされる関数<code>f_compiled</code>を最初に呼び出したとき、jaxはPythonの関数をXLAにコンパイルする 3. 2回目以降関数呼び出しが高速になる という処理の流れになります。</p>
 <p>では、さっそく何かシミュレーションしてみましょう。 適当に天井からボールを落としてみましょう。</p>
-<div class="cell" data-execution_count="32">
-<details>
+<div id="bfbb7963-1d1d-4685-8d8d-11f03e97a444" class="cell" data-execution_count="32">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> typing <span class="im">as</span> t</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -306,8 +346,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p>適当にボールを20個落としてみます。</p>
-<div class="cell" data-execution_count="3">
-<details>
+<div id="8f22461b-ad83-4238-a781-df8fef8a4cbc" class="cell" data-execution_count="3">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ball_animation(balls: t.Iterable[Array]) <span class="op">-&gt;</span> ArtistAnimation:</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span>
@@ -6400,12 +6440,16 @@ xZESAAAAAElFTkSuQmCC\
 </script>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-4-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-4-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>では、このシミュレーションをするのに、どれくらい時間がかかるでしょうか。ボールの数を変えてベンチマークしてみましょう。</p>
-<div class="cell" data-execution_count="4">
-<details>
+<div id="02772ef9-606c-4a2f-a349-3d3a89a0950d" class="cell" data-execution_count="4">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bench(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    f: t.Callable[..., t.Any],</span>
@@ -6431,12 +6475,16 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>numpy_result <span class="op">=</span> bench_and_plot(simulate_balls, <span class="st">"NumPy"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-5-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-5-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>おおむね線形に実行時間が増えていることがわかります。このコードを、jaxを使って高速化してみましょう。 基本的には<code>numpy</code>を<code>jax.numpy</code>に置き換えればいいです。</p>
-<div class="cell" data-execution_count="5">
-<details>
+<div id="fd551caa-1b09-4066-8695-4b59fbc317fe" class="cell" data-execution_count="5">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
@@ -6456,8 +6504,8 @@ xZESAAAAAElFTkSuQmCC\
 </details>
 </div>
 <p>では同じようにベンチマークをとってみましょう。</p>
-<div class="cell" data-execution_count="6">
-<details>
+<div id="c1e9168a-2f3a-4147-84d8-751321c041c6" class="cell" data-execution_count="6">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>jax_nojit_result <span class="op">=</span> bench_and_plot(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> n: simulate_balls(n, forward<span class="op">=</span>move_balls_jax),</span>
@@ -6465,12 +6513,16 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>謎の挙動を見せているし、すごく遅いですね。今度はJITコンパイルしてみましょう。 <code>jax.jit(f, backend="cpu")</code>で関数をCPU上で動くXLAコードにコンパイルできます。</p>
-<div class="cell" data-execution_count="7">
-<details>
+<div id="e7afe618-f1fc-4250-a822-8424c55df348" class="cell" data-execution_count="7">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>jax_cpu_result <span class="op">=</span> bench_and_plot(</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> n: simulate_balls(n, forward<span class="op">=</span>jax.jit(move_balls_jax, backend<span class="op">=</span><span class="st">"cpu"</span>)),</span>
@@ -6478,12 +6530,16 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-8-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>すごく速くなりました。今度はGPUでやってみます。</p>
-<div class="cell" data-execution_count="8">
-<details>
+<div id="bf57e1f2-dbfb-4236-acbe-c2645041e98f" class="cell" data-execution_count="8">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>jax_gpu_result <span class="op">=</span> bench_and_plot(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> n: simulate_balls(n, forward<span class="op">=</span>jax.jit(move_balls_jax, backend<span class="op">=</span><span class="st">"gpu"</span>)),</span>
@@ -6491,12 +6547,16 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-9-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>圧倒的に速いですね。一応線形に実行時間が増えてはいますが…。 なお、今回は学内スパコンのNVIDIA P100 GPUを使用しています。</p>
-<div class="cell" data-execution_count="9">
-<details>
+<div id="ec781eca-0be7-4d50-b1a6-b9583dabffd4" class="cell" data-execution_count="9">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> sns.lineplot(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>pd.concat(</span>
@@ -6514,7 +6574,11 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="va">None</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-10-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>このボールの数だとGPUは線形に計算時間が増えているように見えませんね。 まあ何はともあれ、GPU用にJITコンパイルしてあげると速そうだなあ、という感じがします。</p>
@@ -6523,8 +6587,8 @@ xZESAAAAAElFTkSuQmCC\
 <h1>3. Jaxで勾配を計算してみる</h1>
 <p>Jaxは単に速いNumPyとしての機能に加え、自動微分によって、関数<span class="math inline">\(f(x, y, z, ...)\)</span>の各<span class="math inline">\(x, y, z,...\)</span>による偏微分<span class="math inline">\(\frac{\partial f}{\partial x}, \frac{\partial f}{\partial y}, \frac{\partial f}{\partial z}, ...\)</span>を計算する機能を持っています。ここでは<code>jax.grad</code>による勾配の計算だけを紹介します。</p>
 <p>なんか、適当に関数を最適化してみましょう。まずは、適当に関数を決めてみます。 <span class="math inline">\(z = x^2 + y^2 + y\)</span> にしました。</p>
-<div class="cell" data-execution_count="10">
-<details>
+<div id="091adb78-4416-45d0-8d8f-68b0e595a33d" class="cell" data-execution_count="10">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> f(x, y):</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> x <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> y <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> y</span>
@@ -6553,12 +6617,16 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>plot_f()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-11-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p><span class="math inline">\((x, y) = (5, 5)\)</span>でのこの関数の勾配を計算してみます。勾配を計算してほしい引数を<code>jax.grad(argnums=...)</code>で指定します。</p>
-<div class="cell" data-execution_count="11">
-<details>
+<div id="b68c20e4-e901-4bff-a771-3a8cc04d47e7" class="cell" data-execution_count="11">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>jax.grad(f, argnums<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">1</span>))(jnp.array(<span class="fl">5.0</span>), jnp.array(<span class="fl">5.0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -6568,8 +6636,8 @@ xZESAAAAAElFTkSuQmCC\
 </div>
 </div>
 <p><span class="math inline">\(\frac{\partial z}{\partial x}, \frac{\partial z}{\partial y}\)</span>を計算してくれました。 せっかくなので、最急降下法してみましょう。</p>
-<div class="cell" data-execution_count="12">
-<details>
+<div id="0b32f7a9-8129-4092-9740-d1d30d9144fa" class="cell" data-execution_count="12">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> steepest_descent(alpha: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.01</span>) <span class="op">-&gt;</span> JaxArray:</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    f_grad <span class="op">=</span> jax.grad(f, argnums<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
@@ -6587,12 +6655,16 @@ xZESAAAAAElFTkSuQmCC\
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>plot_f(steepest_descent())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-13-output-1.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>最急降下方向に進んでくれているように見えます。 ところで、gradはトップダウン型リバースモード自動微分（誤差逆伝播法の難しい言い方です）を採用しているので、リバースモードでVector Jacobian Productを計算する<code>vjp</code>という関数が使われています。 フォーワードモードで計算する<code>jvp</code>という関数もあります。 このあたりの機能は、ただネットワークを学習させたいだけならほとんど使いませんが、一応やってみましょう。</p>
-<div class="cell" data-execution_count="13">
-<details>
+<div id="5b8a6fa3-b42e-4937-aec1-cb9684a2d7b0" class="cell" data-execution_count="13">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>primals, f_vjp <span class="op">=</span> jax.vjp(f, <span class="fl">5.0</span>, <span class="fl">5.0</span>)</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"VJP value: </span><span class="sc">{</span>primals<span class="sc">.</span>item()<span class="sc">}</span><span class="ss"> grad: </span><span class="sc">{</span>[x.item() <span class="cf">for</span> x <span class="kw">in</span> f_vjp(<span class="fl">1.0</span>)]<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -6619,8 +6691,8 @@ JVP value: 55.0 grad: 21.0</code></pre>
 <li>OpenAI gym風の<code>Env</code> APIやAnt・Halfcheetahなどの謎ロボット</li>
 </ul>
 <p>おもむろにインストールしてみます。</p>
-<div class="cell" data-execution_count="14">
-<details>
+<div id="0580c058-a188-422e-b5bc-f23ee7a281e1" class="cell" data-execution_count="14">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> brax</span>
@@ -6631,8 +6703,8 @@ JVP value: 55.0 grad: 21.0</code></pre>
 </details>
 </div>
 <p>さっきと同じ、ボールを動かしてみましょう。さっきはxy座標で動かしましたが、brax</p>
-<div class="cell" data-execution_count="15">
-<details>
+<div id="5c6e2622-94eb-4368-9b4d-5de380ec3123" class="cell" data-execution_count="15">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_ball() <span class="op">-&gt;</span> <span class="va">None</span>:</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    config <span class="op">=</span> brax.Config(dt<span class="op">=</span><span class="fl">0.1</span>, substeps<span class="op">=</span><span class="dv">4</span>)</span>
@@ -11387,7 +11459,11 @@ ACAdAQQApCOAAIB0/hfvK49F+i8YywAAAABJRU5ErkJggg==\
 </script>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-16-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-16-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>ここで、4つのAPIを使いました。 - <code>brax.Config</code>でシステムを定義 - <code>brax.System(config)</code>でシステムを作成 - <code>brax.QP</code>で初期位置・速度・アングル等を作成 - <code>brax.System.step(qp, ...)</code>で1ステップシミュレーションした結果を取得</p>
@@ -11400,8 +11476,8 @@ ACAdAQQApCOAAIB0/hfvK49F+i8YywAAAABJRU5ErkJggg==\
     v=[(0, 0), (1, 2), ...],
 )</code></pre>
 <p>に変換される感じです。 このジャーゴンは便利なので覚えてもいいと思います。 ちなみに、treemapのノードが葉かどうかはオブジェクトが<a href="https://jax.readthedocs.io/en/latest/pytrees.html">PyTreeか否か</a>によります。 これは「以上のデータ構造をJaxは暗に木構造だとみなします。不足なら自分で登録してください」という話なので、最初は面食らうと思います。 これを陽なAPIでやろうにするとRustやScalaにあるtraitが必要なので、悪い設計ではないと思いますが。 というわけで、コードはこんな感じになります。</p>
-<div class="cell" data-execution_count="16">
-<details>
+<div id="e62d57ca-c82b-4c94-88d8-0c50055eda01" class="cell" data-execution_count="16">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_balls_brax(n_balls: <span class="bu">int</span>, n_steps: <span class="bu">int</span> <span class="op">=</span> <span class="dv">100</span>) <span class="op">-&gt;</span> t.List[Array]:</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    sys <span class="op">=</span> brax.System(make_ball())</span>
@@ -17382,7 +17458,11 @@ AABJRU5ErkJggg==\
 </script>
 </div>
 <div class="cell-output cell-output-display">
-<p><img src="jax-brax-haiku_files/figure-html/cell-17-output-2.png" class="img-fluid"></p>
+<div>
+<figure class="figure">
+<p><img src="jax-brax-haiku_files/figure-html/cell-17-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>jitを使わないとbraxがなぜかnumpyの関数を呼ぼうとしてエラーになったので、jitも併用しています。</p>
@@ -17390,8 +17470,8 @@ AABJRU5ErkJggg==\
 <section id="haikuで謎のロボットを学習させてみる" class="level1">
 <h1>5. Haikuで謎のロボットを学習させてみる</h1>
 <p>というわけで、braxの使い方をざっと見てみましたが、毎回自分でロボットを考えるのは大変<del>だし査読者にも文句を言われる</del>なので、今回は謎ロボットを学習させてみましょう。 open AI gym風の<code>brax.envs.Env</code>がサポートされています。今回はAntを訓練してみましょう。 <code>gym.make</code>に相当するのが<code>brax.envs.create</code>です。 <code>step</code>のAPIはgymと違い内部状態・報酬などが入った<code>brax.envs.State</code>というクラスを渡して次の<code>State</code>を受け取るというインターフェイスです。</p>
-<div class="cell" data-execution_count="17">
-<details>
+<div id="6ffc9616-3cf8-43ca-bb10-5e53c372d9ff" class="cell" data-execution_count="17">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> brax.envs</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -17454,8 +17534,8 @@ AABJRU5ErkJggg==\
 </div>
 </div>
 <p>なんか、跳ねていますね。嬉しそう。 では、さっそく学習させてみましょう。 今回は、深層強化学習の代表的な手法であるPPOを使ってみます。 本当はSACも用意したかったのですが、時間がなかったので諦めました。 とりあえず、三層MLPを用意しましょう。 例えば、こんな感じのものがあればいいです。</p>
-<div class="cell" data-execution_count="18">
-<details>
+<div id="ad554d48-f943-4953-b9c3-b22728fe7a30" class="cell" data-execution_count="18">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mlp_v1(</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    observation: JaxArray,</span>
@@ -17474,8 +17554,8 @@ AABJRU5ErkJggg==\
 </details>
 </div>
 <p>これを<code>jit</code>して<code>grad</code>をとってAdamか何かでパラメタを更新して…とやればMLPが動くわけですが、パラメタが多すぎてちょっと面倒ですね。 そこでここでは、jaxでニューラルネットワークを訓練する際、パラメタの管理などをやってくれるライブラリである<a href="https://github.com/deepmind/dm-haiku">Haiku</a>を使ってみます。 なお、brax公式のexamplesでは<a href="https://github.com/google/flax">Flax</a>を使っています。 正直HaikuもFlaxもそこまで変わらないのですが、Flaxの方がややAPIの押しが強い（PyTorchでいう<code>nn.Module</code>相当のものがdataclassでないといけなかったりとか）印象があります。 また、HaikuはDeepmindが、FlaxはGoogleが開発しているライブラリとなります。 とりあえずインストールしてみましょう。</p>
-<div class="cell" data-execution_count="31">
-<details>
+<div id="52ba4a2a-1f73-49f1-969a-d91dcd280518" class="cell" data-execution_count="31">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> haiku <span class="im">as</span> hk</span>
@@ -17497,8 +17577,8 @@ AABJRU5ErkJggg==\
 </details>
 </div>
 <p>ニューラルネットワークを定義するためのPythonライブラリはtheano、tensorflowと色々ありましたが、最近は<code>torch.nn.Module</code>や<code>chainer.Link</code>のように、ネットワークの重み・forwardの出力・隣接しているノードを記録したオブジェクトを使って、動的に計算グラフを構築するものが多いかと思います。 しかし、Haikuによるそれは少し異なります。ポイントは、勾配を計算する部分はJaxが担当するので、Haikuはただ「ネットワークのパラメタを管理するだけ」でいいということです。 そのために、Haikuは<code>transform</code>というAPIを用意しています。 これは見たほうが早いでしょう。</p>
-<div class="cell" data-execution_count="20">
-<details>
+<div id="60fd17d4-1a4e-45a4-b380-114b9ef1006e" class="cell" data-execution_count="20">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mlp_v2(observation: JaxArray) <span class="op">-&gt;</span> JaxArray:</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    w1 <span class="op">=</span> hk.get_parameter(<span class="st">"w1"</span>, shape<span class="op">=</span>[observation.shape[<span class="dv">1</span>], <span class="dv">3</span>], init<span class="op">=</span>jnp.ones)</span>
@@ -17542,8 +17622,8 @@ AABJRU5ErkJggg==\
 <p>こんな感じになります。 まとめると、 - <code>transform(f)</code>は二つの関数<code>init</code>、<code>apply</code>をかえす - <code>transform</code>は<code>f</code>を、<code>f</code>の中で<code>haiku.get_parameter</code>を使って呼び出されたパラメタを入力とする関数に変換する - <code>init</code>はパラメタを初期化して返す。パラメタは<code>FlatMap</code>というオブジェクトだがこれはほとんど<code>dict</code>と同じ - <code>apply</code>は与えられたパラメタを使って所望の計算を行う という感じですね。</p>
 <p>ついでに、上の例では<code>hk.PRNGSequence</code>という<code>PRNGKey</code>の更新を勝手にやってくれるものを使っています。</p>
 <p>しかし、これでもまだ面倒ですね。 実際のところ、よく使うネットワークはモジュールとしてまとまっているので、これを使えばいいです。</p>
-<div class="cell" data-execution_count="21">
-<details>
+<div id="827b7103-2d4a-439c-9650-57b6e7cf146a" class="cell" data-execution_count="21">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mlp_v3(output_size: <span class="bu">int</span>, observation: JaxArray) <span class="op">-&gt;</span> JaxArray:</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> hk.Linear(<span class="dv">64</span>)(observation)</span>
@@ -17554,8 +17634,8 @@ AABJRU5ErkJggg==\
 </details>
 </div>
 <p>これを使って、PPOのネットワークを書いてみましょう。 方策は標準偏差が状態に依存しない正規分布にします。</p>
-<div class="cell" data-execution_count="22">
-<details>
+<div id="c6fad21e-3a9e-48f5-9d61-6d717ea513bb" class="cell" data-execution_count="22">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> NetworkOutput(t.NamedTuple):</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    mean: JaxArray</span>
@@ -17574,8 +17654,8 @@ AABJRU5ErkJggg==\
 <p>これだけです。デフォルトでは、ネットワークの重みは<a href="https://dm-haiku.readthedocs.io/en/latest/api.html#haiku.initializers.TruncatedNormal">TruncatedNormal</a>で初期化されます。今回は全部デフォルトのままにしました。</p>
 <p>次に、これを使って、環境とインタラクトするコードを書いてみます。 いま、braxの利点を活かすために、 1. ネットワークから次のアクションをサンプルして 2. シミュレータで次の状態をシミュレート という過程をすべて<code>jax.jit</code>の中でやるのが理想ですよね。</p>
 <p>ですから、たとえばこんな感じにやればいいです。</p>
-<div class="cell" data-execution_count="23">
-<details>
+<div id="61ce8185-19cb-490b-a3cf-8871b57ac01a" class="cell" data-execution_count="23">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>Action <span class="op">=</span> JaxArray</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -17596,8 +17676,8 @@ AABJRU5ErkJggg==\
 </div>
 <p>ここで、行動のサンプルには<a href="https://github.com/deepmind/distrax"><code>distrax</code></a>というライブラリを使いました。 平均値にノイズをいれるだけなので、ライブラリを使ってもあまり変わらないのですが…。 いま、各ジョイントに対して加える力が、それぞれ独立な正規分布からサンプリングされると仮定しているので、<code>MutliVariateNormDiag</code>(共分散行列が対角行列になる多変量正規分布）を使ってモデリングしています。 <code>distrax.Independent</code>と<code>distrax.Normal</code>を使っても同じことができます。 行動は一応tanhで<span class="math inline">\([-1, 1]\)</span>の範囲にならしています。</p>
 <p>ちょっと試してみましょう。</p>
-<div class="cell" data-execution_count="24">
-<details>
+<div id="098509d7-c97e-4be1-9ded-319b53b541b5" class="cell" data-execution_count="24">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ant <span class="op">=</span> brax.envs.create(env_name<span class="op">=</span><span class="st">"ant"</span>, batch_size<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>init, step <span class="op">=</span> make_step_function(ant)</span>
@@ -17610,8 +17690,8 @@ AABJRU5ErkJggg==\
 </div>
 <p>というわけで無事に<code>step</code>をJITコンパイルして高速化できました。 <code>reset</code>はほとんど呼ばないので別にコンパイルしなくてもいいのですが、jitしないとbraxが<code>jnp.DeviceArray</code>のかわりにnumpyを使いたがって少し面倒なのでjitしています。</p>
 <p>あとはPPOを実装していきますが、時間の都合で手短かにいきます。 まずは<a href="https://arxiv.org/abs/1506.02438">GAE</a>ですね。 普通に書くと<code>jax.jit</code>が<a href="https://ja.wikipedia.org/wiki/%E3%83%AB%E3%83%BC%E3%83%97%E5%B1%95%E9%96%8B">ループアンローリング</a>を行ってコンパイル時間が激遅になるので、<a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.lax.fori_loop.html"><code>jax.lax.fori_loop</code></a>という黒魔術を使います。 コンパイル時定数は<code>static_argnums</code>で指定します。 <code>vmap</code>で各ワーカー用に並列化します。</p>
-<div class="cell" data-execution_count="25">
-<details>
+<div id="27a8aeba-4678-402b-9328-c8684ac6fd66" class="cell" data-execution_count="25">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> functools</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -17642,8 +17722,8 @@ AABJRU5ErkJggg==\
 </div>
 <p>なんかブログで書くには黒魔術すぎる気もしますが…。</p>
 <p>次に学習データのバッチを構成する部分ですね。 これは、普通にPyTorchとかと変わらないです。</p>
-<div class="cell" data-execution_count="26">
-<details>
+<div id="71d86f78-3b27-4825-8907-b52bfe0ae973" class="cell" data-execution_count="26">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> dataclasses</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -17729,8 +17809,8 @@ AABJRU5ErkJggg==\
 </div>
 <p>普通のdataclassesはjitできないので、<code>chex.dataclass</code>を使います。 さっき少しだけ触れましたが、<code>chex.dataclass</code>は作成したdataclassをPyTreeとしてjaxに登録してくれます。 実は<code>flax.struct.dataclass</code>というだいたい同じものもあって、braxの内部ではこれを使っているようです。 また<span class="math inline">\(\gamma = 0.99, \lambda = 0.95\)</span>としました。</p>
 <p>いよいよ学習の部分ですね。 まず、損失関数を<code>jax.grad</code>できるように書きます。</p>
-<div class="cell" data-execution_count="27">
-<details>
+<div id="e9362acc-e338-4cc2-8f87-b43c838a584f" class="cell" data-execution_count="27">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ppo_loss(action_size: <span class="bu">int</span>, batch: Batch) <span class="op">-&gt;</span> JaxArray:</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    mean, stddev, value <span class="op">=</span> policy_and_value(action_size, batch.observation)</span>
@@ -17750,8 +17830,8 @@ AABJRU5ErkJggg==\
 </div>
 <p><span class="math inline">\(\epsilon = 0.2\)</span>で固定しているので、<span class="math inline">\([1 - 0.2, 1 + 0.2]\)</span>の範囲でクリップします。</p>
 <p>ではこれを使って、今度はパラメタの更新を全部jitにつっこんでみましょう。 パラメタの更新には<a href="https://github.com/deepmind/optax">optax</a>というライブラリを使います。色々なSGDのバリアントを実装しているライブラリですが、僕はほとんどAdamしか使いません…。</p>
-<div class="cell" data-execution_count="28">
-<details>
+<div id="a452ee26-6fec-4cc9-a366-479cba85da32" class="cell" data-execution_count="28">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -17780,8 +17860,8 @@ AABJRU5ErkJggg==\
 </details>
 </div>
 <p>さて、ここまで来たらあと一歩ですね。 次に面倒ですが次の状態のvalueをとってきてバッチを作る部分を書きます。</p>
-<div class="cell" data-execution_count="30">
-<details>
+<div id="9bf709e6-e16d-44b7-b5ae-0de0d847e986" class="cell" data-execution_count="30">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_next_value_function(action_size: <span class="bu">int</span>) <span class="op">-&gt;</span> Batch:</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> next_value_fn(obs: JaxArray) <span class="op">-&gt;</span> JaxArray:</span>
@@ -17794,8 +17874,8 @@ AABJRU5ErkJggg==\
 </div>
 <p>速度を求めるなら、これは<code>make_batch</code>と一緒にjitしてしまってもいいですが、まあ面倒なのでこれでもいいでしょう。</p>
 <p>では材料がそろったのでメインループを書いていきましょう。 面倒ですが、評価用のenvironmentも別に作ります。</p>
-<div class="cell" data-execution_count="33">
-<details>
+<div id="5b5c835b-e257-4ebd-9f6a-7f993ee07218" class="cell" data-execution_count="33">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="im">import</span> tqdm</span>
@@ -17805,8 +17885,8 @@ AABJRU5ErkJggg==\
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    clear_output()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-execution_count="36">
-<details>
+<div id="aac1eedd-de4a-46c1-973e-ad339b2a74f1" class="cell" data-execution_count="36">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -18011,18 +18091,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -18054,11 +18123,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/kngwyu\.github\.io\/rlog2\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -18068,8 +18176,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -18081,7 +18198,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -18125,6 +18365,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -18150,6 +18391,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -18210,6 +18477,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 

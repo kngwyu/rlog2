@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.450">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2023-06-09">
 
-<title>RLog2 - equinoxで強化学習してみる</title>
+<title>equinoxで強化学習してみる – RLog2</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,7 +23,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -34,7 +34,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -58,7 +58,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -80,7 +80,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "end",
   "type": "overlay",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -89,6 +95,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
     "search-submit-button-title": "Submit",
     "search-label": "Search"
@@ -100,12 +107,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }
 </script>
 <script async="" src="https://hypothes.is/embed.js"></script>
+<script>
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    document.body.classList.add('hypothesis-enabled');
+  });
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -113,38 +152,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg navbar-dark ">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">RLog2</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../about.html" rel="" target="">
- <span class="menu-text">RLog2: RL blog 2</span></a>
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">RLog2: RL blog 2</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://sigmoid.social/@kngwyu" rel="" target=""><i class="bi bi-mastodon" role="img">
+    <a class="nav-link" href="https://sigmoid.social/@kngwyu"> <i class="bi bi-mastodon" role="img">
 </i> 
- <span class="menu-text">Mastodon</span></a>
+<span class="menu-text">Mastodon</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="https://github.com/kngwyu" rel="" target=""><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/kngwyu"> <i class="bi bi-github" role="img">
 </i> 
- <span class="menu-text">Github</span></a>
+<span class="menu-text">Github</span></a>
   </li>  
 </ul>
+          </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
 </div>
-          </div> <!-- /navcollapse -->
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -208,6 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
+
 <p>最近<a href="https://docs.kidger.site/equinox/">equinox</a>という<a href="https://jax.readthedocs.io/en/latest/">jax</a>ベースの深層学習モデルを定義するライブラリを使ってみたのですが、これが中々いいと思ったので紹介ついでに強化学習してみます。他のjaxベースのライブラリにはDeepmindの<a href="https://dm-haiku.readthedocs.io/en/latest/">haiku</a>やGoogle Researchの<a href="https://flax.readthedocs.io/en/latest/">flax</a>があります。この2つのライブラリは実際のところあまり変わりはありません。というのも、jaxには試験的に書かれた<a href="https://jax.readthedocs.io/en/latest/jax.example_libraries.stax.html">stax</a>という深層学習ライブラリのリファレンス実装があり、haikuもflaxもstaxをベースにオブジェクト志向的な<code>Module</code>を採用したものだからです。あるいは、haikuやflaxは「staxをPyTorchっぽくしたもの」と言ってもいいかもしれません。equinoxのドキュメントにある<a href="https://docs.kidger.site/equinox/examples/init_apply/">Compatibility with init-apply libraries</a>というページでは、これらのライブラリのやり方を「init-applyアプローチ」と呼んで軽く説明しています。これについてざっと見てみましょう。</p>
 <section id="jaxにできることとできないこと" class="level1">
 <h1>Jaxにできることとできないこと</h1>
@@ -216,8 +256,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>JAX is Autograd and XLA, brought together for high-performance numerical computing.</p>
 </blockquote>
 <p><a href="https://www.tensorflow.org/xla">XLA</a>というのは、Tensorflowのバックエンドとして開発された深層学習用の中間言語で、CPU/GPU/TPU用に数値計算コードを最適化してくるものです。深層学習に求められる並列化の性質から、特にSIMD演算/ベクトル並列化に特化しています。Jaxは、<code>jax.numpy</code>というNumPyに似せたライブラリをXLAのフロントエンドとして提供することで、「NumPyコードをベクトル並列化された高速なGPU用コードに実行時コンパイルすること」を可能にしています。では、Autogradというのはなんでしょうか？これは、jaxの開発者が以前に開発していたライブラリの名前でもありますが、自動微分全般のことを指すと考えていいでしょう。自分で勾配逆伝播のコードを書かなくても、jaxでは損失関数の各パラメタにおいての偏微分を勝手に計算してくれます。試しに、<span class="math inline">\(f(x, y) = x^2 + y\)</span>の偏微分を計算してみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="2">
-<details>
+<div id="ff14064e-d950-4450-bd62-cf9c590b96ef" class="cell" data-tags="[]" data-execution_count="2">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
@@ -297,8 +337,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="equinoxの特徴" class="level1">
 <h1>equinoxの特徴</h1>
 <p>equinoxの特徴は、init-applyアプローチと異なり、「よりオブジェクト指向的な」（または、PyTorchに近い）インターフェースを志向している点にあります。 ドキュメントのトップページにある<a href="https://docs.kidger.site/equinox/#quick-example">Quick example</a>を見てみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="3">
-<details>
+<div id="e12206f3-c53e-42d3-89f2-1dfdf01c85f4" class="cell" data-tags="[]" data-execution_count="3">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> equinox <span class="im">as</span> eqx</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
@@ -357,8 +397,8 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 <li><code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある</li>
 </ul>
 <p>ここで、最後の「<code>grad</code>を使う際に、パラメタとその他の変数を分離する必要がある」というのは、どういう意味でしょうか？例えば、self-attentionを計算する以下のようなModuleを考えます。</p>
-<div class="cell" data-tags="[]" data-execution_count="17">
-<details>
+<div id="cade3801-2a52-4669-93e6-c3e2986b7ed5" class="cell" data-tags="[]" data-execution_count="17">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SelfAttention(eqx.Module):</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    q: eqx.nn.Linear</span>
@@ -381,8 +421,8 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 </details>
 </div>
 <p><code>eqx.Module</code>は内部で<code>dataclasses.dataclass</code>を使うので、<code>__init__</code>等の初期化メソッドはあらかじめ用意されていますが、これをオーバーライドしてパラメタの初期化に使います。 <span class="math inline">\(\sqrt{d_\mathrm{attn}}\)</span>は定数なので、これもメンバ変数にしてしまいましょう。勾配を計算してみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="18">
-<details>
+<div id="594006e8-ca53-44cd-870b-c3b6d7f0a4a8" class="cell" data-tags="[]" data-execution_count="18">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> SelfAttention(<span class="dv">4</span>, <span class="dv">8</span>, jax.random.PRNGKey(<span class="dv">10</span>))</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>jax.grad(<span class="kw">lambda</span> model, x: jnp.mean(model(x)))(model, jnp.ones((<span class="dv">3</span>, <span class="dv">4</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -415,8 +455,8 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 </div>
 </div>
 <p>ここで困ったことに、<code>sqrt_d_attn</code>での偏微分も計算されてしまいました。<code>eqx.Module</code>そのものがパラメタを持つことによって、定数であるようなメンバ変数に対しても偏微分が計算されてしまいます。この問題を、equinoxでは、<a href="https://docs.kidger.site/equinox/api/filtering/partition-combine/#equinox.partition"><code>eqx.partition</code></a>と<a href="https://docs.kidger.site/equinox/api/filtering/partition-combine/#equinox.is_inexact_array"><code>eqx.is_inexact_array</code></a>を使って、「32bit浮動小数点の<code>jax.Array</code>または<code>numpy.ndarray</code>」と「その他のメンバ変数」を分離することにより解決しています。やってみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="19">
-<details>
+<div id="baff873a-9915-49b0-960d-6f582e452183" class="cell" data-tags="[]" data-execution_count="19">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>eqx.partition(model, eqx.is_inexact_array)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -460,8 +500,8 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 <li><code>jax.grad(g)(params, others, ...)</code>で勾配を計算</li>
 </ol>
 <p>という流れになります。面倒ですね。 長々説明したのですが、これを全部やってくれるのが、<a href="https://docs.kidger.site/equinox/api/filtering/transformations/#equinox.filter_grad"><code>equinox.filter_grad</code></a>です。基本何も考えずにこれを使えばいいです。やってみましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="20">
-<details>
+<div id="1b76481a-6851-42a4-b936-31eb3cf5dcfa" class="cell" data-tags="[]" data-execution_count="20">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>eqx.filter_grad(<span class="kw">lambda</span> model, x: jnp.mean(model(x)))(model, jnp.ones((<span class="dv">3</span>, <span class="dv">4</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -499,8 +539,8 @@ Grad? Linear(weight=f32[3,2], bias=f32[3])</code></pre>
 <section id="環境" class="level2">
 <h2 class="anchored" data-anchor-id="環境">環境</h2>
 <p>一通り<code>equinox</code>の特徴を紹介したところで、これを使って強化学習してみます。せっかくjaxを使っているの<del>とgymのAPIが変わりまくった上にgymnasiumに変わって全然ついていけないの</del>で、jax製の環境を使ってみましょう。ここでは<a href="https://instadeepai.github.io/jumanji/">jumanji</a>というライブラリの<a href="https://instadeepai.github.io/jumanji/environments/maze/?h=maze">Maze</a>を使ってみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="21">
-<details>
+<div id="6edeabd9-809d-4a59-8e35-c9c5cbd8fd00" class="cell" data-tags="[]" data-execution_count="21">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jumanji</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.wrappers <span class="im">import</span> AutoResetWrapper</span>
@@ -1591,8 +1631,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <section id="入力" class="level3">
 <h3 class="anchored" data-anchor-id="入力">入力</h3>
 <p>それぞれ壁の位置、エージェントの位置、ゴールの位置をそれぞれ10x10のバイナリ画像で表現し、<code>3x10x10</code>の配列として入力します。</p>
-<div class="cell" data-tags="[]" data-execution_count="22">
-<details>
+<div id="ea0845b8-4e7f-4c57-85fa-4d0097724b37" class="cell" data-tags="[]" data-execution_count="22">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.environments.routing.maze.types <span class="im">import</span> Observation, State</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1607,8 +1647,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <section id="ネットワーク" class="level3">
 <h3 class="anchored" data-anchor-id="ネットワーク">ネットワーク</h3>
 <p>たたみこんでからReLU + 線形レイヤを2回というシンプルな構成にします。途中までは価値関数と方策は共通でいいでしょう。方策はカテゴリカル分布とします。面倒なので、入力サイズ<span class="math inline">\(3 \times 10 \times 10\)</span>、行動数<span class="math inline">\(4\)</span>として入出力サイズをベタ書きしてしまいます。</p>
-<div class="cell" data-tags="[]" data-execution_count="164">
-<details>
+<div id="28760915-3974-4931-b1d9-300918b8ace2" class="cell" data-tags="[]" data-execution_count="164">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> NamedTuple</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1661,8 +1701,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <section id="ロールアウト" class="level3">
 <h3 class="anchored" data-anchor-id="ロールアウト">ロールアウト</h3>
 <p>PPOの実装では1000~8000ステップ程度環境で行動した履歴を集めてそれを使って何度かネットワークを更新するのが普通です。ここでは<a href="https://jax.readthedocs.io/en/latest/jaxpr.html#scan">jax.lax.scan</a>を使って、Pythonのループを使うより高速なロールアウトを実装します。scanの速度面での恩恵は大きいですが、使い方には少し注意が必要です。特に、1ステップ進める関数の二番目の出力を<code>results: list[Result]</code> とすると、最終的に返ってくるのが<code>Result(member1=stack([m1 for m1 in results.member1]), ...)</code>になることは把握しておきましょう。 また、<code>exec_rollout</code>の引数が<code>eqx.Module</code>のインスタンスである<code>SoftmaxPPONet</code>を含んでいるので、<code>eqx.filter_jit</code>でjitしてあげるとうまいことjitできない値を除外してjitしてくれます。 行動は方策ネットワークの出力をsoftmaxしてサンプルしますが、<code>Observation</code>に迷路で移動可能な方向を教えてくれる<code>action_mask</code>が入っているので、これを使って取れない行動には<code>-inf</code>をかけてマスクしておきましょう。簡単な環境ならこれをやらなくても大丈夫だと思うのですが、壁を多いときはこれがないとけっこう難しいです。</p>
-<div class="cell" data-tags="[]" data-execution_count="165">
-<details>
+<div id="8768f96f-b12a-4829-851d-e28a3b3f29d7" class="cell" data-tags="[]" data-execution_count="165">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> chex</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1731,8 +1771,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 </details>
 </div>
 <p>テストしてみましょう。<code>jax.vmap</code>で簡単に環境をベクトル並列化できるのがjax製環境の利点なので、今回は16並列で動かしてみます。<code>reset</code>を<code>vmap</code>してPRNGKeyを16個突っ込むと勝手に16並列の<code>State</code>がでてきます。</p>
-<div class="cell" data-tags="[]" data-execution_count="145">
-<details>
+<div id="9a8194d4-38d6-4a5e-8786-6478dc688589" class="cell" data-tags="[]" data-execution_count="145">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>key, net_key, reset_key, rollout_key <span class="op">=</span> jax.random.split(key, <span class="dv">4</span>)</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>pponet <span class="op">=</span> SoftmaxPPONet(net_key)</span>
@@ -1756,8 +1796,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <section id="学習" class="level3">
 <h3 class="anchored" data-anchor-id="学習">学習</h3>
 <p>データが集められたので後はネットワークを更新するコードを書きましょう。まず<a href="https://arxiv.org/abs/1506.02438">GAE</a>を計算します。意外とボトルネックになるので<a href="https://jax.readthedocs.io/en/latest/_autosummary/jax.lax.fori_loop.html#jax.lax.fori_loop"><code>fori_loop</code></a>で高速化しておきましょう。</p>
-<div class="cell" data-tags="[]" data-execution_count="166">
-<details>
+<div id="6fb97c68-6f34-4c41-96a9-f4121eba5c1f" class="cell" data-tags="[]" data-execution_count="166">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="at">@chex.dataclass</span>(frozen<span class="op">=</span><span class="va">True</span>, mappable_dataclass<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Batch:</span>
@@ -1839,8 +1879,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="167">
-<details>
+<div id="98d7ee97-0681-4707-9538-e08b2f09956e" class="cell" data-tags="[]" data-execution_count="167">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>batch <span class="op">=</span> make_batch(rollout, next_value, <span class="fl">0.99</span>, <span class="fl">0.95</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>batch.advantages.shape, batch.onehot_actions.shape, batch.log_action_probs.shape</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1862,8 +1902,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <li>各メンバを<code>jnp.concatenate</code>でくっつけて大きさ<span class="math inline">\(MK \times N \times ...\)</span>の配列にreshapeする</li>
 </ol>
 <p>という方法を使いました。ちょっと面倒ですし、正直ここまで高速化しなくてもいいかもしれませんね。メモリ使用量が不安な場合は<span class="math inline">\(K\)</span>のループをPythonで書くのもアリかなと思いますが、今回は入力が<span class="math inline">\(3\times 10\times 10\)</span>なので大丈夫そうですね。</p>
-<div class="cell" data-tags="[]" data-execution_count="168">
-<details>
+<div id="4f8161dd-88e0-47c1-a75f-f4d672adfb70" class="cell" data-tags="[]" data-execution_count="168">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1943,8 +1983,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 </details>
 </div>
 <p>というわけで、部品が全部できたので学習を回してみましょう。まず何も壁がない簡単な迷路で試してみます。簡単な迷路を作りましょう。 <a href="https://github.com/instadeepai/jumanji/blob/v0.3.1/jumanji/environments/routing/maze/generator.py">junmanjiのデフォルトの迷路ジェネレーター</a>をコピペして適当に書き換えました。また、この環境ではゴールでのみ報酬が与えられるので、単純に報酬和/終了したエピソードの数 でエピソードあたりの平均リターンが求められます。これを訓練状況の指標として出力しておきましょう。ハイパーパラメータはわりと勘で決めました。</p>
-<div class="cell" data-tags="[]" data-execution_count="169">
-<details>
+<div id="49fb7ce5-85b0-467c-be1a-13a787233fa9" class="cell" data-tags="[]" data-execution_count="169">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.environments.routing.maze.generator <span class="im">import</span> Generator</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jumanji.environments.routing.maze.types <span class="im">import</span> Position, State</span>
@@ -1970,8 +2010,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="202">
-<details>
+<div id="7cc78c09-91ca-47e5-8333-77b505e281c6" class="cell" data-tags="[]" data-execution_count="202">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_training(</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    key: jax.Array,</span>
@@ -2028,8 +2068,8 @@ AQAAAABMYXZmNjAuMy4xMDA=
 <span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pponet</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="204">
-<details>
+<div id="71cf2a7d-0e7e-4824-977b-c73f10d18f4f" class="cell" data-tags="[]" data-execution_count="204">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -2053,8 +2093,8 @@ Elapsed time: 3.2s</code></pre>
 </div>
 </div>
 <p>約8万ステップが3秒ちょっとで学習できました。速いですね。学習したエージェントがどんなもんか見てみましょう。</p>
-<div class="cell" data-execution_count="207">
-<details>
+<div id="4eaab7a3-8a0e-490f-a12e-a4b79fbed9a7" class="cell" data-execution_count="207">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="at">@eqx.filter_jit</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> visualization_rollout(</span>
@@ -2084,8 +2124,8 @@ Elapsed time: 3.2s</code></pre>
 <span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> [initial_state] <span class="op">+</span> [treedef.unflatten(leaf) <span class="cf">for</span> leaf <span class="kw">in</span> <span class="bu">zip</span>(<span class="op">*</span>leaves)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="208">
-<details>
+<div id="6408cc9b-be1a-4f55-ba96-dae9585ea486" class="cell" data-tags="[]" data-execution_count="208">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>env <span class="op">=</span> AutoResetWrapper(jumanji.make(<span class="st">"Maze-v0"</span>, generator<span class="op">=</span>TestGenerator()))</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>key, eval_key <span class="op">=</span> jax.random.split(key)</span>
@@ -3242,8 +3282,8 @@ AExhdmY2MC4zLjEwMA==
 </div>
 </div>
 <p>さすがにこのくらいなら簡単そうですね。次はもう少し難しくしてみたいところです。デフォルトの完全ランダム生成される迷路はやたら遅かったので、適当に自作してみましょう。スタート、ゴールをそれぞれ3箇所から同確率でサンプルし、合計9通りの組み合わせを解きます。まあこのくらいならたぶんいけるでしょう。10倍の80万ステップ学習させてみます。</p>
-<div class="cell" data-tags="[]" data-execution_count="209">
-<details>
+<div id="ddbb172d-0aeb-4e80-9f91-a104a4da011b" class="cell" data-tags="[]" data-execution_count="209">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MedDifficultyGenerator(Generator):</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    WALLS <span class="op">=</span> [</span>
@@ -3292,8 +3332,8 @@ AExhdmY2MC4zLjEwMA==
 <span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="210">
-<details>
+<div id="cfef9a46-79a3-403c-948e-22561bad6e6b" class="cell" data-tags="[]" data-execution_count="210">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> datetime</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -3320,8 +3360,8 @@ Mean episodic return: 0.9970540974825924
 Elapsed time: 1.2e+01s</code></pre>
 </div>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="212">
-<details>
+<div id="1ef05025-a323-43aa-b47b-175ee499b6c4" class="cell" data-tags="[]" data-execution_count="212">
+<details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>env <span class="op">=</span> AutoResetWrapper(jumanji.make(<span class="st">"Maze-v0"</span>, generator<span class="op">=</span>MedDifficultyGenerator()))</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>key, eval_key <span class="op">=</span> jax.random.split(key)</span>
@@ -4781,18 +4821,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -4824,11 +4853,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/kngwyu\.github\.io\/rlog2\/");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -4838,8 +4906,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -4851,7 +4928,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -4895,6 +5095,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -4920,6 +5121,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -4980,6 +5207,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+
 
 
 
