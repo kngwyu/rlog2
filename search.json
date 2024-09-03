@@ -25,7 +25,7 @@
     "href": "posts/python_basic_en.html#arithmetic-operations",
     "title": "Quick Python basic course for OIST new students",
     "section": "Arithmetic operations",
-    "text": "Arithmetic operations\nPrease also refer to the official tutorial. We can use +-*/ for basic arithmetic operations.\n\n\nCode\n3 + 5 * 4\n\n\n23\n\n\nAddition is evaluated later than multiplication and division. We can use () to change the order.\n\n\nCode\n(3 + 5) * 4\n\n\n32"
+    "text": "Arithmetic operations\nPrease also refer to the official tutorial. We can use +-*/ for basic arithmetic operations.\n\n\nCode\n3 + 5 * 4\n\n\n23\n\n\nPower is **, and the modulo is %.\n\n\nCode\n(2 ** 4) % 10\n\n\n6\n\n\nAddition is evaluated later than multiplication and division. We can use () to change the order.\n\n\nCode\n(3 + 5) * 4\n\n\n32"
   },
   {
     "objectID": "posts/python_basic_en.html#exercise-1.1",
@@ -35,18 +35,46 @@
     "text": "Exercise 1.1\nCompute how many seconds are in a day."
   },
   {
-    "objectID": "posts/python_basic_en.html#text",
-    "href": "posts/python_basic_en.html#text",
+    "objectID": "posts/python_basic_en.html#variable",
+    "href": "posts/python_basic_en.html#variable",
     "title": "Quick Python basic course for OIST new students",
-    "section": "Text",
-    "text": "Text\nWe can use \"\" and '' to represent texts. Both have the same effect.\n\n\nCode\n\"Hey, programming is fun!\"\n\n\n'Hey, programming is fun!'\n\n\nWe can get the substring by indexing and concatenate them.\n\n\nCode\n\"Hey, programming is fun!\"[: -4] + \"not fun!\"\n\n\n'Hey, programming is not fun!'"
+    "section": "Variable",
+    "text": "Variable\nVariable is the most important concept. You may think of it is a container that has some value, and we can name it.\n\n\nCode\nvar1 = 30\nprint(var1)\nvar1 = 40\nprint(var1)\n\n\n30\n40\n\n\n= is the syntax that assigns some value into the variable. There are some operators that changes the value in the variable in place.\nprint is what I’m not explained yet, but please understand that it just shows the content of the given variable (or, more precisely, the evaluated result of the given experssion).\n\n\nCode\nvar1 += 40\nprint(var1)\n\n\n80"
   },
   {
-    "objectID": "posts/python_basic_en.html#list",
-    "href": "posts/python_basic_en.html#list",
+    "objectID": "posts/python_basic_en.html#expression-and-statements",
+    "href": "posts/python_basic_en.html#expression-and-statements",
     "title": "Quick Python basic course for OIST new students",
-    "section": "List",
-    "text": "List\nWe can construct a list by [].\n\n\nCode\n[\"Hey\", 2, 4, [\"Yay\", \"Me\"]]\n\n\n['Hey', 2, 4, ['Yay', 'Me']]"
+    "section": "Expression and statements",
+    "text": "Expression and statements\nIn Python, what we can assign into the variable is called expression. Expression includes numerical values, texts, and values themselves.\n\n\nCode\nvar1 = 20\nvar2 = -100\nvar3 = var2\nvar3\n\n\n-100\n\n\nIn Colab notebook, the last expression in the cell is printed out. In the cell above, the content of var3 is printed out.\nOn the other hand, the assignement like var1 = 20 is called statement. If the cell ends with statement, Colab notebook doesn’t show anything."
+  },
+  {
+    "objectID": "posts/python_basic_en.html#for-loop",
+    "href": "posts/python_basic_en.html#for-loop",
+    "title": "Quick Python basic course for OIST new students",
+    "section": "For loop",
+    "text": "For loop\nThe power of the computer is in its speed. Todays computers can executre millionds of operations in a second. Thus, the most basic usage to utilize the computation power of computers is to make it repeat something. for loop the most basic way to do this. There is a range object that is often used with for loop, which represents certain numerical range.\n\n\nCode\nrange(10)\n\n\nrange(0, 10)\n\n\nFor loop repeats something with this range.\n\n\nCode\nfor i in range(10):\n    print(i)\n\n\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n\n\nHere, the program in the for loop is executed with variable i with all values in the range [0, 10) assigned.\nWait, did you notice this redundant four spaces?\nfor i in range(10):\n□□□□print(i)\nThese spaces are called indentation and used to indicate that these statements are inside the for loop block. This indentation is used everywhere in Python, as we’ll see later. Note that two spaces and three spaces also work, but you should to have the same indentation width throughout your code.\nLet’s go back to the for loop. It’s useful to accumulate values by for loop.\n\n\nCode\nsum_0_100 = 0\nfor i in range(101):\n    sum_0_100 += i\nsum_0_100\n\n\n5050\n\n\n\nExercise 2.1\nCompute \\(\\sum_{i=0}^{100} 2^k\\)."
+  },
+  {
+    "objectID": "posts/python_basic_en.html#if-statement",
+    "href": "posts/python_basic_en.html#if-statement",
+    "title": "Quick Python basic course for OIST new students",
+    "section": "If statement",
+    "text": "If statement\nThe for loop is powerful, but not very frexible. It does the same thing everytime. However, we sometimes want to make the computer to do a differnt thing sometimes. Here, if statement is useful. if statement works with boolean values.\n\n\nCode\nTrue\n\n\nTrue\n\n\n\n\nCode\nFalse\n\n\nFalse\n\n\nIn Python, True and False are boolean types. Some expression returns boolean type as the result. For example, comparing numbers by &gt; and &lt; returns True or False.\n\n\nCode\n10 &lt; 40\n\n\nTrue\n\n\n\n\nCode\n40 &gt; 10\n\n\nTrue\n\n\nWe can use a == b for checking two numbers a and b are equal. Also, &gt;= and &lt;= represent \\(\\geq\\) and \\(\\leq\\).\n\n\nCode\n40 == 40\n\n\nTrue\n\n\nThe if statement executes the code inside the block if the expression is evaluated as True.\n\n\nCode\nvar_a = 100\n\nif var_a  &gt; 90:\n    print(\"Hey\")\n\n\nHey\n\n\nHere, print(\"Hey\") is executed because var_a &gt; 90 is True.\n\n\nCode\nif var_a  &gt; 100:\n    print(\"No hey\")\n\n\nIf the given expression is evaluated as False, nothing happens.\nWe can use if statement combined with for loop. For example, we can accumulate the sum of even numbers between \\(0\\) and \\(100\\) by:\n\n\nCode\neven_sum_0_100 = 0\n\nfor i in range(0, 101):\n    if i % 2 == 0:\n        even_sum_0_100 += i\n\neven_sum_0_100\n\n\n2550\n\n\nif statement can have else branch if needed. If the given expression is False, statements in the else block is executed.\n\n\nCode\nif var_a  &gt; 100:\n    print(\"Hey\")\nelse:\n    print(\"Not hey\")\n\n\nNot hey\n\n\nIf you need more branches, if statement can be really complex with elif (shorthand of else if) blocks.\n\n\nCode\nif var_a &gt; 100:\n    print(\"Cond 1\")\nelif var_a == 100:\n    print(\"Cond 2\")\nelif var_a == 99:\n    print(\"Cond 3\")\nelse:\n    print(\"Cond 4\")\n\n\nCond 2"
+  },
+  {
+    "objectID": "posts/python_basic_en.html#intinterger-type",
+    "href": "posts/python_basic_en.html#intinterger-type",
+    "title": "Quick Python basic course for OIST new students",
+    "section": "int(interger) type",
+    "text": "int(interger) type\nPython has some builtin data types. So far, we used int type.\n\n\nCode\ntype(30)\n\n\nint\n\n\nOn machine, int types have a simple representation by binary. Let’s see it:\n\n\nCode\nbin(4)\n\n\n'0b100'\n\n\nWe call the minimum unit of this binary representation (i.e., 0 or 1) bit. Although there is some tricks to where we store the bit for minus (-), for intergers, that’s it."
+  },
+  {
+    "objectID": "posts/python_basic_en.html#float-type",
+    "href": "posts/python_basic_en.html#float-type",
+    "title": "Quick Python basic course for OIST new students",
+    "section": "float type",
+    "text": "float type\nBut, for general real numbers like 3.14, the situation is a bit complex.\n\nList\nWe can construct a list by [].\n\n\nCode\n[\"Hey\", 2, 4, [\"Yay\", \"Me\"]]\n\n\n['Hey', 2, 4, ['Yay', 'Me']]\n\n\n\n\nTest\nWe can use “” and ’’ to represent texts. Both have the same effect.\n\n\nCode\n\"Hey, programming is fun!\"\n\n\n'Hey, programming is fun!'\n\n\nWe can get the substring by indexing and concatenate them.\n\n\nCode\n\"Hey, programming is fun!\"[: -4] + \"not fun!\""
   },
   {
     "objectID": "posts/python_basic_en.html#none",
@@ -54,27 +82,6 @@
     "title": "Quick Python basic course for OIST new students",
     "section": "None",
     "text": "None\nIt sounds a bit weird, but None is the special value that represents nothing.\n\n\nCode\nNone"
-  },
-  {
-    "objectID": "posts/python_basic_en.html#variable",
-    "href": "posts/python_basic_en.html#variable",
-    "title": "Quick Python basic course for OIST new students",
-    "section": "Variable",
-    "text": "Variable\nVariable is the most important concept. You may think of it is a container that has some value, and we can name it.\n\n\nCode\nvar1 = 30\nprint(var1)\nvar1 = 40\nprint(var1)\n\n\n30\n40\n\n\n= is the syntax that assigns some value into the variable. There are some operators that changes the value in the variable in place.\n\n\nCode\nvar1 += 40\nprint(var1)\n\n\n80"
-  },
-  {
-    "objectID": "posts/python_basic_en.html#expression-and-statements",
-    "href": "posts/python_basic_en.html#expression-and-statements",
-    "title": "Quick Python basic course for OIST new students",
-    "section": "Expression and statements",
-    "text": "Expression and statements\nIn Python, what we can assign into the variable is called expression. Expression includes numerical values, texts, and values themselves.\n\n\nCode\nvar1 = 20\nvar2 = \"Hey\"\nvar3 = var2\nvar3\n\n\n'Hey'\n\n\nIn Colab notebook, the last expression in the cell is printed out. In the cell above, the content of var3 is printed out.\nOn the other hand, the assignement like var1 = 20 is called statement. If the cell ends with statement, Colab notebook doesn’t show anything."
-  },
-  {
-    "objectID": "posts/python_basic_en.html#for-loop",
-    "href": "posts/python_basic_en.html#for-loop",
-    "title": "Quick Python basic course for OIST new students",
-    "section": "For loop",
-    "text": "For loop\nThe power of the computer is in its speed. Todays computers can executre millionds of operations in a second. Thus, the most basic usage to utilize the computation power of computers is to make it repeat something. for loop the most basic way to do this. There is a range object that is often used with for loop, which represents certain numerical range.\n\n\nCode\nrange(10)\n\n\nrange(0, 10)\n\n\nFor loop repeats something with this range.\n\n\nCode\nfor i in range(10):\n    print(i)\n\n\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n\n\nHere, the program in the for loop is executed with variable i with all values in the range [0, 10) assigned. It’s useful to accumulate values by for loop.\n\n\nCode\nsum_0_100 = 0\nfor i in range(101):\n    sum_0_100 += i\nsum_0_100\n\n\n5050"
   },
   {
     "objectID": "posts/understanding-attention.html",
