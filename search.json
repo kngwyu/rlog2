@@ -81,14 +81,21 @@
     "href": "posts/python_basic_en.html#float-type",
     "title": "Quick Python basic course for OIST new students",
     "section": "float type",
-    "text": "float type\nBut, for general real numbers like 3.14, the situation is a bit complex.\n\n\nCode\ntype(3.14)\n\n\nfloat\n\n\nReal values are called float type in Python and some other programming languages. What does it mean? This example of representing \\(12.345\\) from Wikipedia article may be easy to understand.\n\\[\n12.345=\\underbrace{12345}_{\\text{significand}}\\times\\underbrace{10}_{\\text{base}}\\underbrace{{}^{-3}}^{\\text{exponent}}\n\\]\nSo, in computer, real values are stored by two intergers (significand and exponent) with the fixed base. Base \\(2\\) is commonly used. This approximation of real numbers are called floating-point numbers, from which the type name float is derived.\nOn most computers available nowadays, Python’s float type has 1 bit for sign (\\(+/-\\)), 11 bits for exponent, and 52 bits for significand. Thus, it has some limitations in precision.\n\n\nCode\n10 / 3\n\n\n3.3333333333333335\n\n\nThe answer should be \\(3.33333....\\), but because it has only 52 bits for significand, the maximal precision for the significand is:\n\n\nCode\n2 ** 52\n\n\n4503599627370496\n\n\nBecause\n\n\nCode\n(3333333333333333 &lt; 2**52) and (33333333333333333 &gt; 2**52)\n\n\nTrue\n\n\n, \\(3.333333333333333\\) is the most precise representation of \\(3.33333...\\) in Python float.\nThis limit of floating point representation sometimes causes large errors in some scienctific applications, and there are bunch of researches how to deal with the error."
+    "text": "float type\nBut, for general real numbers like 3.14, the situation is a bit complex.\n\n\nCode\ntype(3.14)\n\n\nfloat\n\n\nReal values are called float type in Python and some other programming languages. What does it mean? This example of representing \\(12.345\\) from Wikipedia article may be easy to understand.\n\\[\n12.345=\\underbrace{12345}_{\\text{significand}}\\times\\underbrace{10}_{\\text{base}}\\underbrace{{}^{-3}}^{\\text{exponent}}\n\\]\nSo, in computer, real values are stored by two intergers (significand and exponent) with the fixed base. Base \\(2\\) is commonly used. This approximation of real numbers are called floating-point numbers, from which the type name float is derived.\nOn most computers available nowadays, Python’s float type has 1 bit for sign (\\(+/-\\)), 11 bits for exponent, and 52 bits for significand. Thus, it has some limitations in precision.\n\n\nCode\n10 / 3\n\n\n3.3333333333333335\n\n\nThe answer should be \\(3.33333....\\), but because it has only 52 bits for significand, it can’t express \\(3.333333333333333\\).\nThis limit of floating point representation sometimes causes large errors in some scienctific applications, and there are bunch of researches how to deal with the error."
   },
   {
     "objectID": "posts/python_basic_en.html#execercise-3.1",
     "href": "posts/python_basic_en.html#execercise-3.1",
     "title": "Quick Python basic course for OIST new students",
     "section": "Execercise 3.1",
-    "text": "Execercise 3.1\nCompute the most precise approximation of \\(\\pi\\) in Python float.\n\nList\nWe can construct a list by [].\n\n\nCode\n[\"Hey\", 2, 4, [\"Yay\", \"Me\"]]\n\n\n['Hey', 2, 4, ['Yay', 'Me']]\n\n\n\n\nTest\nWe can use “” and ’’ to represent texts. Both have the same effect.\n\n\nCode\n\"Hey, programming is fun!\"\n\n\n'Hey, programming is fun!'\n\n\nWe can get the substring by indexing and concatenate them.\n\n\nCode\n\"Hey, programming is fun!\"[: -4] + \"not fun!\""
+    "text": "Execercise 3.1\nDisplay the largest number in Python float."
+  },
+  {
+    "objectID": "posts/python_basic_en.html#list",
+    "href": "posts/python_basic_en.html#list",
+    "title": "Quick Python basic course for OIST new students",
+    "section": "List",
+    "text": "List\nList is a convenient data type to store multiple values in one variable. We can construct a list by [].\n\n\nCode\n[\"Hey\", 2, 4, [\"Yay\", \"Me\"]]\n\n\n['Hey', 2, 4, ['Yay', 'Me']]\n\n\n\nText\nWe can use “” and ’’ to represent texts. Both have the same effect.\n\n\nCode\n\"Hey, programming is fun!\"\n\n\n'Hey, programming is fun!'\n\n\nWe can get the substring by indexing and concatenate them.\n\n\nCode\n\"Hey, programming is fun!\"[: -4] + \"not fun!\""
   },
   {
     "objectID": "posts/python_basic_en.html#none",
