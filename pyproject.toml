@@ -3,7 +3,7 @@ name = "rlog2"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.12.*"
 dependencies = [
   "black",
   "ipympl",
@@ -16,4 +16,13 @@ dependencies = [
   "pandas",
   "pillow",
   "seaborn",
+  "jax>=0.5.2",
+  "kauldron>=1.2.1",
+  "penzai>=0.2.4",
+  "gemma>=3.0.2",
+  "kagglehub>=0.3.10",
+  "datasets>=3.3.2",
 ]
+
+[project.optional-dependencies]
+cuda12 = ["jax[cuda12]"]
