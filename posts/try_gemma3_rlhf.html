@@ -605,7 +605,15 @@ window.Quarto = {
 </section>
 <section id="reward-model-ppoでファインチューニングする" class="level1">
 <h1>5. Reward Model + PPOでファインチューニングする</h1>
-<p>結論から言うと、このgemmaライブラリを使った場合実装が非常に難しいと感じたので諦めました。以下面倒な話なので興味ある人だけ読んでほしいのですが、gemmaパッケージは<a href="https://github.com/google-research/kauldron">kauldron</a>というGoogle製のパッケージに依存しており、これの扱いが非常にやっかいです。モデル、データ、損失関数を定義すればあとはよしなにやってくれる<code>Trainer</code>というのがこのkauldronの主なAPIで、SFTやDPOであればこのTrainerだけでどうにかなるのですが、 - Reward Modelのnormalizationをするだけなのに訓練ステップ全体を書き換える必要がある - PPOについても同じく文章生成→アドバンテージ計算を含めて訓練ステップ全体を書き換える必要がある - 勝手にjitされるので部分的なデバッグが極めて難しい - モデルのコンパイルに一時間くらいかかるし…</p>
+<p>結論から言うと、このgemmaライブラリを使った場合実装が非常に難しいと感じたので諦めました。以下面倒な話なので興味ある人だけ読んでほしいのですが、gemmaパッケージは<a href="https://github.com/google-research/kauldron">kauldron</a>というGoogle製のパッケージに依存しており、これの扱いが非常にやっかいです。モデル、データ、損失関数を定義すればあとはよしなにやってくれる<code>Trainer</code>というのがこのkauldronの主なAPIで、SFTやDPOであればこのTrainerだけでどうにかなるのですが、</p>
+<ul>
+<li>Reward Modelのnormalizationをするだけなのに訓練ステップ全体を書き換える必要がある</li>
+<li>PPOについても同じく文章生成→アドバンテージ計算を含めて訓練ステップ全体を書き換える必要がある</li>
+<li>勝手にjitされるので部分的なデバッグが極めて難しい
+<ul>
+<li>モデルのコンパイルに一時間くらいかかるし…</li>
+</ul></li>
+</ul>
 <p>といった感じでちょっとこれ以上頑張っても無理かなと思い諦めました。<code>TrainStep</code>とかいうのをオーバーライドしないといけなくて、コードを分割してデバッグするのが困難なのが個人的には一番きついかな、と思います。jit無効化ができない理由もよくわからないし。</p>
 <p>jitが遅いのはjax自体の課題でもあり、だから最近は特定のモデル構造に最適化したvLLMのようなライブラリが登場しjaxはあまり流行ってないのだと思いますが。</p>
 </section>

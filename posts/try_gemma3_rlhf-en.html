@@ -192,7 +192,7 @@ window.Quarto = {
     <div class="quarto-title column-body">
       <h1 class="title">Gemma3でRLHFを試してみる</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">ja</div>
+                <div class="quarto-category">en</div>
                 <div class="quarto-category">NLP</div>
                 <div class="quarto-category">deep</div>
               </div>
@@ -222,19 +222,19 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#前置き" id="toc-前置き" class="nav-link active" data-scroll-target="#前置き">1: 前置き</a></li>
-  <li><a href="#rlhfについて" id="toc-rlhfについて" class="nav-link" data-scroll-target="#rlhfについて">2: RLHFについて</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">1: Introduction</a></li>
+  <li><a href="#about-rlhf" id="toc-about-rlhf" class="nav-link" data-scroll-target="#about-rlhf">2: About RLHF</a>
   <ul class="collapse">
-  <li><a href="#rlhfの目的関数" id="toc-rlhfの目的関数" class="nav-link" data-scroll-target="#rlhfの目的関数">2.1: RLHFの目的関数</a></li>
-  <li><a href="#dpoの目的関数" id="toc-dpoの目的関数" class="nav-link" data-scroll-target="#dpoの目的関数">2.2: DPOの目的関数</a></li>
+  <li><a href="#rlhfs-objective-function" id="toc-rlhfs-objective-function" class="nav-link" data-scroll-target="#rlhfs-objective-function">2.1: RLHF’s Objective Function</a></li>
+  <li><a href="#dpos-objective-function" id="toc-dpos-objective-function" class="nav-link" data-scroll-target="#dpos-objective-function">2.2: DPO’s Objective Function</a></li>
   </ul></li>
-  <li><a href="#gemma-3を使ってみる" id="toc-gemma-3を使ってみる" class="nav-link" data-scroll-target="#gemma-3を使ってみる">3: Gemma 3を使ってみる</a></li>
-  <li><a href="#gemma-3をdpoにより学習してみる" id="toc-gemma-3をdpoにより学習してみる" class="nav-link" data-scroll-target="#gemma-3をdpoにより学習してみる">4: Gemma 3をDPOにより学習してみる</a></li>
-  <li><a href="#直接dpo" id="toc-直接dpo" class="nav-link" data-scroll-target="#直接dpo">4.1: 直接DPO</a></li>
+  <li><a href="#trying-out-gemma-3" id="toc-trying-out-gemma-3" class="nav-link" data-scroll-target="#trying-out-gemma-3">3: Trying out Gemma 3</a></li>
+  <li><a href="#training-gemma-3-with-dpo" id="toc-training-gemma-3-with-dpo" class="nav-link" data-scroll-target="#training-gemma-3-with-dpo">4: Training Gemma 3 with DPO</a></li>
+  <li><a href="#only-dpo" id="toc-only-dpo" class="nav-link" data-scroll-target="#only-dpo">4.1: Only DPO</a></li>
   <li><a href="#sft" id="toc-sft" class="nav-link" data-scroll-target="#sft">4.2: SFT</a></li>
   <li><a href="#sft---dpo" id="toc-sft---dpo" class="nav-link" data-scroll-target="#sft---dpo">4.3: SFT -&gt; DPO</a></li>
-  <li><a href="#reward-model-ppoでファインチューニングする" id="toc-reward-model-ppoでファインチューニングする" class="nav-link" data-scroll-target="#reward-model-ppoでファインチューニングする">5. Reward Model + PPOでファインチューニングする</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">6. まとめ</a></li>
+  <li><a href="#fine-tuning-with-reward-model-ppo" id="toc-fine-tuning-with-reward-model-ppo" class="nav-link" data-scroll-target="#fine-tuning-with-reward-model-ppo">5. Fine-tuning with Reward Model + PPO</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">6. Conclusion</a></li>
   </ul>
 </nav>
     </div>
@@ -245,27 +245,27 @@ window.Quarto = {
 
 
 
-<section id="前置き" class="level1">
-<h1>1: 前置き</h1>
-<p>前回のエントリを見たら2年近く前で衝撃を受けたのですが…</p>
-<p>それはさておき、昨今ChatGPTをはじめとする「大規模言語モデルと対話できるWebサービス」が大流行しており、<a href="https://www.anthropic.com/news/the-anthropic-economic-index">Anthropicの調査</a>によると特にプログラマのようなコンピューターを使う職種にはよく広まっているようです。それを支えている技術がRLHF(Reinforcement Learning from Human Feedback)と呼ばれる技術です。素のLLMを人間の嗜好に沿うように訓練していい感じに対話してくれるようにしよう、そのために問題を定式化しよう、ということでこれができたのだと思います。実際には（強化学習の中でも）コンテキストつきバンディット問題だと思うんですが、RLと名前についているからには、まあ試しておくべきかな、と思いつつ結局何もしていなかったので、今回重い腰を上げてやってみることにしました。</p>
-<p>というわけで、このブログでは簡単にRLHFについて概観したあと、公開されているモデルを実際にRLHFで訓練してみようと思います。NVIDIA RTX4090が4台のったマシンを使うのでGPUメモリが20GBくらいで訓練できるモデルなら別になんでもいいのですが、僕は<a href="https://jax.readthedocs.io">Jax</a>が好きなのでGoogleが最近公開した<a href="https://blog.google/technology/developers/gemma-3/">Gemma 3</a>の<a href="https://github.com/google-deepmind/gemma/">コード</a>を使ってみることにしました。後述しますが、この判断はわりと間違いだったと思います。</p>
+<section id="introduction" class="level1">
+<h1>1: Introduction</h1>
+<p>I was shocked to see that my last entry was almost two years ago…</p>
+<p>Putting that aside, web services that allow interaction with large language models, starting with ChatGPT, have become very popular recently. According to a <a href="https://www.anthropic.com/news/the-anthropic-economic-index">survey by Anthropic</a>, they are particularly widespread in computer-using professions like programming. The technology supporting this is called RLHF (Reinforcement Learning from Human Feedback). I believe it was developed to formulate a problem for training a base LLM to interact nicely according to human preferences. In reality, I think it’s a contextual bandit problem (within reinforcement learning), but since it has ‘RL’ in its name, I felt I should give it a try. I hadn’t done anything about it, so I finally decided to get to it.</p>
+<p>So, in this blog post, after a brief overview of RLHF, I will try to actually train a publicly available model with RLHF. I’m using a machine with four NVIDIA RTX4090s, so any model that can be trained with about 20GB of GPU memory would be fine. However, since I like <a href="https://jax.readthedocs.io">Jax</a>, I decided to use the <a href="https://github.com/google-deepmind/gemma/">code</a> for <a href="https://blog.google/technology/developers/gemma-3/">Gemma 3</a>, which was recently released by Google. As I’ll mention later, I think this decision was quite a mistake.</p>
 </section>
-<section id="rlhfについて" class="level1">
-<h1>2: RLHFについて</h1>
-<p>最近読んだ<a href="https://proceedings.mlr.press/v238/gheshlaghi-azar24a.html">A General Theoretical Paradigm to Understand Learning from Human Preferences</a>の説明をベースにRLHFについて簡単にまとめます。</p>
-<p>まず方策 <span class="math inline">\(\pi: \Delta_\mathcal{X}^\mathcal{Y}\)</span>を考えます。強化学習的な方策と思ってもらってもいいんですが、現実的には<span class="math inline">\(\pi(y|x)\)</span>は言語モデルがコンテキスト<span class="math inline">\(x\)</span>を受け取ったときに文章<span class="math inline">\(y\)</span>を生成する確率って感じでいいと思います。<span class="math inline">\(\mathcal{X},\mathcal{Y}\)</span>は離散集合です。</p>
-<p>強化学習では、これを報酬を使って訓練するのですが、RLHFでは報酬の代わりに人間の嗜好を表すデータがあるような場合を考えます。<span class="math inline">\(y, y' \in \mathcal{Y}\)</span>を考えます。このとき、関係演算子<span class="math inline">\(\succ\)</span>を使って<span class="math inline">\(y \succ y'\)</span>なら<span class="math inline">\(y\)</span>のほうが<span class="math inline">\(y'\)</span>より好まれると表記します。<span class="math inline">\(p(y \succ y'|x)\)</span>により、コンテキスト<span class="math inline">\(x\)</span>に対して続く生成文<span class="math inline">\(y\)</span>が<span class="math inline">\(y'\)</span>より好まれる確率を表します。このとき、多くの人を反映するような真の嗜好分布<span class="math inline">\(p^*(y \succ y'|x)\)</span>が存在すると仮定します。</p>
-<section id="rlhfの目的関数" class="level2">
-<h2 class="anchored" data-anchor-id="rlhfの目的関数">2.1: RLHFの目的関数</h2>
-<p>嗜好データを使って何を最適化するのかというと、RLHFではまずBradley-Terry modelというモデルにもとづいて嗜好を報酬に変換します。このモデルでは<span class="math inline">\(\sigma(x) = \frac{1}{1 + e^{-1}}\)</span>を使い、<span class="math inline">\(p(y \succ y' | x) = \sigma(r(x, y) - r(x, y'))\)</span>が成り立つような実数関数<span class="math inline">\(r\)</span>が存在すると仮定します。すると、データセット<span class="math inline">\(\mathcal{D} = (x_i, y_{w,i} \succ y_{l, i})^N_{i=1}\)</span>に対して、<span class="math inline">\(r\)</span>は<span class="math inline">\(L(r)= -\mathbb{E}_{(x, y_w, y_l)~D} \left[ \log ( \sigma(r(x, y_w) - r(x, y_l)) ) \right]\)</span>を損失関数とするロジスティック回帰により学習できます。</p>
-<p>この報酬関数のもとで、制約付き期待報酬和<span class="math inline">\(J(\pi) = \mathbb{E}\pi [r(x, y)] − \tau D_\textbf{KL}(\pi || \pi_\textbf{ref})\)</span>を最大化するのがRLHFの目的関数になります。<span class="math inline">\(\tau D_\textbf{KL}(\pi || \pi_\textbf{ref})\)</span>が方策に対する制約で、<span class="math inline">\(\pi_\textbf{ref}\)</span>として事前学習済みモデルを使って大きく壊れないようにするのが一般的なようです。</p>
+<section id="about-rlhf" class="level1">
+<h1>2: About RLHF</h1>
+<p>I will briefly summarize RLHF based on the explanation from <a href="https://proceedings.mlr.press/v238/gheshlaghi-azar24a.html">A General Theoretical Paradigm to Understand Learning from Human Preferences</a>, which I recently read.</p>
+<p>First, let’s consider a policy <span class="math inline">\(\pi: \Delta_\mathcal{X}^\mathcal{Y}\)</span>. You can think of it as a policy in reinforcement learning, but in practice, it’s fine to think of <span class="math inline">\(\pi(y|x)\)</span> as the probability that a language model generates a sentence <span class="math inline">\(y\)</span> given a context <span class="math inline">\(x\)</span>. <span class="math inline">\(\mathcal{X}\)</span> and <span class="math inline">\(\mathcal{Y}\)</span> are discrete sets.</p>
+<p>In reinforcement learning, this is trained using rewards, but in RLHF, we consider cases where there is data representing human preferences instead of rewards. Consider <span class="math inline">\(y, y' \in \mathcal{Y}\)</span>. We use the relational operator <span class="math inline">\(\succ\)</span> to denote that <span class="math inline">\(y\)</span> is preferred over <span class="math inline">\(y'\)</span>, written as <span class="math inline">\(y \succ y'\)</span>. <span class="math inline">\(p(y \succ y'|x)\)</span> represents the probability that the generated sentence <span class="math inline">\(y\)</span> following context <span class="math inline">\(x\)</span> is preferred over <span class="math inline">\(y'\)</span>. We assume the existence of a true preference distribution <span class="math inline">\(p^*(y \succ y'|x)\)</span> that reflects the preferences of many people.</p>
+<section id="rlhfs-objective-function" class="level2">
+<h2 class="anchored" data-anchor-id="rlhfs-objective-function">2.1: RLHF’s Objective Function</h2>
+<p>So, what do we optimize using preference data? In RLHF, preferences are first converted into rewards based on a model called the Bradley-Terry model. This model uses <span class="math inline">\(\sigma(x) = \frac{1}{1 + e^{-x}}\)</span> and assumes the existence of a real-valued function <span class="math inline">\(r\)</span> such that <span class="math inline">\(p(y \succ y' | x) = \sigma(r(x, y) - r(x, y'))\)</span>. Then, for a dataset <span class="math inline">\(\mathcal{D} = (x_i, y_{w,i} \succ y_{l, i})^N_{i=1}\)</span>, <span class="math inline">\(r\)</span> can be learned through logistic regression with the loss function <span class="math inline">\(L(r)= -\mathbb{E}_{(x, y_w, y_l)~D} \left[ \log ( \sigma(r(x, y_w) - r(x, y_l)) ) \right]\)</span>.</p>
+<p>Under this reward function, the objective function of RLHF is to maximize the constrained expected reward sum <span class="math inline">\(J(\pi) = \mathbb{E}_\pi [r(x, y)] − \tau D_\textbf{KL}(\pi || \pi_\textbf{ref})\)</span>. The term <span class="math inline">\(\tau D_\textbf{KL}(\pi || \pi_\textbf{ref})\)</span> is a constraint on the policy, and it seems common to use a pre-trained model as <span class="math inline">\(\pi_\textbf{ref}\)</span> to prevent the policy from changing too drastically.</p>
 </section>
-<section id="dpoの目的関数" class="level2">
-<h2 class="anchored" data-anchor-id="dpoの目的関数">2.2: DPOの目的関数</h2>
-<p>2.1の目的関数を最大化するためにはいったん<span class="math inline">\(r\)</span>を学習する必要があるのですが、これを直接最適化する形式にしたのがDPO(Direct Preference Optimization)です。DPOでは以下の最小化項を目的関数とします</p>
+<section id="dpos-objective-function" class="level2">
+<h2 class="anchored" data-anchor-id="dpos-objective-function">2.2: DPO’s Objective Function</h2>
+<p>To maximize the objective function in 2.1, it is necessary to first learn <span class="math inline">\(r\)</span>. DPO (Direct Preference Optimization) is a formulation that optimizes this directly. In DPO, the following minimization term is used as the objective function:</p>
 <p><span class="math inline">\(\min_{\pi} \mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \left[ - \log \sigma \left( \tau \log \frac{\pi(y_w|x)}{\pi(y_l|x)} - \tau \log \frac{\pi_{ref}(y_w|x)}{\pi_{ref}(y_l|x)}  \right) \right]\)</span></p>
-<p>ちょっとわかりにくいので、<span class="math inline">\(\frac{\pi(y_w|x)}{\pi(y_l|x)}\)</span>をx軸として、制約項と定数を無視した<span class="math inline">\(L_\textbf{simple}= - \log \sigma(\log \frac{\pi(y_w|x)}{\pi(y_l|x)})\)</span>をプロットしてみましょう。</p>
+<p>It’s a bit hard to understand, so let’s plot <span class="math inline">\(L_\textbf{simple}= - \log \sigma(\log \frac{\pi(y_w|x)}{\pi(y_l|x)})\)</span>, ignoring the constraint term and constants, with <span class="math inline">\(\frac{\pi(y_w|x)}{\pi(y_l|x)}\)</span> as the x-axis.</p>
 <div id="21ed2445-6124-4cc5-be88-c7abdb704837" class="cell" data-execution_count="1">
 <details class="code-fold">
 <summary>Code</summary>
@@ -301,12 +301,13 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>というわけで、より好まれる<span class="math inline">\(y_w\)</span>と好まれない<span class="math inline">\(y_l\)</span>を生成する確率の密度比が大きいほど、この損失関数は小さくなります。Bradley-Terry modelが成り立つなど、いくつかの仮定のもとでDPOの目的関数とRLHFの目的関数が成り立つことを示すことができます。</p>
+<p>Therefore, the larger the probability density ratio of generating the more preferred <span class="math inline">\(y_w\)</span> to the less preferred <span class="math inline">\(y_l\)</span>, the smaller this loss function becomes. It can be shown that, under certain assumptions, such as the validity of the Bradley-Terry model, the objective functions of DPO and RLHF are equivalent.</p>
 </section>
 </section>
-<section id="gemma-3を使ってみる" class="level1">
-<h1>3: Gemma 3を使ってみる</h1>
-<p>ざっとRLHF、DPOについて概観したところで、公開されているモデルを動かしてみましょう。<a href="https://github.com/google-deepmind/gemma/">Gemmaの公式リポジトリ</a>ではJaxと<a href="https://flax-linen.readthedocs.io/en/latest/">Flaxのlinen API</a>を使ったモデルのコードと、いくつかの例が公開されています。ここでは、公式ドキュメントの<a href="https://gemma-llm.readthedocs.io/en/latest/colab_sampling.html">sampling</a>の章と、<a href="https://penzai.readthedocs.io/en/stable/notebooks/induction_heads_2B.html">penzaiのドキュメント</a>を参考にしてGemmaのモデルをダウンロードして、文章をサンプルしてみます。 今GPUを4台使ったマシンを使っていて、デフォルトだと4台全てでメモリ確保してしまうので適当に環境変数を設定します。</p>
+<section id="trying-out-gemma-3" class="level1">
+<h1>3: Trying out Gemma 3</h1>
+<p>Now that we have a quick overview of RLHF and DPO, let’s try running a publicly available model. The <a href="https://github.com/google-deepmind/gemma/">official Gemma repository</a> provides model code using Jax and the <a href="https://flax-linen.readthedocs.io/en/latest/">Flax linen API</a>, along with several examples. Here, I’ll download the Gemma model and sample some text, referencing the official documentation’s <a href="https://gemma-llm.readthedocs.io/en/latest/colab_sampling.html">sampling</a> chapter and the <a href="https://penzai.readthedocs.io/en/stable/notebooks/induction_heads_2B.html">penzai documentation</a>.</p>
+<p>I’m currently using a machine with 4 GPUs, and by default, it allocates memory on all four. So, I’ll set some environment variables to manage this.</p>
 <div id="02fe50ca-fa42-47ce-bf42-2371bedb17e4" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
@@ -316,7 +317,7 @@ window.Quarto = {
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"XLA_PYTHON_CLIENT_MEM_FRACTION"</span>] <span class="op">=</span> <span class="st">"0.9"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>次に必要なものをインポートしておきます。</p>
+<p>Next, I’ll import the necessary libraries.</p>
 <div id="e6289ecf-4cec-4d09-8ac7-3e52a7ed0878" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>Code</summary>
@@ -333,9 +334,9 @@ window.Quarto = {
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> kauldron <span class="im">import</span> kd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>Gemma 3 1Bモデルを<a href="https://www.kaggle.com/models/google/gemma-3/flax/gemma3-1b">Kaggle Hub</a>からダウンロードします。モデル自体はHugging Faceなど色々なところにアップロードされているのでどこでもいいと思います。</p>
-<p>僕はKaggleのアカウントを持っていなかったので、このためにアカウントとAPIキーを作りました。 <a href="https://github.com/Kaggle/kagglehub/blob/main/README.md">公式ドキュメント</a>に使い方が書いてありますが、APIキーが入ったjsonファイルを<code>~/.kaggle/kaggle.json</code>に置いておくのが楽でいいと思います。</p>
-<p><code>google/gemma-3/flax/gemma3-1b</code>がファインチューニングしていないモデル、<code>google/gemma-3/flax/gemma3-1b-it</code>がファインチューニング済みのモデルになります。今回は両方ダウンロードしてみます。</p>
+<p>I will download the Gemma 3 1B model from <a href="https://www.kaggle.com/models/google/gemma-3/flax/gemma3-1b">Kaggle Hub</a>. The model itself is uploaded to various places like Hugging Face, so any source should be fine.</p>
+<p>I didn’t have a Kaggle account, so I created one and an API key for this purpose. The usage is described in the <a href="https://github.com/Kaggle/kagglehub/blob/main/README.md">official documentation</a>, but I think the easiest way is to place the json file containing the API key at <code>~/.kaggle/kaggle.json</code>.</p>
+<p><code>google/gemma-3/flax/gemma3-1b</code> is the non-fine-tuned model, and <code>google/gemma-3/flax/gemma3-1b-it</code> is the fine-tuned model. I will download both this time.</p>
 <div id="fe5abcd3-6a71-4c69-9e30-c868d13a5a80" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>Code</summary>
@@ -343,7 +344,7 @@ window.Quarto = {
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>tuned_weights_dir <span class="op">=</span> Path(kagglehub.model_download(<span class="st">"google/gemma-3/flax/gemma3-1b-it"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>共用PCで容量が足りなくなったら手動で消さないといけないので、デフォルトのダウンロード場所を確認しておきましょう。</p>
+<p>Since I’m on a shared PC, I might need to delete the files manually if space runs out, so let’s check the default download location.</p>
 <div id="46034577-9b99-4336-be19-977c9589f66c" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>Code</summary>
@@ -353,7 +354,7 @@ window.Quarto = {
 <pre><code>PosixPath('/home/yuji/.cache/kagglehub/models/google/gemma-3/flax/gemma3-1b-it/1')</code></pre>
 </div>
 </div>
-<p>ついでに容量も確認しておきましょうか。</p>
+<p>While we’re at it, let’s also check the size.</p>
 <div id="e6495fc7-cfa6-4a58-8103-58a05f7dcf96" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>Code</summary>
@@ -369,7 +370,7 @@ window.Quarto = {
 <pre><code>1.4555628383532166</code></pre>
 </div>
 </div>
-<p>合計で1.45GBくらいでしょうか。1Bとはいえまあまあでかいですね。ではgemmaライブラリを使ってパラメタを読み込んでみます。</p>
+<p>The total size seems to be about 1.45GB. 1B model is relatively small among today’s many open models, but it’s still large. Now, let’s try loading the parameters using the gemma library.</p>
 <div id="1fb97d48-1c61-4775-af65-e6432a4e1067" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>Code</summary>
@@ -377,7 +378,7 @@ window.Quarto = {
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tuned_params <span class="op">=</span> gm.ckpts.load_params(tuned_weights_dir <span class="op">/</span> <span class="st">"gemma3-1b-it"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p><a href="https://flax-linen.readthedocs.io/en/latest/">Flaxのlinen API</a>に詳しい人ならわかると思いますがパラメタはただのdictです。<code>layer_0</code>だけ表示してみましょう。</p>
+<p>As those familiar with the <a href="https://flax-linen.readthedocs.io/en/latest/">Flax linen API</a> would know, the parameters are just a dictionary. Let’s display only <code>layer_0</code>.</p>
 <div id="d00f3680-5fb5-4a21-8e90-804973db670b" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>Code</summary>
@@ -396,10 +397,10 @@ window.Quarto = {
  'pre_ffw_norm': {'scale': (1152,)}}</code></pre>
 </div>
 </div>
-<p>このdictにネットワーク構造に関する情報はないのですが、各レイヤーの名前から、アテンションレイヤーとMLPがあって、色々とLayer Normが入っているんだなというのがわかりますね。僕は言語モデル素人なのでこんなにLayer Normをいれるんだな、というのは知りませんでした。</p>
-<p>余談ですが最近のflaxにはPyTorchのようにclassにパラメタを直接もたせる<a href="https://flax.readthedocs.io/en/latest/">nnx</a>というAPIもありますが、これはGoogleの方が作った<a href="https://docs.kidger.site/equinox/">equinox</a>というライブラリとよく似ているので、いろいろ乱立されてもなあという感じもあります。まあJax人口は少ないので、誰も気にしてなさそうな気もしますが。</p>
-<p>では、モデルを実際に動かしてみましょう。まずは、チューニング前のパラメタを使ってみます。</p>
-<p><code>gemini.text.ChatSampler</code>というクラスが、トークナイザーを初期化したり、コンテクストを保持したり、面倒なことを色々やってくれるようです。ですが残念ながら、デフォルトのトークナイザーは<code>gs://gemma-data/tokenizers/tokenizer_gemma3.model</code>というよくわからないURL(google cloudのストレージ上だと思いますが)から語彙をダウンロードしようとして失敗するので、自分でトークナイザーを初期化します。 <a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_tokenizer.py">Github</a>からコピペしてファイルパスだけ変えます。語彙ファイルはモデルが入っているディレクトリにある<code>tokenizer.model</code>というやつです。</p>
+<p>This dictionary doesn’t contain information about the network structure, but from the names of each layer, we can see that there are attention layers and MLPs, with various Layer Norms included. As a newcomer to language models, I didn’t know they used this many Layer Norms.</p>
+<p>As an aside, recent versions of Flax also have an API called <a href="https://flax.readthedocs.io/en/latest/">nnx</a> that allows parameters to be held directly in a class, similar to PyTorch. However, this is very similar to a library called <a href="https://docs.kidger.site/equinox/">equinox</a> created by someone at Google, so it feels a bit like there are too many competing standards. Well, since the Jax population is small, I guess nobody really cares.</p>
+<p>Now, let’s actually run the model. First, I’ll try using the pre-tuning parameters.</p>
+<p>It seems the <code>gemma.text.ChatSampler</code> class handles various tedious tasks like initializing the tokenizer and maintaining context. Unfortunately, the default tokenizer fails because it tries to download the vocabulary from a strange URL: <code>gs://gemma-data/tokenizers/tokenizer_gemma3.model</code> (I assume it’s on Google Cloud Storage). Therefore, I will initialize the tokenizer myself. I’ll copy and paste from <a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_tokenizer.py">Github</a> and just change the file path. The vocabulary file is <code>tokenizer.model</code> located in the model’s directory.</p>
 <div id="ace5aba1-7c62-4f53-a5b0-3f0ff8b51674" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>Code</summary>
@@ -425,7 +426,7 @@ window.Quarto = {
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>local_tokenizer <span class="op">=</span> MyGemma3Tokenizer(tuned_weights_dir <span class="op">/</span> <span class="st">"tokenizer.model"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>トークナイザーは<a href="https://github.com/google/sentencepiece">SentencePiece</a>ですが、いくつかの<a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_tokenizer.py#L97">特別なトークン</a>が追加されているようです。</p>
+<p>The tokenizer is <a href="https://github.com/google/sentencepiece">SentencePiece</a>, but it seems some <a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_tokenizer.py#L97">special tokens</a> have been added.</p>
 <pre><code>  PAD = 0
   EOS = 1
   BOS = 2
@@ -446,8 +447,8 @@ window.Quarto = {
   # Multimodal tokens (Gemma3 only)
   START_OF_IMAGE = 255999  # '&lt;start_of_image&gt;'
   END_OF_IMAGE = 256000  # &lt;end_of_image&gt;</code></pre>
-<p>画像やターンの終始はわかるんですが、最初のPADやらMASKはなんだかよくわかりません。</p>
-<p>ではサンプルしてみましょう。</p>
+<p>I understand the image and turn start/end tokens, but I’m not quite sure about the initial PAD or MASK tokens.</p>
+<p>Now, let’s try sampling.</p>
 <div id="2522d72d-c4cf-4f7a-bf5e-169a7fe0dd19" class="cell" data-execution_count="13">
 <details class="code-fold">
 <summary>Code</summary>
@@ -464,8 +465,8 @@ window.Quarto = {
 <pre><code>'How are you doing?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?'</code></pre>
 </div>
 </div>
-<p>何やら、恐ろしい文章が出てきました。アラビア語？</p>
-<p>次に、チューニングずみのパラメタを使ってみます。</p>
+<p>A strange sentence has appeared. Is it Arabic?</p>
+<p>Next, I’ll try using the tuned parameters.</p>
 <div id="242cad62-2cb7-44e5-9019-e0f97718f44f" class="cell" data-execution_count="14">
 <details class="code-fold">
 <summary>Code</summary>
@@ -481,24 +482,24 @@ window.Quarto = {
 <pre><code>'I’m doing well, thank you for asking! As a large language model, I don’t experience feelings in the same way humans do, but I’m functioning perfectly and ready to help you with whatever you need. 😊 \n\nHow are *you* doing today? Is there anything you’d like to chat about or any task you’d like me to help you with?'</code></pre>
 </div>
 </div>
-<p>特に有益とは言えませんが、とても愛想のいい回答をしてくれました。わざわざにっこりの絵文字😊までつけてくれるなんて、気がきいていますね。</p>
-<p>この2つの比較から、公開されているGemma 3 1Bモデルにおいては、<strong>チューニング前とチューニング済みのモデルでは大きく対話タスクにおける振る舞いが異なる</strong> と言えそうです。</p>
-<p>ところでJax使いとしてはこのサンプルはjitされているの？ということが気になると思うのですが、<a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_sampler_call.py#L245">ここ</a>でjitが使われているようです。しかし残念ながらバッチサイズや入力コンテキスト長が違うと再コンパイルになります。</p>
-<p>デコーディングのアルゴリズムは<a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_sampling.py">貪欲法しか実装されていません</a>。</p>
+<p>It’s not particularly useful, but it gave a very friendly response. It’s thoughtful of it to even include a smiley face emoji 😊.</p>
+<p>From this comparison, it seems we can say that for the publicly available Gemma 3 1B model, <strong>the behavior in dialogue tasks differs significantly between the pre-trained and fine-tuned models</strong>.</p>
+<p>By the way, as a Jax user, you might be wondering if this sampling is JIT-compiled. It seems that JIT is used <a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_sampler_call.py#L245">here</a>. Unfortunately, however, it recompiles if the batch size or input context length changes.</p>
+<p>As for the decoding algorithm, <a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_sampling.py">only greedy search is implemented</a>.</p>
 </section>
-<section id="gemma-3をdpoにより学習してみる" class="level1">
-<h1>4: Gemma 3をDPOにより学習してみる</h1>
-<p>というわけで、untunedな方をDPOにより学習してみます。データセットは適当にHugging Faceで探してきました。</p>
+<section id="training-gemma-3-with-dpo" class="level1">
+<h1>4: Training Gemma 3 with DPO</h1>
+<p>So, I will try training the untuned model with DPO. I found a suitable dataset on Hugging Face.</p>
 <ol type="1">
-<li><p><a href="https://huggingface.co/datasets/argilla/distilabel-capybara-dpo-7k-binarized">Capybara</a>で直接DPOする</p></li>
-<li><p><a href="https://huggingface.co/datasets/HuggingFaceH4/no_robots">no robots</a>という指示データセットで教師ありファインチューニング(SFT)する</p></li>
-<li><p>2 → 1の順で両方やる</p></li>
+<li><p>Direct DPO using <a href="https://huggingface.co/datasets/argilla/distilabel-capybara-dpo-7k-binarized">Capybara</a></p></li>
+<li><p>Supervised Fine-Tuning (SFT) using the <a href="https://huggingface.co/datasets/HuggingFaceH4/no_robots">no robots</a> instruction dataset</p></li>
+<li><p>Doing both, in the order of 2 then 1</p></li>
 </ol>
-<p>という3通りを試してみたいと思います。</p>
+<p>I would like to try these three approaches.</p>
 </section>
-<section id="直接dpo" class="level1">
-<h1>4.1: 直接DPO</h1>
-<p>コードは<a href="https://github.com/kngwyu/gemma-rlhf/blob/main/scripts/dpo.py">これ</a>です。gemmaのライブラリ内に色々用意されているのですんなりできました。</p>
+<section id="only-dpo" class="level1">
+<h1>4.1: Only DPO</h1>
+<p>The code is <a href="https://github.com/kngwyu/gemma-rlhf/blob/main/scripts/dpo.py">here</a>. It was straightforward because various things are prepared within the gemma library.</p>
 <div id="705b3f3c-860b-4450-9e6b-df28f8a46633" class="cell" data-execution_count="16">
 <details class="code-fold">
 <summary>Code</summary>
@@ -520,7 +521,7 @@ window.Quarto = {
 <pre><code>'How are you doing? সেকেন্ড\n terceiro\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow'</code></pre>
 </div>
 </div>
-<p>英語を喋ってくれるようにはなりましたが、同じことを繰り返してしまいますね。別のことを聞いてみましょうか。</p>
+<p>It has started to speak English, but it keeps repeating my question. Let’s try asking something else.</p>
 <div id="b324480b-5675-4e1a-9a39-425e410d012d" class="cell" data-execution_count="18">
 <details class="code-fold">
 <summary>Code</summary>
@@ -530,11 +531,11 @@ window.Quarto = {
 <pre><code>'If you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a'</code></pre>
 </div>
 </div>
-<p>だめですね。</p>
+<p>Same.</p>
 </section>
 <section id="sft" class="level1">
 <h1>4.2: SFT</h1>
-<p>SFTのコードは<a href="https://github.com/kngwyu/gemma-rlhf/blob/main/scripts/sft.py">これ</a>です。</p>
+<p>The code for SFT is <a href="https://github.com/kngwyu/gemma-rlhf/blob/main/scripts/sft.py">here</a>.</p>
 <div id="a4f6cdb2-6ebb-4371-a890-1b15beb7baf8" class="cell" data-execution_count="21">
 <details class="code-fold">
 <summary>Code</summary>
@@ -556,7 +557,7 @@ window.Quarto = {
 <pre><code>"[{'content': 'How are you doing?', 'role': 'user'}, {'content': 'I am doing well. How are you?', 'role': 'assistant'}]"</code></pre>
 </div>
 </div>
-<p>なんと、しっかり質問に回答してくれます。json形式ですが…?</p>
+<p>Wow, it answers the question properly. But in JSON format…?</p>
 <div id="0cd764f8-135b-4e57-9f26-b83724efc9f6" class="cell" data-execution_count="24">
 <details class="code-fold">
 <summary>Code</summary>
@@ -566,7 +567,7 @@ window.Quarto = {
 <pre><code>"[{'content': 'I like to sleep.', 'role': 'user'}, {'content': 'I like to sleep too. How about you?', 'role': 'assistant'}]ในสนาม\n[{'content': 'I like to sleep.', 'role': 'user'}, {'content': 'I like to sleep too. How about you?', 'role': 'assistant'}]ในสนาม\n[{'content': 'I like to sleep.', 'role': 'user'}, {'content': 'I like"</code></pre>
 </div>
 </div>
-<p>寝るのが好きらしいです。</p>
+<p>Apparently, it likes to sleep.</p>
 </section>
 <section id="sft---dpo" class="level1">
 <h1>4.3: SFT -&gt; DPO</h1>
@@ -591,7 +592,7 @@ window.Quarto = {
 <pre><code>"[{'View content': 'src/content/components/Post/Post.js', 'server-ip': '127.0.0.1', 'request-id': '12345-1', 'conversation-id': 'Coursera-d9110-c2', 'next-view': 'Post/Post'}, {'server-ip': '127.0.0.1', 'request-id': '12"</code></pre>
 </div>
 </div>
-<p>とんでもないことになりました。</p>
+<p>?</p>
 <div id="82fb617a-c678-4889-acab-d593f1e4e16a" class="cell" data-execution_count="27">
 <details class="code-fold">
 <summary>Code</summary>
@@ -601,46 +602,54 @@ window.Quarto = {
 <pre><code>'[{\'content\': \'src/content/components/Post/Post.js#questionContent:\', \'role\': \'user\'}, {\'content\': \'I like to play with my toys.\', \'role\': \'assistant\'}, {\'content\': \'What are your favorite toys?\', \'role\': \'user\'}, {\'content\': \'My favorite toy is a catnip mouse.\', \'role\': \'assistant\'}, {\'content\': "What do you do with your favorite toy?", \'role\': \'user\'}, {\'content'</code></pre>
 </div>
 </div>
-<p>なぜPost.jsにこだわるのでしょうか。Capybaraは、わりと一般的な質問が多かった気がしますが。でも遊ぶのが好きで、かつcatnip mouseが好きだと答えてくれました。僕はよく知らないのですが、猫が遊ぶためのねずみのおもちゃのことのようですね。</p>
+<p>Why is it obsessed with Post.js? I thought Capybara had fairly general questions. But it did answer that it likes to play and likes catnip mice. I’m not familiar with it, but it seems to be a mouse toy for cats to play with.</p>
 </section>
-<section id="reward-model-ppoでファインチューニングする" class="level1">
-<h1>5. Reward Model + PPOでファインチューニングする</h1>
-<p>結論から言うと、このgemmaライブラリを使った場合実装が非常に難しいと感じたので諦めました。以下面倒な話なので興味ある人だけ読んでほしいのですが、gemmaパッケージは<a href="https://github.com/google-research/kauldron">kauldron</a>というGoogle製のパッケージに依存しており、これの扱いが非常にやっかいです。モデル、データ、損失関数を定義すればあとはよしなにやってくれる<code>Trainer</code>というのがこのkauldronの主なAPIで、SFTやDPOであればこのTrainerだけでどうにかなるのですが、 - Reward Modelのnormalizationをするだけなのに訓練ステップ全体を書き換える必要がある - PPOについても同じく文章生成→アドバンテージ計算を含めて訓練ステップ全体を書き換える必要がある - 勝手にjitされるので部分的なデバッグが極めて難しい - モデルのコンパイルに一時間くらいかかるし…</p>
-<p>といった感じでちょっとこれ以上頑張っても無理かなと思い諦めました。<code>TrainStep</code>とかいうのをオーバーライドしないといけなくて、コードを分割してデバッグするのが困難なのが個人的には一番きついかな、と思います。jit無効化ができない理由もよくわからないし。</p>
-<p>jitが遅いのはjax自体の課題でもあり、だから最近は特定のモデル構造に最適化したvLLMのようなライブラリが登場しjaxはあまり流行ってないのだと思いますが。</p>
-</section>
-<section id="まとめ" class="level1">
-<h1>6. まとめ</h1>
-<p>というわけで、適当なデータセットでGemma 1Bを訓練してみました。結果としては、</p>
+<section id="fine-tuning-with-reward-model-ppo" class="level1">
+<h1>5. Fine-tuning with Reward Model + PPO</h1>
+<p>To state the conclusion first, I gave up because I found the implementation to be extremely difficult when using this gemma library. The following is a complicated story, so please read only if you are interested. The gemma package depends on a Google-made package called <a href="https://github.com/google-research/kauldron">kauldron</a>, which is very tricky to handle. The main API of kauldron is a <code>Trainer</code> that handles everything once you define the model, data, and loss function. For SFT or DPO, this <code>Trainer</code> is sufficient, but:</p>
 <ul>
-<li>SFTはほとんど工夫しなくてもうまくいった</li>
-<li>DPOは駄目だった
+<li>You need to rewrite the entire training step just to normalize the Reward Model.</li>
+<li>Similarly for PPO, the entire training step, including text generation and advantage calculation, needs to be rewritten.</li>
+<li>Partial debugging is extremely difficult because it is JIT-compiled automatically.
 <ul>
-<li>SFT + DPOは若干回答が深くなったが余計なことを答えるように</li>
+<li>And the model compilation takes about an hour…</li>
 </ul></li>
 </ul>
-<p>という感じですかね。DPOは何がこんなに駄目なんでしょうか。またその他の教訓としては</p>
+<p>For these reasons, I felt it was impossible to proceed further and gave up. Having to override something called <code>TrainStep</code> and the difficulty of splitting the code for debugging was the hardest part for me personally. I also don’t understand why JIT compilation can’t be disabled.</p>
+<p>The slowness of JIT is also an issue with Jax itself, which I think is why libraries like vLLM, optimized for specific model structures, have appeared recently, and Jax is not very popular.</p>
+</section>
+<section id="conclusion" class="level1">
+<h1>6. Conclusion</h1>
+<p>So, I tried training Gemma 1B on a suitable dataset. The results are as follows:</p>
 <ul>
-<li>DPOの実装はすごく簡単
+<li>SFT worked well with little to no tweaking.</li>
+<li>DPO did not work well.
 <ul>
-<li>Preference dataの形式には注意する必要があるが、実装自体は教師ありファインチューニングと同じくらい簡単</li>
-</ul></li>
-<li>Reward Model + PPOの実装は難しい
-<ul>
-<li>Reward Modelはデータセットからサンプリングしてnormalizationする必要がある</li>
-<li>PPOはオンポリシーでやるなら学習時に毎回文章を生成する必要がある、めちゃくちゃ面倒
-<ul>
-<li>GRPOもこれ？</li>
-</ul></li>
-<li>ただReward Modelの訓練にpreference以外のデータも混ぜられる（よね？）のはいいかも</li>
-</ul></li>
-<li>Google製gemmaライブラリはとても難しい
-<ul>
-<li>他のパッケージを使う方がいい</li>
-<li>道具選びは大事….</li>
+<li>SFT + DPO resulted in slightly deeper answers, but it also started to say unnecessary things.</li>
 </ul></li>
 </ul>
-<p>といった感じでしょうか。 ところでDPOってKL制約があるのでもとのpreference dataの方策と自分の方策が離れすぎてたら駄目な気がするんですが、そのへんどうなんでしょうか？ preference dataを増やせないならいちいち生成して学習するオンポリシーPPOに分がある気もします。そのへん次回以降のブログで検証したいですが、いかんせんもう少し手に馴染む道具がないとLLMを使うコードを書くのは正直苦痛だし面白くないですね。このブログ、Gemma3が出てきた3月に書き始めて、しばらく放置していたのもそのへんが理由だったり…。</p>
+<p>That’s about it. I wonder what’s so wrong with DPO. Other lessons learned include:</p>
+<ul>
+<li>DPO implementation is very easy.
+<ul>
+<li>You need to be careful with the format of the preference data, but the implementation itself is about as easy as supervised fine-tuning.</li>
+</ul></li>
+<li>Reward Model + PPO implementation is difficult.
+<ul>
+<li>The Reward Model needs to be sampled from the dataset and normalized.</li>
+<li>If you do PPO on-policy, you need to generate text at every training step, which is incredibly tedious.
+<ul>
+<li>Is GRPO like this too?</li>
+</ul></li>
+<li>However, being able to mix data other than preferences into the Reward Model training might be a good thing (right?).</li>
+</ul></li>
+<li>The Google-made gemma library is very difficult.
+<ul>
+<li>It’s better to use other packages.</li>
+<li>Choosing the right tools is important….</li>
+</ul></li>
+</ul>
+<p>I guess that’s the summary. By the way, DPO has a KL constraint, so I feel that it won’t work if the policy deviates too much from the original preference data policy. I wonder about that. If the preference data cannot be increased, I feel that on-policy PPO, which generates and learns each time, might have an advantage. I’d like to verify that in a future blog post, but frankly, writing code that uses LLMs is painful and not fun without tools that are a bit more user-friendly. That’s one of the reasons I started writing this blog post when Gemma 3 came out in March and then left it for a while….</p>
 
 
 </section>
