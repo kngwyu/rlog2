@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2025-08-20">
+
+<title>Gemma3でRLHFを試してみる – RLog2</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-c1f1e6c05e4d9aa3145bdaa62cecd366.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script type="application/json" class="js-hypothesis-config">
+{
+  "theme": "clean"
+}
+</script>
+<script async="" src="https://hypothes.is/embed.js"></script>
+<script>
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    document.body.classList.add('hypothesis-enabled');
+  });
+</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">RLog2</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../about.html"> 
+<span class="menu-text">RLog2: RL blog 2</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://bsky.app/profile/kngwyu.bsky.social"> <i class="bi bi-bluesky" role="img">
+</i> 
+<span class="menu-text">Bluesky</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://github.com/kngwyu"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text">Github</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Gemma3でRLHFを試してみる</h1>
+                                <div class="quarto-categories">
+                <div class="quarto-category">ja</div>
+                <div class="quarto-category">NLP</div>
+                <div class="quarto-category">deep</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">August 20, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#前置き" id="toc-前置き" class="nav-link active" data-scroll-target="#前置き">1: 前置き</a></li>
+  <li><a href="#rlhfについて" id="toc-rlhfについて" class="nav-link" data-scroll-target="#rlhfについて">2: RLHFについて</a>
+  <ul class="collapse">
+  <li><a href="#rlhfの目的関数" id="toc-rlhfの目的関数" class="nav-link" data-scroll-target="#rlhfの目的関数">2.1: RLHFの目的関数</a></li>
+  <li><a href="#dpoの目的関数" id="toc-dpoの目的関数" class="nav-link" data-scroll-target="#dpoの目的関数">2.2: DPOの目的関数</a></li>
+  </ul></li>
+  <li><a href="#gemma-3を使ってみる" id="toc-gemma-3を使ってみる" class="nav-link" data-scroll-target="#gemma-3を使ってみる">3: Gemma 3を使ってみる</a></li>
+  <li><a href="#gemma-3をdpoにより学習してみる" id="toc-gemma-3をdpoにより学習してみる" class="nav-link" data-scroll-target="#gemma-3をdpoにより学習してみる">4: Gemma 3をDPOにより学習してみる</a></li>
+  <li><a href="#直接dpo" id="toc-直接dpo" class="nav-link" data-scroll-target="#直接dpo">4.1: 直接DPO</a></li>
+  <li><a href="#sft" id="toc-sft" class="nav-link" data-scroll-target="#sft">4.2: SFT</a></li>
+  <li><a href="#sft---dpo" id="toc-sft---dpo" class="nav-link" data-scroll-target="#sft---dpo">4.3: SFT -&gt; DPO</a></li>
+  <li><a href="#reward-model-ppoでファインチューニングする" id="toc-reward-model-ppoでファインチューニングする" class="nav-link" data-scroll-target="#reward-model-ppoでファインチューニングする">5. Reward Model + PPOでファインチューニングする</a></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">6. まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="前置き" class="level1">
+<h1>1: 前置き</h1>
+<p>前回のエントリを見たら2年近く前で衝撃を受けたのですが…</p>
+<p>それはさておき、昨今ChatGPTをはじめとする「大規模言語モデルと対話できるWebサービス」が大流行しており、<a href="https://www.anthropic.com/news/the-anthropic-economic-index">Anthropicの調査</a>によると特にプログラマのようなコンピューターを使う職種にはよく広まっているようです。それを支えている技術がRLHF(Reinforcement Learning from Human Feedback)と呼ばれる技術です。素のLLMを人間の嗜好に沿うように訓練していい感じに対話してくれるようにしよう、そのために問題を定式化しよう、ということでこれができたのだと思います。実際には（強化学習の中でも）コンテキストつきバンディット問題だと思うんですが、RLと名前についているからには、まあ試しておくべきかな、と思いつつ結局何もしていなかったので、今回重い腰を上げてやってみることにしました。</p>
+<p>というわけで、このブログでは簡単にRLHFについて概観したあと、公開されているモデルを実際にRLHFで訓練してみようと思います。NVIDIA RTX4090が4台のったマシンを使うのでGPUメモリが20GBくらいで訓練できるモデルなら別になんでもいいのですが、僕は<a href="https://jax.readthedocs.io">Jax</a>が好きなのでGoogleが最近公開した<a href="https://blog.google/technology/developers/gemma-3/">Gemma 3</a>の<a href="https://github.com/google-deepmind/gemma/">コード</a>を使ってみることにしました。後述しますが、この判断はわりと間違いだったと思います。</p>
+</section>
+<section id="rlhfについて" class="level1">
+<h1>2: RLHFについて</h1>
+<p>最近読んだ<a href="https://proceedings.mlr.press/v238/gheshlaghi-azar24a.html">A General Theoretical Paradigm to Understand Learning from Human Preferences</a>の説明をベースにRLHFについて簡単にまとめます。</p>
+<p>まず方策 <span class="math inline">\(\pi: \Delta_\mathcal{X}^\mathcal{Y}\)</span>を考えます。強化学習的な方策と思ってもらってもいいんですが、現実的には<span class="math inline">\(\pi(y|x)\)</span>は言語モデルがコンテキスト<span class="math inline">\(x\)</span>を受け取ったときに文章<span class="math inline">\(y\)</span>を生成する確率って感じでいいと思います。<span class="math inline">\(\mathcal{X},\mathcal{Y}\)</span>は離散集合です。</p>
+<p>強化学習では、これを報酬を使って訓練するのですが、RLHFでは報酬の代わりに人間の嗜好を表すデータがあるような場合を考えます。<span class="math inline">\(y, y' \in \mathcal{Y}\)</span>を考えます。このとき、関係演算子<span class="math inline">\(\succ\)</span>を使って<span class="math inline">\(y \succ y'\)</span>なら<span class="math inline">\(y\)</span>のほうが<span class="math inline">\(y'\)</span>より好まれると表記します。<span class="math inline">\(p(y \succ y'|x)\)</span>により、コンテキスト<span class="math inline">\(x\)</span>に対して続く生成文<span class="math inline">\(y\)</span>が<span class="math inline">\(y'\)</span>より好まれる確率を表します。このとき、多くの人を反映するような真の嗜好分布<span class="math inline">\(p^*(y \succ y'|x)\)</span>が存在すると仮定します。</p>
+<section id="rlhfの目的関数" class="level2">
+<h2 class="anchored" data-anchor-id="rlhfの目的関数">2.1: RLHFの目的関数</h2>
+<p>嗜好データを使って何を最適化するのかというと、RLHFではまずBradley-Terry modelというモデルにもとづいて嗜好を報酬に変換します。このモデルでは<span class="math inline">\(\sigma(x) = \frac{1}{1 + e^{-1}}\)</span>を使い、<span class="math inline">\(p(y \succ y' | x) = \sigma(r(x, y) - r(x, y'))\)</span>が成り立つような実数関数<span class="math inline">\(r\)</span>が存在すると仮定します。すると、データセット<span class="math inline">\(\mathcal{D} = (x_i, y_{w,i} \succ y_{l, i})^N_{i=1}\)</span>に対して、<span class="math inline">\(r\)</span>は<span class="math inline">\(L(r)= -\mathbb{E}_{(x, y_w, y_l)~D} \left[ \log ( \sigma(r(x, y_w) - r(x, y_l)) ) \right]\)</span>を損失関数とするロジスティック回帰により学習できます。</p>
+<p>この報酬関数のもとで、制約付き期待報酬和<span class="math inline">\(J(\pi) = \mathbb{E}\pi [r(x, y)] − \tau D_\textbf{KL}(\pi || \pi_\textbf{ref})\)</span>を最大化するのがRLHFの目的関数になります。<span class="math inline">\(\tau D_\textbf{KL}(\pi || \pi_\textbf{ref})\)</span>が方策に対する制約で、<span class="math inline">\(\pi_\textbf{ref}\)</span>として事前学習済みモデルを使って大きく壊れないようにするのが一般的なようです。</p>
+</section>
+<section id="dpoの目的関数" class="level2">
+<h2 class="anchored" data-anchor-id="dpoの目的関数">2.2: DPOの目的関数</h2>
+<p>2.1の目的関数を最大化するためにはいったん<span class="math inline">\(r\)</span>を学習する必要があるのですが、これを直接最適化する形式にしたのがDPO(Direct Preference Optimization)です。DPOでは以下の最小化項を目的関数とします</p>
+<p><span class="math inline">\(\min_{\pi} \mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}} \left[ - \log \sigma \left( \tau \log \frac{\pi(y_w|x)}{\pi(y_l|x)} - \tau \log \frac{\pi_{ref}(y_w|x)}{\pi_{ref}(y_l|x)}  \right) \right]\)</span></p>
+<p>ちょっとわかりにくいので、<span class="math inline">\(\frac{\pi(y_w|x)}{\pi(y_l|x)}\)</span>をx軸として、制約項と定数を無視した<span class="math inline">\(L_\textbf{simple}= - \log \sigma(\log \frac{\pi(y_w|x)}{\pi(y_l|x)})\)</span>をプロットしてみましょう。</p>
+<div id="21ed2445-6124-4cc5-be88-c7abdb704837" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn.objects <span class="im">as</span> so</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sigmoid(x):</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">1.0</span> <span class="op">/</span> (<span class="fl">1.0</span> <span class="op">+</span> np.exp(<span class="op">-</span>x))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="fl">0.1</span>, <span class="fl">10.0</span>, <span class="dv">100</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> <span class="op">-</span>np.log(sigmoid(np.log(x)))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    so.Plot(</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        data<span class="op">=</span>{<span class="st">"x"</span>: x, <span class="st">"y"</span>: y},</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="st">"x"</span>,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        y<span class="op">=</span><span class="st">"y"</span>,</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    .add(</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        so.Line(),</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        orient<span class="op">=</span><span class="st">"y"</span>,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    .label(x<span class="op">=</span><span class="vs">r"</span><span class="dv">$</span><span class="ch">\f</span><span class="vs">rac{</span><span class="er">\</span><span class="vs">pi</span><span class="kw">(</span><span class="vs">y_w</span><span class="cf">|</span><span class="vs">x</span><span class="kw">)</span><span class="vs">}{</span><span class="er">\</span><span class="vs">pi</span><span class="kw">(</span><span class="vs">y_l</span><span class="cf">|</span><span class="vs">x</span><span class="kw">)</span><span class="vs">}</span><span class="dv">$</span><span class="vs">"</span>, y<span class="op">=</span><span class="vs">r"</span><span class="dv">$</span><span class="vs">L_</span><span class="ch">\t</span><span class="vs">ext{simple}</span><span class="dv">$</span><span class="vs">"</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="1">
+<div>
+<figure class="figure">
+<p><img src="try_gemma3_rlhf-en_files/figure-html/cell-2-output-1.png" width="599" height="445" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>というわけで、より好まれる<span class="math inline">\(y_w\)</span>と好まれない<span class="math inline">\(y_l\)</span>を生成する確率の密度比が大きいほど、この損失関数は小さくなります。Bradley-Terry modelが成り立つなど、いくつかの仮定のもとでDPOの目的関数とRLHFの目的関数が成り立つことを示すことができます。</p>
+</section>
+</section>
+<section id="gemma-3を使ってみる" class="level1">
+<h1>3: Gemma 3を使ってみる</h1>
+<p>ざっとRLHF、DPOについて概観したところで、公開されているモデルを動かしてみましょう。<a href="https://github.com/google-deepmind/gemma/">Gemmaの公式リポジトリ</a>ではJaxと<a href="https://flax-linen.readthedocs.io/en/latest/">Flaxのlinen API</a>を使ったモデルのコードと、いくつかの例が公開されています。ここでは、公式ドキュメントの<a href="https://gemma-llm.readthedocs.io/en/latest/colab_sampling.html">sampling</a>の章と、<a href="https://penzai.readthedocs.io/en/stable/notebooks/induction_heads_2B.html">penzaiのドキュメント</a>を参考にしてGemmaのモデルをダウンロードして、文章をサンプルしてみます。 今GPUを4台使ったマシンを使っていて、デフォルトだと4台全てでメモリ確保してしまうので適当に環境変数を設定します。</p>
+<div id="02fe50ca-fa42-47ce-bf42-2371bedb17e4" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"CUDA_VISIBLE_DEVICES"</span>] <span class="op">=</span> <span class="st">"3"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"XLA_PYTHON_CLIENT_MEM_FRACTION"</span>] <span class="op">=</span> <span class="st">"0.9"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>次に必要なものをインポートしておきます。</p>
+<div id="e6289ecf-4cec-4d09-8ac7-3e52a7ed0878" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> dataclasses</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> jax.numpy <span class="im">as</span> jnp</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> kagglehub</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optax</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Gemma imports</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> gemma <span class="im">import</span> gm</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> kauldron <span class="im">import</span> kd</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Gemma 3 1Bモデルを<a href="https://www.kaggle.com/models/google/gemma-3/flax/gemma3-1b">Kaggle Hub</a>からダウンロードします。モデル自体はHugging Faceなど色々なところにアップロードされているのでどこでもいいと思います。</p>
+<p>僕はKaggleのアカウントを持っていなかったので、このためにアカウントとAPIキーを作りました。 <a href="https://github.com/Kaggle/kagglehub/blob/main/README.md">公式ドキュメント</a>に使い方が書いてありますが、APIキーが入ったjsonファイルを<code>~/.kaggle/kaggle.json</code>に置いておくのが楽でいいと思います。</p>
+<p><code>google/gemma-3/flax/gemma3-1b</code>がファインチューニングしていないモデル、<code>google/gemma-3/flax/gemma3-1b-it</code>がファインチューニング済みのモデルになります。今回は両方ダウンロードしてみます。</p>
+<div id="fe5abcd3-6a71-4c69-9e30-c868d13a5a80" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>untuned_weights_dir <span class="op">=</span> Path(kagglehub.model_download(<span class="st">"google/gemma-3/flax/gemma3-1b"</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>tuned_weights_dir <span class="op">=</span> Path(kagglehub.model_download(<span class="st">"google/gemma-3/flax/gemma3-1b-it"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>共用PCで容量が足りなくなったら手動で消さないといけないので、デフォルトのダウンロード場所を確認しておきましょう。</p>
+<div id="46034577-9b99-4336-be19-977c9589f66c" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>tuned_weights_dir</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<pre><code>PosixPath('/home/yuji/.cache/kagglehub/models/google/gemma-3/flax/gemma3-1b-it/1')</code></pre>
+</div>
+</div>
+<p>ついでに容量も確認しておきましょうか。</p>
+<div id="e6495fc7-cfa6-4a58-8103-58a05f7dcf96" class="cell" data-execution_count="6">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> total_file_size(path: Path):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> path.is_file():</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> path.stat().st_size</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">sum</span>(<span class="bu">map</span>(total_file_size, path.glob(<span class="st">"*"</span>)))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>total_file_size(tuned_weights_dir) <span class="op">/</span> (<span class="dv">1024</span> <span class="op">**</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>1.4555628383532166</code></pre>
+</div>
+</div>
+<p>合計で1.45GBくらいでしょうか。1Bとはいえまあまあでかいですね。ではgemmaライブラリを使ってパラメタを読み込んでみます。</p>
+<div id="1fb97d48-1c61-4775-af65-e6432a4e1067" class="cell" data-execution_count="9">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>untuned_params <span class="op">=</span> gm.ckpts.load_params(untuned_weights_dir <span class="op">/</span> <span class="st">"gemma3-1b"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tuned_params <span class="op">=</span> gm.ckpts.load_params(tuned_weights_dir <span class="op">/</span> <span class="st">"gemma3-1b-it"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p><a href="https://flax-linen.readthedocs.io/en/latest/">Flaxのlinen API</a>に詳しい人ならわかると思いますがパラメタはただのdictです。<code>layer_0</code>だけ表示してみましょう。</p>
+<div id="d00f3680-5fb5-4a21-8e90-804973db670b" class="cell" data-execution_count="10">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>jax.tree.<span class="bu">map</span>(<span class="kw">lambda</span> v: v.shape, tuned_params)[<span class="st">"layer_0"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>{'attn': {'_key_norm': {'scale': (256,)},
+  '_query_norm': {'scale': (256,)},
+  'attn_vec_einsum': {'w': (4, 256, 1152)},
+  'kv_einsum': {'w': (2, 1, 1152, 256)},
+  'q_einsum': {'w': (4, 1152, 256)}},
+ 'mlp': {'gating_einsum': (2, 6912, 1152), 'linear': (6912, 1152)},
+ 'post_attention_norm': {'scale': (1152,)},
+ 'post_ffw_norm': {'scale': (1152,)},
+ 'pre_attention_norm': {'scale': (1152,)},
+ 'pre_ffw_norm': {'scale': (1152,)}}</code></pre>
+</div>
+</div>
+<p>このdictにネットワーク構造に関する情報はないのですが、各レイヤーの名前から、アテンションレイヤーとMLPがあって、色々とLayer Normが入っているんだなというのがわかりますね。僕は言語モデル素人なのでこんなにLayer Normをいれるんだな、というのは知りませんでした。</p>
+<p>余談ですが最近のflaxにはPyTorchのようにclassにパラメタを直接もたせる<a href="https://flax.readthedocs.io/en/latest/">nnx</a>というAPIもありますが、これはGoogleの方が作った<a href="https://docs.kidger.site/equinox/">equinox</a>というライブラリとよく似ているので、いろいろ乱立されてもなあという感じもあります。まあJax人口は少ないので、誰も気にしてなさそうな気もしますが。</p>
+<p>では、モデルを実際に動かしてみましょう。まずは、チューニング前のパラメタを使ってみます。</p>
+<p><code>gemini.text.ChatSampler</code>というクラスが、トークナイザーを初期化したり、コンテクストを保持したり、面倒なことを色々やってくれるようです。ですが残念ながら、デフォルトのトークナイザーは<code>gs://gemma-data/tokenizers/tokenizer_gemma3.model</code>というよくわからないURL(google cloudのストレージ上だと思いますが)から語彙をダウンロードしようとして失敗するので、自分でトークナイザーを初期化します。 <a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_tokenizer.py">Github</a>からコピペしてファイルパスだけ変えます。語彙ファイルはモデルが入っているディレクトリにある<code>tokenizer.model</code>というやつです。</p>
+<div id="ace5aba1-7c62-4f53-a5b0-3f0ff8b51674" class="cell" data-execution_count="11">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclasses.dataclass</span>(frozen<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyGemma3Tokenizer(gm.text.Tokenizer):</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Tokenizer for Gemma 3, modified to work with local vocab file"""</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    path: Path</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    special_tokens <span class="op">=</span> gm.text._tokenizer._Gemma3SpecialTokens</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Tokens which are forbidden to be generated in the sampler.</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    FORBIDDEN_TOKENS <span class="op">=</span> (</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        special_tokens.START_OF_IMAGE,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        special_tokens.END_OF_IMAGE,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    VERSION <span class="op">=</span> <span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="c0b6c060-884b-4f98-9fee-dae2ff3b7d28" class="cell" data-execution_count="12">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>local_tokenizer <span class="op">=</span> MyGemma3Tokenizer(tuned_weights_dir <span class="op">/</span> <span class="st">"tokenizer.model"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>トークナイザーは<a href="https://github.com/google/sentencepiece">SentencePiece</a>ですが、いくつかの<a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_tokenizer.py#L97">特別なトークン</a>が追加されているようです。</p>
+<pre><code>  PAD = 0
+  EOS = 1
+  BOS = 2
+  UNK = 3
+  MASK = 4
+  # '[multimodal]' = 5
+  # Initial index to access the `&lt;unusedXX&gt;` tokens. For example, `&lt;unused7&gt;` is
+  # `SpecialTokens.CUSTOM + 7`
+  CUSTOM = 6  # &lt;unused0&gt;
+  # &lt;unused1&gt; = 7
+  # &lt;unused2&gt; = 8
+  # ...
+  # TODO(epot): Tokenizer also has `&lt;unused99&gt;` up to `&lt;unused6238&gt;` after the
+  # `&lt;START_OF_IMAGE&gt;` token (starting at 256000).
+  START_OF_TURN = 105  # &lt;start_of_turn&gt;
+  END_OF_TURN = 106  # &lt;end_of_turn&gt;
+
+  # Multimodal tokens (Gemma3 only)
+  START_OF_IMAGE = 255999  # '&lt;start_of_image&gt;'
+  END_OF_IMAGE = 256000  # &lt;end_of_image&gt;</code></pre>
+<p>画像やターンの終始はわかるんですが、最初のPADやらMASKはなんだかよくわかりません。</p>
+<p>ではサンプルしてみましょう。</p>
+<div id="2522d72d-c4cf-4f7a-bf5e-169a7fe0dd19" class="cell" data-execution_count="13">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> gm.nn.Gemma3_1B()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>untuned_chatbot <span class="op">=</span> gm.text.ChatSampler(</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    tokenizer<span class="op">=</span>local_tokenizer,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    params<span class="op">=</span>untuned_params,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    multi_turn<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>untuned_chatbot.chat(<span class="st">"How are you doing?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>'How are you doing?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?\nআপনি কেমন আছেন?'</code></pre>
+</div>
+</div>
+<p>何やら、恐ろしい文章が出てきました。アラビア語？</p>
+<p>次に、チューニングずみのパラメタを使ってみます。</p>
+<div id="242cad62-2cb7-44e5-9019-e0f97718f44f" class="cell" data-execution_count="14">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tuned_chatbot <span class="op">=</span> gm.text.ChatSampler(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    tokenizer<span class="op">=</span>local_tokenizer,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    params<span class="op">=</span>tuned_params,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    multi_turn<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>tuned_chatbot.chat(<span class="st">"How are you doing?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<pre><code>'I’m doing well, thank you for asking! As a large language model, I don’t experience feelings in the same way humans do, but I’m functioning perfectly and ready to help you with whatever you need. 😊 \n\nHow are *you* doing today? Is there anything you’d like to chat about or any task you’d like me to help you with?'</code></pre>
+</div>
+</div>
+<p>特に有益とは言えませんが、とても愛想のいい回答をしてくれました。わざわざにっこりの絵文字😊までつけてくれるなんて、気がきいていますね。</p>
+<p>この2つの比較から、公開されているGemma 3 1Bモデルにおいては、<strong>チューニング前とチューニング済みのモデルでは大きく対話タスクにおける振る舞いが異なる</strong> と言えそうです。</p>
+<p>ところでJax使いとしてはこのサンプルはjitされているの？ということが気になると思うのですが、<a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_sampler_call.py#L245">ここ</a>でjitが使われているようです。しかし残念ながらバッチサイズや入力コンテキスト長が違うと再コンパイルになります。</p>
+<p>デコーディングのアルゴリズムは<a href="https://github.com/google-deepmind/gemma/blob/5d42f3a2159f340b8c965f32a5c168ae2dc93690/gemma/gm/text/_sampling.py">貪欲法しか実装されていません</a>。</p>
+</section>
+<section id="gemma-3をdpoにより学習してみる" class="level1">
+<h1>4: Gemma 3をDPOにより学習してみる</h1>
+<p>というわけで、untunedな方をDPOにより学習してみます。データセットは適当にHugging Faceで探してきました。</p>
+<ol type="1">
+<li><p><a href="https://huggingface.co/datasets/argilla/distilabel-capybara-dpo-7k-binarized">Capybara</a>で直接DPOする</p></li>
+<li><p><a href="https://huggingface.co/datasets/HuggingFaceH4/no_robots">no robots</a>という指示データセットで教師ありファインチューニング(SFT)する</p></li>
+<li><p>2 → 1の順で両方やる</p></li>
+</ol>
+<p>という3通りを試してみたいと思います。</p>
+</section>
+<section id="直接dpo" class="level1">
+<h1>4.1: 直接DPO</h1>
+<p>コードは<a href="https://github.com/kngwyu/gemma-rlhf/blob/main/scripts/dpo.py">これ</a>です。gemmaのライブラリ内に色々用意されているのですんなりできました。</p>
+<div id="705b3f3c-860b-4450-9e6b-df28f8a46633" class="cell" data-execution_count="16">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>dpo_raw_params <span class="op">=</span> gm.ckpts.load_params(<span class="st">"/data/capybara_dpo_raw/checkpoints/ckpt_10000/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="2511c52b-1b7f-4d21-a81a-7fa696842cb1" class="cell" data-execution_count="17">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>dpo_raw_chatbot <span class="op">=</span> gm.text.ChatSampler(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    tokenizer<span class="op">=</span>local_tokenizer,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    params<span class="op">=</span>dpo_raw_params[<span class="st">"policy"</span>],</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    multi_turn<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>dpo_raw_chatbot.chat(<span class="st">"How are you doing?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<pre><code>'How are you doing? সেকেন্ড\n terceiro\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow are you doing?\nHow'</code></pre>
+</div>
+</div>
+<p>英語を喋ってくれるようにはなりましたが、同じことを繰り返してしまいますね。別のことを聞いてみましょうか。</p>
+<div id="b324480b-5675-4e1a-9a39-425e410d012d" class="cell" data-execution_count="18">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>dpo_raw_chatbot.chat(<span class="st">"If you are a cat, what do you like?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<pre><code>'If you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a cat, what do you like?\nIf you are a'</code></pre>
+</div>
+</div>
+<p>だめですね。</p>
+</section>
+<section id="sft" class="level1">
+<h1>4.2: SFT</h1>
+<p>SFTのコードは<a href="https://github.com/kngwyu/gemma-rlhf/blob/main/scripts/sft.py">これ</a>です。</p>
+<div id="a4f6cdb2-6ebb-4371-a890-1b15beb7baf8" class="cell" data-execution_count="21">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>sft_params <span class="op">=</span> gm.ckpts.load_params(<span class="st">"/data/norobots_sft/checkpoints/ckpt_10000/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="46b031a1-c98d-497b-96c7-d21986e67d57" class="cell" data-execution_count="23">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>sft_chatbot <span class="op">=</span> gm.text.ChatSampler(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    tokenizer<span class="op">=</span>local_tokenizer,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    params<span class="op">=</span>sft_params,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    multi_turn<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>sft_chatbot.chat(<span class="st">"How are you doing?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<pre><code>"[{'content': 'How are you doing?', 'role': 'user'}, {'content': 'I am doing well. How are you?', 'role': 'assistant'}]"</code></pre>
+</div>
+</div>
+<p>なんと、しっかり質問に回答してくれます。json形式ですが…?</p>
+<div id="0cd764f8-135b-4e57-9f26-b83724efc9f6" class="cell" data-execution_count="24">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>sft_chatbot.chat(<span class="st">"If you are a cat, what do you like?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="24">
+<pre><code>"[{'content': 'I like to sleep.', 'role': 'user'}, {'content': 'I like to sleep too. How about you?', 'role': 'assistant'}]ในสนาม\n[{'content': 'I like to sleep.', 'role': 'user'}, {'content': 'I like to sleep too. How about you?', 'role': 'assistant'}]ในสนาม\n[{'content': 'I like to sleep.', 'role': 'user'}, {'content': 'I like"</code></pre>
+</div>
+</div>
+<p>寝るのが好きらしいです。</p>
+</section>
+<section id="sft---dpo" class="level1">
+<h1>4.3: SFT -&gt; DPO</h1>
+<div id="59f956ce-d437-4d70-a5bd-4a1b95cc692e" class="cell" data-execution_count="25">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dpo_sft_params <span class="op">=</span> gm.ckpts.load_params(<span class="st">"/data/capybara_dpo_sft/checkpoints/ckpt_10000/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="2ca4b394-6d9c-4523-8245-567d2dcd2f63" class="cell" data-execution_count="26">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>dpo_sft_chatbot <span class="op">=</span> gm.text.ChatSampler(</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    tokenizer<span class="op">=</span>local_tokenizer,</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    params<span class="op">=</span>dpo_sft_params[<span class="st">"policy"</span>],</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    multi_turn<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>dpo_sft_chatbot.chat(<span class="st">"How are you doing?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="26">
+<pre><code>"[{'View content': 'src/content/components/Post/Post.js', 'server-ip': '127.0.0.1', 'request-id': '12345-1', 'conversation-id': 'Coursera-d9110-c2', 'next-view': 'Post/Post'}, {'server-ip': '127.0.0.1', 'request-id': '12"</code></pre>
+</div>
+</div>
+<p>とんでもないことになりました。</p>
+<div id="82fb617a-c678-4889-acab-d593f1e4e16a" class="cell" data-execution_count="27">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>dpo_sft_chatbot.chat(<span class="st">"If you are a cat, what do you like?"</span>, max_new_tokens<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="27">
+<pre><code>'[{\'content\': \'src/content/components/Post/Post.js#questionContent:\', \'role\': \'user\'}, {\'content\': \'I like to play with my toys.\', \'role\': \'assistant\'}, {\'content\': \'What are your favorite toys?\', \'role\': \'user\'}, {\'content\': \'My favorite toy is a catnip mouse.\', \'role\': \'assistant\'}, {\'content\': "What do you do with your favorite toy?", \'role\': \'user\'}, {\'content'</code></pre>
+</div>
+</div>
+<p>なぜPost.jsにこだわるのでしょうか。Capybaraは、わりと一般的な質問が多かった気がしますが。でも遊ぶのが好きで、かつcatnip mouseが好きだと答えてくれました。僕はよく知らないのですが、猫が遊ぶためのねずみのおもちゃのことのようですね。</p>
+</section>
+<section id="reward-model-ppoでファインチューニングする" class="level1">
+<h1>5. Reward Model + PPOでファインチューニングする</h1>
+<p>結論から言うと、このgemmaライブラリを使った場合実装が非常に難しいと感じたので諦めました。以下面倒な話なので興味ある人だけ読んでほしいのですが、gemmaパッケージは<a href="https://github.com/google-research/kauldron">kauldron</a>というGoogle製のパッケージに依存しており、これの扱いが非常にやっかいです。モデル、データ、損失関数を定義すればあとはよしなにやってくれる<code>Trainer</code>というのがこのkauldronの主なAPIで、SFTやDPOであればこのTrainerだけでどうにかなるのですが、 - Reward Modelのnormalizationをするだけなのに訓練ステップ全体を書き換える必要がある - PPOについても同じく文章生成→アドバンテージ計算を含めて訓練ステップ全体を書き換える必要がある - 勝手にjitされるので部分的なデバッグが極めて難しい - モデルのコンパイルに一時間くらいかかるし…</p>
+<p>といった感じでちょっとこれ以上頑張っても無理かなと思い諦めました。<code>TrainStep</code>とかいうのをオーバーライドしないといけなくて、コードを分割してデバッグするのが困難なのが個人的には一番きついかな、と思います。jit無効化ができない理由もよくわからないし。</p>
+<p>jitが遅いのはjax自体の課題でもあり、だから最近は特定のモデル構造に最適化したvLLMのようなライブラリが登場しjaxはあまり流行ってないのだと思いますが。</p>
+</section>
+<section id="まとめ" class="level1">
+<h1>6. まとめ</h1>
+<p>というわけで、適当なデータセットでGemma 1Bを訓練してみました。結果としては、</p>
+<ul>
+<li>SFTはほとんど工夫しなくてもうまくいった</li>
+<li>DPOは駄目だった
+<ul>
+<li>SFT + DPOは若干回答が深くなったが余計なことを答えるように</li>
+</ul></li>
+</ul>
+<p>という感じですかね。DPOは何がこんなに駄目なんでしょうか。またその他の教訓としては</p>
+<ul>
+<li>DPOの実装はすごく簡単
+<ul>
+<li>Preference dataの形式には注意する必要があるが、実装自体は教師ありファインチューニングと同じくらい簡単</li>
+</ul></li>
+<li>Reward Model + PPOの実装は難しい
+<ul>
+<li>Reward Modelはデータセットからサンプリングしてnormalizationする必要がある</li>
+<li>PPOはオンポリシーでやるなら学習時に毎回文章を生成する必要がある、めちゃくちゃ面倒
+<ul>
+<li>GRPOもこれ？</li>
+</ul></li>
+<li>ただReward Modelの訓練にpreference以外のデータも混ぜられる（よね？）のはいいかも</li>
+</ul></li>
+<li>Google製gemmaライブラリはとても難しい
+<ul>
+<li>他のパッケージを使う方がいい</li>
+<li>道具選びは大事….</li>
+</ul></li>
+</ul>
+<p>といった感じでしょうか。 ところでDPOってKL制約があるのでもとのpreference dataの方策と自分の方策が離れすぎてたら駄目な気がするんですが、そのへんどうなんでしょうか？ preference dataを増やせないならいちいち生成して学習するオンポリシーPPOに分がある気もします。そのへん次回以降のブログで検証したいですが、いかんせんもう少し手に馴染む道具がないとLLMを使うコードを書くのは正直苦痛だし面白くないですね。このブログ、Gemma3が出てきた3月に書き始めて、しばらく放置していたのもそのへんが理由だったり…。</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/kngwyu\.github\.io\/rlog2\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

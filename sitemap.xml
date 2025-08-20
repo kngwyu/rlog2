@@ -2,54 +2,58 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://kngwyu.github.io/rlog2/index.html</loc>
-    <lastmod>2025-08-20T08:20:10.826Z</lastmod>
+    <lastmod>2025-08-20T08:37:15.243Z</lastmod>
   </url>
   <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/try_gemma3_rlhf.html</loc>
-    <lastmod>2025-08-20T08:20:10.879Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/python_basic_en.html</loc>
-    <lastmod>2025-08-20T08:20:10.873Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/understanding-what-makes-rl-difficult.html</loc>
-    <lastmod>2025-08-20T08:20:10.890Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/understanding-attention.html</loc>
-    <lastmod>2025-08-20T08:20:10.886Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/fast_2d_physics_in_jax_en.html</loc>
-    <lastmod>2025-08-20T08:20:10.860Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/understanding-attention-en.html</loc>
-    <lastmod>2025-08-20T08:20:10.882Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/try_equinox_for_rl_en.html</loc>
-    <lastmod>2025-08-20T08:20:10.877Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/fast_2d_physics_in_jax.html</loc>
-    <lastmod>2025-08-20T08:20:10.846Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/jax-brax-haiku.html</loc>
-    <lastmod>2025-08-20T08:20:10.869Z</lastmod>
-  </url>
-  <url>
-    <loc>https://kngwyu.github.io/rlog2/posts/sandb-exercise-racetrack.html</loc>
-    <lastmod>2025-08-20T08:20:10.876Z</lastmod>
+    <loc>https://kngwyu.github.io/rlog2/posts/try_gemma3_rlhf-en.html</loc>
+    <lastmod>2025-08-20T08:37:15.295Z</lastmod>
   </url>
   <url>
     <loc>https://kngwyu.github.io/rlog2/posts/try_equinox_for_rl_jp.html</loc>
-    <lastmod>2025-08-20T08:20:10.878Z</lastmod>
+    <lastmod>2025-08-20T08:37:15.294Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/sandb-exercise-racetrack.html</loc>
+    <lastmod>2025-08-20T08:37:15.292Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/jax-brax-haiku.html</loc>
+    <lastmod>2025-08-20T08:37:15.285Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/fast_2d_physics_in_jax.html</loc>
+    <lastmod>2025-08-20T08:37:15.262Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/try_equinox_for_rl_en.html</loc>
+    <lastmod>2025-08-20T08:37:15.293Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/understanding-attention-en.html</loc>
+    <lastmod>2025-08-20T08:37:15.299Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/fast_2d_physics_in_jax_en.html</loc>
+    <lastmod>2025-08-20T08:37:15.276Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/understanding-attention.html</loc>
+    <lastmod>2025-08-20T08:37:15.303Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/understanding-what-makes-rl-difficult.html</loc>
+    <lastmod>2025-08-20T08:37:15.306Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/python_basic_en.html</loc>
+    <lastmod>2025-08-20T08:37:15.289Z</lastmod>
+  </url>
+  <url>
+    <loc>https://kngwyu.github.io/rlog2/posts/try_gemma3_rlhf.html</loc>
+    <lastmod>2025-08-20T08:37:15.295Z</lastmod>
   </url>
   <url>
     <loc>https://kngwyu.github.io/rlog2/about.html</loc>
-    <lastmod>2025-08-20T08:20:10.826Z</lastmod>
+    <lastmod>2025-08-20T08:37:15.242Z</lastmod>
   </url>
 </urlset>

@@ -3,6 +3,7 @@
     "listing": "/index.html",
     "items": [
       "/posts/try_gemma3_rlhf.html",
+      "/posts/try_gemma3_rlhf-en.html",
       "/posts/python_basic_en.html",
       "/posts/fast_2d_physics_in_jax_en.html",
       "/posts/fast_2d_physics_in_jax.html",
